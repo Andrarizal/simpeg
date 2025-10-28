@@ -12,7 +12,7 @@ class LeavesOverview extends StatsOverviewWidget
     protected function getStats(): array
     {
         $staff = Auth::user()->staff;
-
+        
         // ambil max cuti dan izindari table master dengan helper setting
         $maxLeave = setting('max_leave_days');
         $maxPermission = setting('max_permission_days');

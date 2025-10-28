@@ -21,35 +21,35 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void 
     {
-        // $this->call([ChairSeeder::class, UnitSeeder::class]);
-
         $this->call([SystemRule::class]);
-        // $roles = [
-        //     ['name' => 'Admin'],
-        //     ['name' => 'User'],
-        // ];
+        $this->call([ChairSeeder::class, UnitSeeder::class]);
 
-        // foreach ($roles as $role) {
-        //     Role::create($role);
-        // }
+        $roles = [
+            ['name' => 'Admin'],
+            ['name' => 'User'],
+        ];
 
-        // User::factory()->create([
-        //     'name' => 'Admin',
-        //     'email' => 'admin@gmail.com',
-        //     'password' => '123456',
-        //     'role_id' => 1
-        // ]);
+        foreach ($roles as $role) {
+            Role::create($role);
+        }
 
-        // Staff::factory(4)->afterCreating(function ($staff) {
-        //         $role = $staff->chair->level === 4 ? 2 : 1;
-        //         User::factory()->create([
-        //             'name' => $staff->name,
-        //             'email' => $staff->personal_email,
-        //             'password' => '123456',
-        //             'role_id' => $role,
-        //             'staff_id' => $staff->id,
-        //         ]);
-        //     })
-        // ->create();
+        User::factory()->create([
+            'name' => 'Admin',
+            'email' => 'admin@gmail.com',
+            'password' => '123456',
+            'role_id' => 1
+        ]);
+
+        Staff::factory(4)->afterCreating(function ($staff) {
+                $role = $staff->chair->level === 4 ? 2 : 1;
+                User::factory()->create([
+                    'name' => $staff->name,
+                    'email' => $staff->personal_email,
+                    'password' => '123456',
+                    'role_id' => $role,
+                    'staff_id' => $staff->id,
+                ]);
+            })
+        ->create();
     }
 }
