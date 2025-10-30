@@ -11,19 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('salaries', function (Blueprint $table) {
+        Schema::create('staff_adjustments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
-                indexName: 'salaries_staff_id'
+                indexName: 'staff_adjustments_staff_id'
             );
-            $table->unsignedTinyInteger('month');
-            $table->unsignedInteger('year');
-            $table->unsignedBigInteger('basic_salary');
-            $table->unsignedBigInteger('subsidy');
-            $table->unsignedBigInteger('deduction');
-            $table->unsignedBigInteger('total');
-            $table->string('file_slip');
+            $table->string('decree_number');
+            $table->date('decree_date');
+            $table->string('class');
             $table->timestamps();
         });
     }
@@ -33,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('salaries');
+        Schema::dropIfExists('staff_adjustments');
     }
 };

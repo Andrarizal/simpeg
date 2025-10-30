@@ -11,16 +11,18 @@ class LeavesOverview extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $staff = Auth::user()->staff;
+        $user = Auth::user();
+        $user->staff_id = $user->staff_id ?? 1;
+        $staff = $user->staff;
         
         // ambil max cuti dan izindari table master dengan helper setting
         $maxLeave = setting('max_leave_days');
         $maxPermission = setting('max_permission_days');
 
         // cocokkan tahun masuk dengan tahun sekarang
-        if (date('Y', strtotime($staff->work_entry_date)) === strval(now()->year)) {
+        if (date('Y', strtotime($staff->entry_date)) === strval(now()->year)) {
             // kurangi sisa cuti dengan bulan yang sudah lewat
-            $maxLeave -= date('m', strtotime($staff->work_entry_date));
+            $maxLeave -= date('m', strtotime($staff->entry_date));
         }
 
         // cek jumlah cuti yang pernah diambil dalam setahun

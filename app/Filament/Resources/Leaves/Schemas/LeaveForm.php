@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Leaves\Schemas;
 
 use App\Models\Leave;
-use App\Models\Staff;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -11,7 +10,6 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class LeaveForm
 {
@@ -51,9 +49,13 @@ class LeaveForm
                     ->dehydrated(true),
                 DatePicker::make('start_date')
                     ->label('Dari Tanggal')
+                    ->minDate(date("Y-m-d",strtotime("tomorrow")))
+                    ->maxDate(date('Y-12-31'))
                     ->required(),
                 DatePicker::make('end_date')
                     ->label('Sampai Tanggal')
+                    ->minDate(date("Y-m-d",strtotime("tomorrow")))
+                    ->maxDate(date('Y-12-31'))
                     ->required(),
                 Textarea::make('reason')
                     ->label('Keperluan')
@@ -69,10 +71,12 @@ class LeaveForm
                     ->label('Nama Pengganti')
                     ->relationship('replacement', 'name', modifyQueryUsing: function ($query) {
                         $user = Auth::user();
+                        $user->staff_id = $user->staff_id ?? 1;
 
                         if ($user && $user->staff_id) {
                             // ambil staff yang satu level jabatan atau lebih rendah
                             $query->where('id', '!=', $user->staff_id)
+                                ->where('unit_id', $user->staff->unit_id) // Masih Error untuk superadmin
                                 ->whereHas('chair', function ($q) use ($user) {
                                     $q->where('level', '>=', $user->staff->chair->level);
                                 });
@@ -88,7 +92,7 @@ class LeaveForm
                         'Ditolak' => 'Ditolak',
                     ])
                     ->required()
-                    ->default('Menunggu')
+                    ->default(fn() => $chair === 1 ? 'Disetujui Direktur' : 'Menunggu')
                     ->visible(fn() => $chair > 1 ? false : true)
                     ->disabled(fn() => $chair > 1 ?  : false)
                     ->dehydrated(true),
@@ -105,9 +109,9 @@ class LeaveForm
             $maxLeave = setting('max_leave_days');
 
             // cocokkan tahun masuk dengan tahun sekarang
-            if (date('Y', strtotime($staff->work_entry_date)) === strval(now()->year)) {
+            if (date('Y', strtotime($staff->entry_date)) === strval(now()->year)) {
                 // kurangi sisa cuti dengan bulan yang sudah lewat
-                $maxLeave -= date('m', strtotime($staff->work_entry_date));
+                $maxLeave -= date('m', strtotime($staff->entry_date));
             }
 
             // cek jumlah cuti yang pernah diambil dalam setahun

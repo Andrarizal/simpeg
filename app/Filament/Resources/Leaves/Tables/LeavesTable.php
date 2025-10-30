@@ -17,6 +17,14 @@ class LeavesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->query(function (): Builder {
+                $query = Leave::query();
+
+                $query->where('staff_id', Auth::user()->staff_id)
+                    ->orderBy('start_date', 'DESC');
+
+                return $query;
+            })
             ->columns([
                 TextColumn::make('type')
                     ->label('Jenis')
@@ -39,7 +47,16 @@ class LeavesTable
                 TextColumn::make('replacement.name')
                     ->label('Nama Pengganti')
                     ->sortable(),
-                TextColumn::make('status'),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Menunggu' => 'warning',
+                        'Disetujui Koordinator' => 'info',
+                        'Disetujui Kasi' => 'success',
+                        'Disetujui Direktur' => 'success',
+                        'Ditolak' => 'danger',
+                    }),
                 TextColumn::make('approver.name')
                     ->numeric()
                     ->sortable()

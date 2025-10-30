@@ -18,23 +18,34 @@ return new class extends Migration
         Schema::create('staff', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('nik')->unique();
+            $table->string('nip')->unique();
             $table->string('name');
             $table->string('birth_place');
             $table->date('birth_date');
-            $table->enum('sex', ['L', 'P'])->default('L');
+            $table->enum('sex', ['L', 'P']);
+            $table->enum('marital', ['Lajang', 'Menikah', 'Cerai Hidup', 'Cerai Mati']);
             $table->text('address');
+            $table->string('email')->unique();
             $table->string('phone')->unique();
-            $table->string('personal_email')->unique();
-            $table->string('office_email')->unique();
-            $table->enum('last_education', ['SMA', 'D3', 'D4/S1', 'S2', 'S3'])->default('SMA');
-            $table->date('work_entry_date');
-            $table->foreignId('unit_id')->constrained(
-                table: 'units',
-                indexName: 'staff_unit_id'
+            $table->string('other_phone')->unique();
+            $table->enum('other_phone_adverb', ['Suami', 'Istri', 'Orang tua', 'Wali', 'Saudara', 'Lainnya']);
+            $table->date('entry_date');
+            $table->date('retirement_date');
+            $table->foreignId('staff_status_id')->constrained(
+                table: 'staff_statuses',
+                indexName: 'staff_staff_status_id'
             );
             $table->foreignId('chair_id')->constrained(
                 table: 'chairs',
                 indexName: 'staff_chair_id'
+            );
+            $table->foreignId('group_id')->constrained(
+                table: 'groups',
+                indexName: 'staff_group_id'
+            );
+            $table->foreignId('unit_id')->constrained(
+                table: 'units',
+                indexName: 'staff_unit_id'
             );
             $table->timestamps();
         });

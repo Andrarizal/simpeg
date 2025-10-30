@@ -9,7 +9,6 @@ use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class ListLeaves extends ListRecords
@@ -27,34 +26,20 @@ class ListLeaves extends ListRecords
     // Bikin dua tabs
     public function getTabs(): array
     {
-        return [
-            'pengajuan' => Tab::make('Pengajuan')
+        $user = Auth::user();
+        $user->staff_id = $user->staff_id ?? 1;
+        
+        if ($user->staff->chair->level != 4){
+            return [
+                'pengajuan' => Tab::make('Pengajuan Anda')
                 ->icon('heroicon-o-document-text'),
-
-            'persetujuan' => Tab::make('Persetujuan')
+                
+                'persetujuan' => Tab::make('Perlu Persetujuan')
                 ->icon('heroicon-o-clipboard-document-check'),
-        ];
-    }
-
-    // Bedain query masing-masing tab/table
-    protected function getTableQuery(): Builder
-    {
-        $query = parent::getTableQuery();
-        $activeTab = $this->activeTab ?? null;
-
-        if ($activeTab === 'pengajuan') {
-            $query->where('staff_id', Auth::user()->staff_id)
-                ->orderBy('start_date', 'DESC');
+            ];
         }
 
-        if ($activeTab === 'persetujuan') {
-            $query->whereHas('staff.unit', function ($q) {
-                $q->where('leader_id', Auth::user()->staff_id)
-                    ->orderBy('start_date', 'DESC');;
-            });
-        }
-
-        return $query;
+        return [];
     }
 
     // Atur view dari tab dengan ambil table

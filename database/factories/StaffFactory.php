@@ -16,20 +16,32 @@ class StaffFactory extends Factory
      */
     public function definition(): array
     {
+        $number = str_pad(fake()->numberBetween(0, 999999999999), 12, '0', STR_PAD_LEFT);
+
+        $formatted = substr_replace($number, '.', 4, 0);
+        $formatted = substr_replace($formatted, '.', 9, 0);
+        $formatted = substr_replace($formatted, '.', 13, 0);
+
+        $nip = $formatted . PHP_EOL;
         return [
             'nik' => fake()->numerify('################'),
+            'nip' => $nip,
             'name' => fake()->name(),
             'birth_place' => fake()->city(),
             'birth_date' => fake()->date('Y-m-d'),
             'sex' => fake()->randomElement(['L', 'P']),
+            'marital' => fake()->randomElement(['Lajang', 'Menikah', 'Cerai Hidup', 'Cerai Mati']),
             'address' => fake()->paragraph(2, false),
+            'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->numerify('08##########'),
-            'personal_email' => fake()->unique()->safeEmail(),
-            'office_email' => fake()->unique()->safeEmail(),
-            'last_education' => fake()->randomElement(['SMA', 'D3', 'D4/S1', 'S2', 'S3']),
-            'work_entry_date' => fake()->date('Y-m-d'),
-            'unit_id' => fake()->numberBetween(1, 32),
+            'other_phone' => fake()->numerify('08##########'),
+            'other_phone_adverb' => fake()->randomElement(['Suami', 'Istri', 'Orang tua', 'Wali', 'Saudara', 'Lainnya']),
+            'entry_date' => fake()->date('Y-m-d'),
+            'retirement_date' => fake()->date('Y-m-d'),
+            'staff_status_id' => fake()->numberBetween(1, 6),
             'chair_id' => fake()->numberBetween(1, 51),
+            'group_id' => fake()->numberBetween(1, 13),
+            'unit_id' => fake()->numberBetween(1, 32),
         ];
     }
 }

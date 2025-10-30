@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leaves\Tables;
 
+use App\Models\Leave;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -10,6 +11,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class ApproveTable
@@ -17,6 +19,20 @@ class ApproveTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->query(function (): Builder {
+                $query = Leave::query();
+
+                $query->whereHas('staff.chair', function ($q) {
+                    $q->where('level', '>', Auth::user()->staff->chair->level); // ambil cuti bawahan
+                })
+                // Jika ingin menerapkan leader unit yang sama
+                // ->whereHas('staff.unit', function ($q) {
+                //     $q->where('leader_id', Auth::user()->staff->unit->leader_id);
+                // }) 
+                ->orderBy('start_date', 'DESC');
+
+                return $query;
+            })
             ->columns([
                 TextColumn::make('staff.name')
                     ->label('Nama Pengaju')
@@ -69,12 +85,16 @@ class ApproveTable
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $user = Auth::user();
+                        $user->staff_id = $user->staff_id ?? 1;
 
                         // Cek level jabatan dari user login
                         switch ($user->staff->chair->level) {
                             case 3:
                                 if ($record->status === 'Menunggu') {
-                                    $record->update(['status' => 'Disetujui Koordinator']);
+                                    $record->update([
+                                        'status' => 'Disetujui Koordinator',
+                                        'approver_id' => $user->staff_id
+                                    ]);
                                 }
                                 break;
 
@@ -86,7 +106,7 @@ class ApproveTable
                                 }
                                 break;
 
-                            case 'Direktur':
+                            case 1:
                                 if (in_array($record->status, ['Disetujui Kasi'])) {
                                     $record->update(['status' => 'Disetujui Direktur']);
                                 }

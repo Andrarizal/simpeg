@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Attendance extends Model
+class StaffAppointment extends Model
 {
-    protected $fillable = ['staff_id', 'date_attendance', 'start_time', 'end_time', 'status'];
+    use HasFactory;
+    
+    protected $fillable = ['staff_id', 'decree_number', 'decree_date', 'class'];
 
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);

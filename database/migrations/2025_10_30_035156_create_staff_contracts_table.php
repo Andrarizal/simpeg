@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('attendances', function (Blueprint $table) {
+        Schema::create('staff_contracts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
-                indexName: 'attendances_staff_id'
+                indexName: 'staff_contracts_staff_id'
             );
-            $table->date('date_attendance');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->enum('status', ['Hadir', 'Izin', 'Sakit']);
+            $table->string('contract_number');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->timestamps();
         });
     }
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('attendances');
+        Schema::dropIfExists('staff_contracts');
     }
 };
