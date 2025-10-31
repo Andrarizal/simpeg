@@ -100,15 +100,79 @@ class ApproveTable
 
                             case 2:
                                 if ($record->status === 'Menunggu' && $record->staff->chair->level === 3) {
-                                    $record->update(['status' => 'Disetujui Kasi']);
-                                } elseif ($record->status === 'Disetujui Koordinator') {
-                                    $record->update(['status' => 'Disetujui Kasi']);
+                                    $record->update([
+                                        'status' => 'Disetujui Kasi',
+                                        'approver_id' => $user->staff_id
+                                    ]);
+                                } else if ($record->status === 'Disetujui Koordinator') {
+                                    $record->update([
+                                        'status' => 'Disetujui Kasi',
+                                        'approver_id' => $user->staff_id
+                                    ]);
                                 }
                                 break;
 
                             case 1:
-                                if (in_array($record->status, ['Disetujui Kasi'])) {
-                                    $record->update(['status' => 'Disetujui Direktur']);
+                                if ($record->status === 'Menunggu' && $record->staff->chair->level === 2) {
+                                    $record->update([
+                                        'status' => 'Disetujui Direktur',
+                                        'approver_id' => $user->staff_id
+                                    ]);
+                                } else if (in_array($record->status, ['Disetujui Kasi'])) {
+                                    $record->update([
+                                        'status' => 'Disetujui Direktur',
+                                        'approver_id' => $user->staff_id
+                                    ]);
+                                }
+                                break;
+                        }
+                    }),
+                Action::make('reject')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $user = Auth::user();
+                        $user->staff_id = $user->staff_id ?? 1;
+
+                        // Cek level jabatan dari user login
+                        switch ($user->staff->chair->level) {
+                            case 3:
+                                if ($record->status === 'Menunggu') {
+                                    $record->update([
+                                        'status' => 'Ditolak',
+                                        'approver_id' => $user->staff_id
+                                    ]);
+                                }
+                                break;
+
+                            case 2:
+                                if ($record->status === 'Menunggu' && $record->staff->chair->level === 3) {
+                                    $record->update([
+                                        'status' => 'Ditolak',
+                                        'approver_id' => $user->staff_id
+                                    ]);
+                                } else if ($record->status === 'Disetujui Koordinator') {
+                                    $record->update([
+                                        'status' => 'Ditolak',
+                                        'approver_id' => $user->staff_id
+                                    ]);
+                                }
+                                break;
+
+                            case 1:
+                                if ($record->status === 'Menunggu' && $record->staff->chair->level === 2) {
+                                    $record->update([
+                                        'status' => 'Ditolak',
+                                        'approver_id' => $user->staff_id
+                                    ]);
+                                } else if (in_array($record->status, ['Disetujui Kasi'])) {
+                                    $record->update([
+                                        'status' => 'Ditolak',
+                                        'approver_id' => $user->staff_id
+                                    ]);
                                 }
                                 break;
                         }

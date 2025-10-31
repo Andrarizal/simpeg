@@ -18,8 +18,8 @@ return new class extends Migration
                 indexName: 'staff_work_experiences_staff_id'
             );
             $table->string('institution');
-            $table->string('work_length');
-            $table->string('admission');
+            $table->string('work_length')->nullable();
+            $table->string('admission')->nullable();
             $table->timestamps();
         });
     }

@@ -21,8 +21,8 @@ return new class extends Migration
             ]);
             $table->string('major');
             $table->string('institution');
-            $table->string('certificate_number');
-            $table->date('certificate_date');
+            $table->string('certificate_number')->nullable();
+            $table->date('certificate_date')->nullable();
             $table->timestamps();
         });
     }

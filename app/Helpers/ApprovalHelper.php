@@ -11,7 +11,7 @@ if (!function_exists('shouldShowApprovalButton')) {
             2 => 
                 ($record->status === 'Menunggu' && $record->staff->chair->level === 3) ||
                 $record->status === 'Disetujui Koordinator',
-            1 => $record->status === 'Disetujui Kasi',
+            1 => ($record->status === 'Menunggu' && $record->staff->chair->level === 2) || ($record->status === 'Disetujui Kasi' && $record->status->chair->level != 4),
             default => false,
         };
     }

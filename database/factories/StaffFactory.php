@@ -39,7 +39,7 @@ class StaffFactory extends Factory
             'entry_date' => fake()->date('Y-m-d'),
             'retirement_date' => fake()->date('Y-m-d'),
             'staff_status_id' => fake()->numberBetween(1, 6),
-            'chair_id' => fake()->numberBetween(1, 51),
+            'chair_id' => fake()->numberBetween(1, 96),
             'group_id' => fake()->numberBetween(1, 13),
             'unit_id' => fake()->numberBetween(1, 32),
         ];
