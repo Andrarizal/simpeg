@@ -22,7 +22,11 @@ class UserForm
                     ->required(),
                 TextInput::make('password')
                     ->password()
-                    ->required(),
+                    ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
+                    ->dehydrated(fn ($state) => filled($state)) // hanya menyimpan jika diisi
+                    ->nullable()
+                    ->visibleOn('create', 'edit')
+                    ->required(fn (string $context): bool => $context === 'create'),
                 Select::make('role_id')
                     ->label('Role')
                     ->relationship('role', 'name')

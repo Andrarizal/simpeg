@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
             'role_id' => 1
         ]);
 
-        Staff::factory(4)->afterCreating(function ($staff) {
+        Staff::factory(7)->afterCreating(function ($staff) {
                 $role = $staff->chair->level === 4 ? 2 : 1;
                 User::factory()->create([
                     'name' => $staff->name,

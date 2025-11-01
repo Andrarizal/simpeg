@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
                 indexName: 'staff_appointments_staff_id'
-            );
+            )->onDelete('cascade');
             $table->string('decree_number');
             $table->date('decree_date');
             $table->string('class');

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
                 indexName: 'staff_work_experiences_staff_id'
-            );
+            )->onDelete('cascade');
             $table->string('institution');
             $table->string('work_length')->nullable();
             $table->string('admission')->nullable();

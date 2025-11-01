@@ -19,11 +19,11 @@ return new class extends Migration
             $table->foreignId('role_id')->constrained(
                 table: 'roles',
                 indexName: 'users_role_id'
-            );
+            )->cascadeOnDelete();
             $table->foreignId('staff_id')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'users_staff_id'
-            );
+            )->nullOnDelete();
             $table->timestamps();
         });
 

@@ -34,19 +34,19 @@ return new class extends Migration
             $table->foreignId('staff_status_id')->constrained(
                 table: 'staff_statuses',
                 indexName: 'staff_staff_status_id'
-            );
+            )->cascadeOnDelete();
             $table->foreignId('chair_id')->constrained(
                 table: 'chairs',
                 indexName: 'staff_chair_id'
-            );
+            )->cascadeOnDelete();
             $table->foreignId('group_id')->constrained(
                 table: 'groups',
                 indexName: 'staff_group_id'
-            );
+            )->cascadeOnDelete();
             $table->foreignId('unit_id')->constrained(
                 table: 'units',
                 indexName: 'staff_unit_id'
-            );
+            )->cascadeOnDelete();
             $table->timestamps();
         });
 

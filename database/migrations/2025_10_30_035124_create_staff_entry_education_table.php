@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
                 indexName: 'staff_entry_education_staff_id'
-            );
+            )->onDelete('cascade');
             $table->enum('level', ['Dokter', 'Dokter Gigi','Spesialis', 'S2', 'S1', 'Profesi Ners', 'Profesi Apoteker', 'DIV', 'DIII', 'DIII Anestesi', 'DIV Anestesi', 'SMK', 'SMA', 'SMP'
             ]);
             $table->string('institution');

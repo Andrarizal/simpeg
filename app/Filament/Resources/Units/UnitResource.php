@@ -54,7 +54,7 @@ class UnitResource extends Resource
                 TextColumn::make('name')
                     ->label('Nama Unit')
                     ->searchable(),
-                TextColumn::make('staff.name')
+                TextColumn::make('leader.name')
                     ->label('Kepala Unit')
                     ->sortable(),
                 TextColumn::make('created_at')

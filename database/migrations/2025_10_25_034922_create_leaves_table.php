@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
                 indexName: 'leaves_staff_id'
-            );
+            )->onDelete('cascade');
             $table->date('start_date');
             $table->date('end_date');
             $table->text('reason');
@@ -25,12 +25,12 @@ return new class extends Migration
             $table->foreignId('replacement_id')->constrained(
                 table: 'staff',
                 indexName: 'leaves_replacement_id'
-            );
+            )->cascadeOnDelete();
             $table->enum('status', ['Menunggu', 'Disetujui Koordinator', 'Disetujui Kasi', 'Disetujui Direktur', 'Ditolak']);
             $table->foreignId('approver_id')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'leaves_approver_id'
-            );
+            )->nullOnDelete();
             $table->string('adverb')->nullable();
             $table->timestamps();
         });

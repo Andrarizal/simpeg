@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
                 indexName: 'staff_contracts_staff_id'
-            );
+            )->onDelete('cascade');
             $table->string('contract_number');
             $table->date('start_date');
             $table->date('end_date');
