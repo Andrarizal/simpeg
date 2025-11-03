@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Leaves\Tables;
 
 use App\Models\Leave;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -14,7 +15,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
-class LeavesTable
+class ReplacerTable
 {
     public static function configure(Table $table): Table
     {
@@ -22,9 +23,8 @@ class LeavesTable
             ->query(function (): Builder {
                 $query = Leave::query();
 
-                $query->where('staff_id', Auth::user()->staff_id)
+                $query->where('replacement_id', Auth::user()->staff_id)
                     ->orderBy('start_date', 'DESC');
-
                 return $query;
             })
             ->columns([
@@ -74,16 +74,12 @@ class LeavesTable
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'Menunggu' => 'warning',
-                        'Diketahui Kepala Seksi' => 'info',
+                        'Diketahui Kepala Unit' => 'info',
                         'Diketahui Koordinator' => 'primary',
                         'Disetujui Kepala Seksi' => 'success',
                         'Disetujui Direktur' => 'success',
                         'Ditolak' => 'danger',
                     }),
-                TextColumn::make('approver.name')
-                    ->numeric()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_verified')
                     ->label('Verifikasi SDM')
                     ->alignCenter()
@@ -103,6 +99,10 @@ class LeavesTable
                         0 => 'Ditolak',
                         'null' => 'Belum direspon',
                     }),
+                TextColumn::make('approver.name')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('adverb')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -119,6 +119,17 @@ class LeavesTable
                 //
             ])
             ->recordActions([
+                Action::make('approve')
+                    ->label('Bersedia')
+                    ->icon('heroicon-o-check')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->is_replaced ? false : true)
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update([
+                            'is_replaced' => true,
+                        ]);
+                    }),
                 ViewAction::make(),
                 DeleteAction::make()
             ])

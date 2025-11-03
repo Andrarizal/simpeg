@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Leaves\Pages;
 use App\Filament\Resources\Leaves\LeaveResource;
 use App\Filament\Resources\Leaves\Tables\ApproveTable;
 use App\Filament\Resources\Leaves\Tables\LeavesTable;
+use App\Filament\Resources\Leaves\Tables\ReplacerTable;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -28,18 +29,19 @@ class ListLeaves extends ListRecords
     {
         $user = Auth::user();
         $user->staff_id = $user->staff_id ?? 1;
+
+        $arrOfTabs = [];
         
-        if ($user->staff->chair->level != 4){
-            return [
-                'pengajuan' => Tab::make('Pengajuan Anda')
-                ->icon('heroicon-o-document-text'),
-                
-                'persetujuan' => Tab::make('Perlu Persetujuan')
-                ->icon('heroicon-o-clipboard-document-check'),
-            ];
+        if ($user->staff->chair->level != 1){
+            $arrOfTabs['pengajuan'] = Tab::make('Pengajuan Anda')->icon('heroicon-o-document-text');
+            $arrOfTabs['pengganti'] = Tab::make('Pengganti')->icon('heroicon-o-document-arrow-up');
         }
 
-        return [];
+        if ($user->staff->chair->level != 4 || $user->role_id == 1 || $user->staff->unit->leader_id == $user->staff->id){
+            $arrOfTabs['persetujuan'] = Tab::make($user->role_id == 1 ? 'Perlu Verifikasi' : 'Perlu Persetujuan')->icon('heroicon-o-clipboard-document-check');
+        }
+
+        return $arrOfTabs;
     }
 
     // Atur view dari tab dengan ambil table
@@ -50,6 +52,10 @@ class ListLeaves extends ListRecords
 
         if ($activeTab === 'pengajuan') {
             return LeavesTable::configure($table);
+        }
+
+        if ($activeTab === 'pengganti') {
+            return ReplacerTable::configure($table);
         }
 
         if ($activeTab === 'persetujuan') {

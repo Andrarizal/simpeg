@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
             $table->enum('type', ['Cuti', 'Izin']);
+            $table->enum('subtype', ['Tahunan', 'Melahirkan', 'Duka', 'Menikah', 'Ibadah Haji', 'Khitan Anak', 'Baptis Anak', 'Non-Sakit', 'Sakit']);
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
                 indexName: 'leaves_staff_id'
@@ -26,11 +27,13 @@ return new class extends Migration
                 table: 'staff',
                 indexName: 'leaves_replacement_id'
             )->cascadeOnDelete();
-            $table->enum('status', ['Menunggu', 'Disetujui Koordinator', 'Disetujui Kasi', 'Disetujui Direktur', 'Ditolak']);
+            $table->unsignedTinyInteger('is_replaced')->nullable()->default(null);
+            $table->enum('status', ['Menunggu', 'Diketahui Kepala Unit', 'Diketahui Koordinator', 'Disetujui Kepala Seksi', 'Disetujui Direktur', 'Ditolak']);
             $table->foreignId('approver_id')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'leaves_approver_id'
             )->nullOnDelete();
+            $table->unsignedTinyInteger('is_verified')->nullable()->default(null);
             $table->string('adverb')->nullable();
             $table->timestamps();
         });

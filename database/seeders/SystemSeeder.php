@@ -38,7 +38,7 @@ class SystemSeeder extends Seeder
             [
                 'group' => 'system',
                 'key' => 'system_name',
-                'value' => 'Sistem Informasi Kepegawaian',
+                'value' => 'Sistem Informasi Manajemen Tenaga dan Pegawai',
                 'type' => 'string',
                 'description' => 'Nama Sistem'
             ],
@@ -52,7 +52,7 @@ class SystemSeeder extends Seeder
             [
                 'group' => 'policy',
                 'key' => 'max_permission_days',
-                'value' => '4',
+                'value' => '6',
                 'type' => 'integer',
                 'description' => 'Maksimal Izin Setahun'
             ],

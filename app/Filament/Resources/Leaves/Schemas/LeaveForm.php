@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Leaves\Schemas;
 
 use App\Models\Leave;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -40,6 +41,29 @@ class LeaveForm
                         // Set nilai dari sisa cuti/izin menggunakan helper
                         $set('remaining', static::calculateRemaining($type, $staff));
                     }),
+                Select::make('subtype')
+                    ->label(fn (callable $get) => 'Jenis ' . $get('type'))
+                    ->options(function (callable $get) {
+                        if ($get('type') == 'Cuti'){
+                            return [
+                                'Tahunan' => 'Tahunan',
+                                'Melahirkan' => 'Melahirkan',
+                                'Duka' => 'Duka',
+                                'Menikah' => 'Menikah',
+                                'Ibadah Haji' => 'Ibadah Haji',
+                                'Khitan Anak' => 'Khitan Anak',
+                                'Baptis Anak' => 'Baptis Anak'
+                            ];
+                        }
+                        return [
+                                'Non-Sakit' => 'Non-Sakit',
+                                'Sakit' => 'Sakit'
+                            ];
+                    })
+                    ->default(fn (callable $get) => $get('type') == 'Cuti' ? 'Tahunan':  'Non-Sakit')
+                    ->required()
+                    ->dehydrated(true)
+                    ->reactive(),
                 Select::make('staff_id')
                     ->label('Nama Pegawai')
                     ->relationship('staff', 'name')
@@ -47,25 +71,48 @@ class LeaveForm
                     ->default(fn() => $chair > 1 ? $staff->id : null)
                     ->disabled(fn() => $chair > 1 ? true : false)
                     ->dehydrated(true),
+                Textarea::make('reason')
+                    ->label('Keperluan')
+                    ->required(),
                 DatePicker::make('start_date')
                     ->label('Dari Tanggal')
                     ->minDate(date("Y-m-d",strtotime("tomorrow")))
                     ->maxDate(date('Y-12-31'))
-                    ->required(),
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function (callable $set, $state) {
+                        // reset end_date ketika start_date berubah
+                        $set('end_date', null);
+                    }),
                 DatePicker::make('end_date')
                     ->label('Sampai Tanggal')
-                    ->minDate(date("Y-m-d",strtotime("tomorrow")))
-                    ->maxDate(date('Y-12-31'))
+                    ->minDate(fn (callable $get) => $get('start_date'))
+                    ->maxDate(function (callable $get) {
+                        $start = $get('start_date');
+                        $subtype = $get('subtype');
+
+                        $limit = match ($subtype) {
+                            'Tahunan' => 6,
+                            'Melahirkan' => 90,
+                            'Duka' => 2,
+                            'Menikah' => 3,
+                            'Ibadah Haji' => 40,
+                            'Khitan Anak' => 1,
+                            'Baptis Anak' => 1,
+                            'Non-Sakit' => 1,
+                            'Sakit' => 30
+                        };
+                        return $start ? Carbon::parse($start)->addDays($limit) : null; // misalnya maksimal 14 hari
+                    })
+                    ->reactive()
+                    ->disabled(fn (callable $get) => blank($get('start_date')))
                     ->required(),
-                Textarea::make('reason')
-                    ->label('Keperluan')
-                    ->required()
-                    ->columnSpanFull(),
                 TextInput::make('remaining')
-                    ->label('Sisa Cuti')
+                    ->label(fn (callable $get) => 'Sisa ' . $get('type'))
                     ->numeric()
                     ->disabled()
-                    ->visible()
+                    ->visible(fn(callable $get) => $get('subtype') == 'Tahunan' || $get('subtype') == 'Non-sakit' ? true : false)
+                    ->default(fn() => static::calculateRemaining('Cuti', $staff))
                     ->dehydrated(true),
                 Select::make('replacement_id')
                     ->label('Nama Pengganti')
@@ -96,7 +143,6 @@ class LeaveForm
                     ->visible(fn() => $chair > 1 ? false : true)
                     ->disabled(fn() => $chair > 1 ?  : false)
                     ->dehydrated(true),
-                Textarea::make('Catatan'),
             ]);
     }
 

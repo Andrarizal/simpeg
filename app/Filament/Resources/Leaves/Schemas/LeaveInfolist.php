@@ -22,7 +22,7 @@ class LeaveInfolist
                     ->label('Sampai Tanggal')
                     ->date(),
                 TextEntry::make('remaining')
-                    ->label('Sisa Cuti')
+                    ->label('Sisa Cuti Sebelum Pengajuan')
                     ->visible()
                     ->numeric(),
                 TextEntry::make('replacement.name')
