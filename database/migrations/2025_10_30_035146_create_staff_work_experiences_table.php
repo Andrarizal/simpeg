@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('institution');
             $table->string('work_length')->nullable();
             $table->string('admission')->nullable();
+            $table->string('certificate')->nullable();
             $table->timestamps();
         });
     }

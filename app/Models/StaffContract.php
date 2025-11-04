@@ -10,7 +10,7 @@ class StaffContract extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['staff_id', 'contract_number', 'start_date', 'end_date'];
+    protected $fillable = ['staff_id', 'contract_number', 'start_date', 'end_date', 'decree'];
 
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('institution');
             $table->string('certificate_number')->nullable();
             $table->date('certificate_date')->nullable();
+            $table->string('certificate')->nullable();
             $table->timestamps();
         });
     }

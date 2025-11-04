@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
             'role_id' => 1
         ]);
 
-        $units = [1,1,1,19,27,27,27];
+        $units = [1,1,1,19,26,26,26];
         $groups = [1,12,12,12,12,12,12];
         $chairs = [1,3,15,53,69,70,71];
         $status = [1,1,1,1,2,4,6];

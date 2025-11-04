@@ -91,7 +91,7 @@ class UnitSeeder extends Seeder
                 'leader_id' => null,
             ],
             [
-                'name' => 'Pemeliharaan Sarana Rumah Sakit (PSRS)',
+                'name' => 'Logistik',
                 'leader_id' => null,
             ],
             [
@@ -103,11 +103,7 @@ class UnitSeeder extends Seeder
                 'leader_id' => null,
             ],
             [
-                'name' => 'Fisioterapi',
-                'leader_id' => null,
-            ],
-            [
-                'name' => 'Central Sterile Supply Departrment (CSSD)',
+                'name' => 'Sanitasi & Central Sterile Supply Departrment (CSSD)',
                 'leader_id' => null,
             ],
             [
@@ -131,7 +127,7 @@ class UnitSeeder extends Seeder
                 'leader_id' => null,
             ],
             [
-                'name' => 'Teknisi',
+                'name' => 'Elektromedis & Teknis',
                 'leader_id' => null,
             ],
             [

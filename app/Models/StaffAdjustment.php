@@ -10,7 +10,7 @@ class StaffAdjustment extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['staff_id', 'decree_number', 'decree_date', 'class'];
+    protected $fillable = ['staff_id', 'decree_number', 'decree_date', 'class', 'decree'];
 
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);

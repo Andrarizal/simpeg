@@ -24,6 +24,7 @@ class ApproveTable
         return $table
             ->query(function (): Builder {
                 $query = Leave::query();
+                $query->where('staff_id', '!=', Auth::user()->staff_id);
                 if (Auth::user()->role_id == 1){
                     $query->orderBy('created_at', 'DESC');
                 } else {

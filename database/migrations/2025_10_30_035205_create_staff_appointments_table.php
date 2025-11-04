@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('decree_number');
             $table->date('decree_date');
             $table->string('class');
+            $table->string('decree')->nullable();
             $table->timestamps();
         });
     }

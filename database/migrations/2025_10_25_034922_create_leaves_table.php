@@ -27,6 +27,7 @@ return new class extends Migration
                 table: 'staff',
                 indexName: 'leaves_replacement_id'
             )->cascadeOnDelete();
+            $table->string('evidence')->nullable();
             $table->unsignedTinyInteger('is_replaced')->nullable()->default(null);
             $table->enum('status', ['Menunggu', 'Diketahui Kepala Unit', 'Diketahui Koordinator', 'Disetujui Kepala Seksi', 'Disetujui Direktur', 'Ditolak']);
             $table->foreignId('approver_id')->nullable()->constrained(

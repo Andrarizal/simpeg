@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Staff\Schemas;
 
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -12,9 +13,11 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Livewire\WithFileUploads;
 
 class StaffForm
 {
+    use WithFileUploads;
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -115,6 +118,15 @@ class StaffForm
                             ->label('Tanggal Berakhir')
                             ->minDate(now())
                             ->required(),
+                        FileUpload::make('decree')
+                            ->label('Surat Kontrak')
+                            ->disk('public')
+                            ->visibility('public')
+                            ->directory('surat-kontrak')
+                            ->required()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(2048) // maksimal 2MB
+                            ->helperText('Unggah surat kontrak dalam format PDF'),
                     ])
                     ->columnSpanFull(),
 
@@ -123,8 +135,7 @@ class StaffForm
                     ->schema([
                         TextInput::make('appointment.decree_number')
                             ->label('Nomor SK')
-                            ->placeholder('ext. 12/12/SK/YMP/XI/2025
-')
+                            ->placeholder('ext. 12/12/SK/YMP/XI/2025')
                             ->required(),
                         DatePicker::make('appointment.decree_date')
                             ->label('Tanggal SK')
@@ -133,6 +144,15 @@ class StaffForm
                             ->label('Golongan')
                             ->placeholder('IIIa, IVb, dst.')
                             ->required(),
+                        FileUpload::make('decree')
+                            ->label('Surat Pengangkatan Pegawai Tetap')
+                            ->disk('public')
+                            ->visibility('public')
+                            ->directory('surat-pengangkatan')
+                            ->required()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(2048) // maksimal 2MB
+                            ->helperText('Unggah surat pengangkatan pegawai tetap dalam format PDF'),
                     ])
                     ->columnSpanFull(),
 
@@ -141,13 +161,21 @@ class StaffForm
                     ->schema([
                         TextInput::make('adjustment.decree_number')
                             ->label('Nomor SK Penyesuaian')
-                            ->placeholder('ext. 21/02/SK/YMP/I/2016
-'),
+                            ->placeholder('ext. 21/02/SK/YMP/I/2016'),
                         DatePicker::make('adjustment.decree_date')
                             ->label('Tanggal SK Penyesuaian'),
                         TextInput::make('adjustment.class')
                             ->label('Golongan Baru')
                             ->placeholder('IIIa, IVb, dst.'),
+                        FileUpload::make('decree')
+                            ->label('Surat Penyesuaian')
+                            ->disk('public')
+                            ->visibility('public')
+                            ->directory('surat-penyesuaian')
+                            ->required()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(2048) // maksimal 2MB
+                            ->helperText('Unggah surat penyesuaian golongan dalam format PDF'),
                     ])
                     ->columnSpanFull(),
                 // === FORM TAMBAHAN DEPENDENSI ===
@@ -171,6 +199,16 @@ class StaffForm
                                 DatePicker::make('entryEducation.certificate_date')
                                     ->label('Tanggal Ijazah')
                                     ->required(),
+                                FileUpload::make('certification')
+                                    ->label('Ijazah')
+                                    ->disk('public')
+                                    ->visibility('public')
+                                    ->directory('ijazah-awal')
+                                    ->required()
+                                    ->acceptedFileTypes(['application/pdf'])
+                                    ->maxSize(2048) // maksimal 2MB
+                                    ->helperText('Unggah ijazah dalam format PDF')
+                                    ->columnSpanFull(),
                                 TextInput::make('entryEducation.nonformal_education')
                                     ->label('Pendidikan Nonformal')
                                     ->placeholder('ext. Kursus Mitra Paramedika'),
@@ -200,6 +238,14 @@ class StaffForm
                                     ->placeholder('1234/ABC/ABCDE/KM/S-1/IV/25'),
                                 DatePicker::make('workEducation.certificate_date')
                                     ->label('Tanggal Ijazah'),
+                                FileUpload::make('certification')
+                                    ->label('Ijazah')
+                                    ->disk('public')
+                                    ->visibility('public')
+                                    ->directory('ijazah-bekerja')
+                                    ->acceptedFileTypes(['application/pdf'])
+                                    ->maxSize(2048) // maksimal 2MB
+                                    ->helperText('Unggah ijazah dalam format PDF'),
                             ])
                             ->visible(fn (Get $get) => $get('has_work_education')),
 
@@ -217,6 +263,14 @@ class StaffForm
                                     ->placeholder('ext. 2 Tahun'),
                                 TextInput::make('workExperience.admission')
                                     ->label('Pengakuan'),
+                                FileUpload::make('certification')
+                                    ->label('Sertifikat')
+                                    ->disk('public')
+                                    ->visibility('public')
+                                    ->directory('ijazah')
+                                    ->acceptedFileTypes(['application/pdf'])
+                                    ->maxSize(2048) // maksimal 2MB
+                                    ->helperText('Unggah sertifikat dalam format PDF'),
                             ])
                             ->visible(fn (Get $get) => $get('has_work_experience')),
                     ])

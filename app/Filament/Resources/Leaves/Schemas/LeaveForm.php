@@ -5,15 +5,19 @@ namespace App\Filament\Resources\Leaves\Schemas;
 use App\Models\Leave;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
+use Livewire\WithFileUploads;
 
 class LeaveForm
 {
+    use WithFileUploads;
+
     public static function configure(Schema $schema): Schema
     {
         // Cek jabatan user
@@ -56,11 +60,10 @@ class LeaveForm
                             ];
                         }
                         return [
-                                'Non-Sakit' => 'Non-Sakit',
-                                'Sakit' => 'Sakit'
+                                'Sakit' => 'Sakit',
+                                'Non-Sakit' => 'Non-Sakit'
                             ];
                     })
-                    ->default(fn (callable $get) => $get('type') == 'Cuti' ? 'Tahunan':  'Non-Sakit')
                     ->required()
                     ->dehydrated(true)
                     ->reactive(),
@@ -76,7 +79,14 @@ class LeaveForm
                     ->required(),
                 DatePicker::make('start_date')
                     ->label('Dari Tanggal')
-                    ->minDate(date("Y-m-d",strtotime("tomorrow")))
+                    ->minDate(function (callable $get) {
+                        $type = $get('subtype'); 
+
+                        if (in_array($type, ['Tahunan', 'Melahirkan'])) {
+                            return Carbon::now()->addMonth(); 
+                        }
+                        return Carbon::tomorrow(); 
+                    })
                     ->maxDate(date('Y-12-31'))
                     ->required()
                     ->reactive()
@@ -100,7 +110,8 @@ class LeaveForm
                             'Khitan Anak' => 1,
                             'Baptis Anak' => 1,
                             'Non-Sakit' => 1,
-                            'Sakit' => 30
+                            'Sakit' => 30,
+                            default => 30
                         };
                         return $start ? Carbon::parse($start)->addDays($limit) : null; // misalnya maksimal 14 hari
                     })
@@ -111,7 +122,7 @@ class LeaveForm
                     ->label(fn (callable $get) => 'Sisa ' . $get('type'))
                     ->numeric()
                     ->disabled()
-                    ->visible(fn(callable $get) => $get('subtype') == 'Tahunan' || $get('subtype') == 'Non-sakit' ? true : false)
+                    ->visible(fn(callable $get) => $get('subtype') == 'Tahunan' || $get('subtype') == 'Non-Sakit' ? true : false)
                     ->default(fn() => static::calculateRemaining('Cuti', $staff))
                     ->dehydrated(true),
                 Select::make('replacement_id')
@@ -130,6 +141,16 @@ class LeaveForm
                         }
                     })
                     ->required(),
+                FileUpload::make('evidence')
+                    ->label(fn (callable $get) => 'Surat ' . $get('type'))
+                    ->disk('public')
+                    ->visibility('public')
+                    ->directory('surat-cuti') // folder penyimpanan di storage/app/public/surat-cuti
+                    ->visible(fn (callable $get) => in_array($get('subtype'), ['Melahirkan', 'Duka', 'Sakit']))
+                    ->required(fn (callable $get) => in_array($get('subtype'), ['Melahirkan', 'Duka', 'Sakit']))
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+                    ->maxSize(2048) // maksimal 2MB
+                    ->helperText('Unggah surat cuti/izin dalam format PDF atau gambar'),
                 Select::make('status')
                     ->options([
                         'Menunggu' => 'Menunggu',
@@ -162,10 +183,16 @@ class LeaveForm
 
             // cek jumlah cuti yang pernah diambil dalam setahun
             $usedLeave = Leave::where('type', 'Cuti')
+                ->where('subtype', 'Tahunan')
                 ->where('staff_id', $staff->id)
                 ->where('status', '!=', 'Ditolak')
                 ->whereYear('start_date', now()->year)
-                ->count();
+                ->get()
+                ->sum(function ($leave) {
+                    $start = Carbon::parse($leave->start_date);
+                    $end = Carbon::parse($leave->end_date);
+                    return $start->diffInDays($end); // +1 agar termasuk hari pertama
+                });
 
             // kurangi jumlah cuti dengan yang cuti sudah diambil
             return max($maxLeave - $usedLeave, 0);
@@ -175,12 +202,24 @@ class LeaveForm
             // ambil max izin dari table master dengan helper setting
             $maxLeave = setting('max_permission_days');
 
+            // cocokkan tahun masuk dengan tahun sekarang
+            if (date('Y', strtotime($staff->entry_date)) === strval(now()->year)) {
+                // kurangi sisa cuti dengan bulan yang sudah lewat
+                $maxLeave -= ceil(date('m', strtotime($staff->entry_date)) / 2);
+            }
+
             // ambil izin yang pernah disetujui
             $usedLeave = Leave::where('type', 'Izin')
+            ->where('subtype', 'Non-Sakit')
             ->where('staff_id', $staff->id)
             ->where('status', '!=', 'Ditolak')
-            ->whereMonth('start_date', now()->month)
-            ->count();
+            ->whereYear('start_date', now()->year)
+            ->get()
+            ->sum(function ($leave) {
+                $start = Carbon::parse($leave->start_date);
+                $end = Carbon::parse($leave->end_date);
+                return $start->diffInDays($end); // +1 agar termasuk hari pertama
+            });
             
             // kurangi dengan izin yang pernah diambil
             return max($maxLeave - $usedLeave, 0);

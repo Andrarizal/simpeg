@@ -10,7 +10,7 @@ class StaffWorkEducation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['staff_id', 'level', 'major', 'institution', 'certificate_number', 'certificate_date'];
+    protected $fillable = ['staff_id', 'level', 'major', 'institution', 'certificate_number', 'certificate_date', 'certification'];
 
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);

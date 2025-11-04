@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('institution');
             $table->string('certificate_number');
             $table->date('certificate_date');
+            $table->date('certificate')->nullable();
             $table->string('nonformal_education')->nullable();
             $table->string('adverb')->nullable();
             $table->timestamps();
