@@ -37,7 +37,7 @@ class ListLeaves extends ListRecords
             $arrOfTabs['pengganti'] = Tab::make('Pengganti')->icon('heroicon-o-document-arrow-up');
         }
 
-        if ($user->staff->chair->level != 4 || $user->role_id == 1 || $user->staff->unit->leader_id == $user->staff->id){
+        if ($user->staff->chair->level != 4 || $user->role_id == 1 || $user->staff->unit->leader_id == $user->staff->chair_id){
             $arrOfTabs['persetujuan'] = Tab::make($user->role_id == 1 ? 'Perlu Verifikasi' : 'Perlu Persetujuan')->icon('heroicon-o-clipboard-document-check');
         }
 

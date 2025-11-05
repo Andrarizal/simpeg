@@ -39,6 +39,7 @@ class LeaveInfolist
                                 '(Tidak Bersedia)' : '(Belum Konfirmasi)'))),
                 TextEntry::make('evidence')
                     ->label('Surat Cuti')
+                    ->visible(fn ($state) => $state ? true : false)
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
                         Action::make('show')
@@ -50,7 +51,22 @@ class LeaveInfolist
                             ->color('success')
                             ->outlined()
                     ),
-                TextEntry::make('status'),
+                TextEntry::make('status')
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                            return 'Diketahui Kepala Seksi';
+                        }
+                        return $state;
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Menunggu' => 'warning',
+                        'Diketahui Kepala Unit' => 'info',
+                        'Diketahui Koordinator' => 'info',
+                        'Disetujui Kepala Seksi', 'Diketahui Kepala Seksi' => 'success',
+                        'Disetujui Direktur' => 'success',
+                        'Ditolak' => 'danger',
+                    }),
                 TextEntry::make('approver.name')
                     ->label('Telah direspon oleh')
                     ->visible(fn ($state) => $state ? true : false),

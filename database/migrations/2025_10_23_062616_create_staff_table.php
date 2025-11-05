@@ -49,10 +49,6 @@ return new class extends Migration
             )->cascadeOnDelete();
             $table->timestamps();
         });
-
-        Schema::table('units', function (Blueprint $table) {
-            $table->foreign('leader_id')->references('id')->on('staff')->onDelete('cascade');
-        });
     }
 
     /**

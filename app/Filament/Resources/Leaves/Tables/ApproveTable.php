@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leaves\Tables;
 
+use App\Models\Chair;
 use App\Models\Leave;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -24,24 +25,61 @@ class ApproveTable
         return $table
             ->query(function (): Builder {
                 $query = Leave::query();
-                $query->where('staff_id', '!=', Auth::user()->staff_id);
+                $query->where('staff_id', '!=', Auth::user()->staff_id); // Buang cuti milik sendiri
+
+                // Jika SDM
                 if (Auth::user()->role_id == 1){
                     $query->orderBy('created_at', 'DESC');
+                // JIka Bukan SDM
                 } else {
-                    $query->whereHas('staff', function ($q) {
-                            $q->where('unit_id', Auth::user()->staff->unit_id);
-                        })
-                        ->whereHas('staff.chair', function ($q) {
-                            if (Auth::user()->staff->unit->leader_id == Auth::user()->staff->id){
-                                $q->where('level', Auth::user()->staff->chair->level);
-                                // ambil cuti bawah kepala unit
-                            } else {
-                                $q->where('level', '>', Auth::user()->staff->chair->level); // ambil cuti bawahan
+                    // Jika Kanit
+                    if (Auth::user()->staff->chair->level == 4){
+                        $query->whereHas('staff.chair', function ($q) {
+                            // Ambil yang satu struktur kepengurusan (Koor User Cuti == Koor Kanit)
+                            $q->where('head_id', Auth::user()->staff->chair->head_id);
+                            // Ambil yang selevel (Karyawan)
+                            $q->where('level', Auth::user()->staff->chair->level);
+                        });
+                    // Jika lebih tinggi dari Kanit
+                    } else if (Auth::user()->staff->chair->level != 1) {
+                        // Masukkan id dari atasan (langsung) user cuti ke array heads
+                        $heads = Leave::with(['staff.chair', 'approver.chair'])
+                                ->get()
+                                ->map(function ($leave) {
+                                    return [$leave->staff->chair->head_id];
+                                })
+                                ->toArray();
+                                
+                        foreach($heads as &$head){
+                            // Cek apabila atasan yang ada di head bukan direktur
+                            while (!in_array(null, $head)){
+                                // Kumpulkan semua atasan dari user cuti
+                                $head[] = Chair::where('id', end($head))->first()->head_id;
                             }
-                        })
-                        ->orderBy('created_at', 'DESC');
+                        }
+                        unset($head);
+                        
+                        $matchFound = false;
+                        foreach ($heads as $head){
+                            // Jika terdapat user login yang sesuai dengan salah satu heads
+                            if(in_array(Auth::user()->staff->chair_id, $head)){
+                                $matchFound = true;
+                                // Ambil yang memiliki level di bawahnya
+                                $query->whereHas('staff.chair', function ($q) use ($head){
+                                    $q->whereIn('head_id', $head)
+                                    ->where('level', '>', Auth::user()->staff->chair->level);
+                                });
+                                break;
+                            }
+                        }
+
+                        // Jika User login tidak sesuai dengan heads
+                        if (!$matchFound) {
+                            $query->whereRaw('1 = 0'); // Paksa hasil kosong
+                        }
+                    }
                 }
-                return $query;
+                return $query->orderBy('created_at', 'DESC');
             })
             ->columns([
                 TextColumn::make('staff.name')
@@ -58,15 +96,31 @@ class ApproveTable
                     ->date(),
                 TextColumn::make('status')
                     ->label('Status')
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                            return 'Diketahui Kepala Seksi';
+                        }
+                        return $state;
+                    })
                     ->badge()
                     ->alignCenter()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Menunggu' => 'warning',
-                        'Diketahui Kepala Unit' => 'info',
-                        'Diketahui Koordinator' => 'primary',
-                        'Disetujui Kasi' => 'success',
-                        'Disetujui Direktur' => 'success',
-                        'Ditolak' => 'danger',
+                    ->color(function ($state, $record) {
+                        $display = $state;
+                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                            $display = 'Diketahui Kepala Seksi';
+                        }
+
+                        if (str_contains($display, 'Disetujui')) {
+                            return 'success';
+                        } else if (str_contains($display, 'Diketahui')) {
+                            return 'info';
+                        } else if (str_contains($display, 'Menunggu')) {
+                            return 'warning';
+                        } else if (str_contains($display, 'Ditolak')) {
+                            return 'danger';
+                        } else {
+                            return 'gray';
+                        }
                     }),
                 IconColumn::make('is_verified')
                     ->label('Verifikasi SDM')
@@ -78,7 +132,7 @@ class ApproveTable
                         'null' => 'heroicon-o-clock',
                     })
                     ->color(fn ($state) => match ($state) {
-                        1 => 'success',
+                        1 => 'info',
                         0 => 'danger',
                         'null' => 'gray',
                     })
@@ -128,7 +182,7 @@ class ApproveTable
             ])
             ->recordActions([
                 Action::make('approve')
-                    ->label(fn() => Auth::user()->staff->chair->level > 2 ? 'Ketahui' : 'Setujui')
+                    ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Ketahui' : 'Setujui')
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role

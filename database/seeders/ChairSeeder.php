@@ -110,11 +110,6 @@ class ChairSeeder extends Seeder
                 'head_id' => 7
             ],
             [
-                'name' => 'Perawat Anestesi',
-                'level' => 4,
-                'head_id' => 7
-            ],
-            [
                 'name' => 'Koor Poliklinik',
                 'level' => 4,
                 'head_id' => 7
@@ -134,6 +129,18 @@ class ChairSeeder extends Seeder
                 'level' => 4,
                 'head_id' => 7
             ],
+            
+            [
+                'name' => 'Koor Shinta',
+                'level' => 4,
+                'head_id' => 7
+            ],
+            [
+                'name' => 'Perawat Shinta',
+                'level' => 4,
+                'head_id' => 7
+            ],
+            
             [
                 'name' => 'Koor Rama',
                 'level' => 4,
@@ -144,6 +151,7 @@ class ChairSeeder extends Seeder
                 'level' => 4,
                 'head_id' => 7
             ],
+            
             [
                 'name' => 'Koor ICU',
                 'level' => 4,
@@ -155,22 +163,17 @@ class ChairSeeder extends Seeder
                 'head_id' => 7
             ],
             [
-                'name' => 'Koor Shinta',
-                'level' => 4,
-                'head_id' => 7
-            ],
-            [
-                'name' => 'Perawat Shinta',
-                'level' => 4,
-                'head_id' => 7
-            ],
-            [
                 'name' => 'Koor UGD',
                 'level' => 4,
                 'head_id' => 7
             ],
             [
                 'name' => 'Perawat UGD',
+                'level' => 4,
+                'head_id' => 7
+            ],
+            [
+                'name' => 'Perawat Anestesi',
                 'level' => 4,
                 'head_id' => 7
             ],
@@ -245,6 +248,11 @@ class ChairSeeder extends Seeder
                 'head_id' => 9
             ],
             [
+                'name' => 'Koor Casemix', 
+                'level' => 4,
+                'head_id' => 9
+            ],
+            [
                 'name' => 'Pelaksana Casemix', 
                 'level' => 4,
                 'head_id' => 9
@@ -285,34 +293,9 @@ class ChairSeeder extends Seeder
                 'head_id' => 6
             ],
             [
-                'name' => 'Pelaksana Logistik', 
-                'level' => 4,
-                'head_id' => 13
-            ],
-            [
-                'name' => 'Sanitarian', 
-                'level' => 4,
-                'head_id' => 12
-            ],
-            [
                 'name' => 'Fisioterapis', 
                 'level' => 4,
                 'head_id' => 8
-            ],
-            [
-                'name' => 'Elektromedis', 
-                'level' => 4,
-                'head_id' => 12
-            ],
-            [
-                'name' => 'Kepala Unit Elektromedis & Teknisi', 
-                'level' => 4,
-                'head_id' => 12
-            ],
-            [
-                'name' => 'Kepala Unit Sanitasi & CSSD', 
-                'level' => 4,
-                'head_id' => 12
             ],
             [
                 'name' => 'Koor Gizi', 
@@ -330,9 +313,39 @@ class ChairSeeder extends Seeder
                 'head_id' => 8
             ],
             [
+                'name' => 'Pelaksana Logistik', 
+                'level' => 4,
+                'head_id' => 13
+            ],
+            [
+                'name' => 'Kepala Unit Sanitasi & CSSD', 
+                'level' => 4,
+                'head_id' => 12
+            ],
+            [
+                'name' => 'Sanitarian', 
+                'level' => 4,
+                'head_id' => 12
+            ],
+            [
                 'name' => 'Pelaksana CSSD', 
                 'level' => 4,
                 'head_id' => 11
+            ],
+            [
+                'name' => 'Kepala Unit Elektromedis & Teknisi', 
+                'level' => 4,
+                'head_id' => 12
+            ],
+            [
+                'name' => 'Elektromedis', 
+                'level' => 4,
+                'head_id' => 12
+            ],
+            [
+                'name' => 'Pelaksana Teknisi', 
+                'level' => 4,
+                'head_id' => 12
             ],
             [
                 'name' => 'Koor Satpam-Umum', 
@@ -383,11 +396,6 @@ class ChairSeeder extends Seeder
                 'name' => 'Pelaksana Driver', 
                 'level' => 4,
                 'head_id' => 13
-            ],
-            [
-                'name' => 'Pelaksana Teknisi', 
-                'level' => 4,
-                'head_id' => 12
             ],
             [
                 'name' => 'Koor Dokter', 

@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedBigInteger('leader_id')->nullable();
+            $table->foreignId('leader_id')->nullable()->constrained(
+                table: 'chairs',
+                indexName: 'units_leader_id'
+            )->nullOnDelete();
             $table->timestamps();
         });
     }

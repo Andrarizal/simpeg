@@ -70,15 +70,31 @@ class LeavesTable
                     }),
                 TextColumn::make('status')
                     ->label('Status')
-                    ->alignCenter()
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                            return 'Diketahui Kepala Seksi';
+                        }
+                        return $state;
+                    })
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Menunggu' => 'warning',
-                        'Diketahui Kepala Seksi' => 'info',
-                        'Diketahui Koordinator' => 'primary',
-                        'Disetujui Kepala Seksi' => 'success',
-                        'Disetujui Direktur' => 'success',
-                        'Ditolak' => 'danger',
+                    ->alignCenter()
+                    ->color(function ($state, $record) {
+                        $display = $state;
+                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                            $display = 'Diketahui Kepala Seksi';
+                        }
+
+                        if (str_contains($display, 'Disetujui')) {
+                            return 'success';
+                        } else if (str_contains($display, 'Diketahui')) {
+                            return 'info';
+                        } else if (str_contains($display, 'Menunggu')) {
+                            return 'warning';
+                        } else if (str_contains($display, 'Ditolak')) {
+                            return 'danger';
+                        } else {
+                            return 'gray';
+                        }
                     }),
                 TextColumn::make('approver.name')
                     ->numeric()
@@ -94,7 +110,7 @@ class LeavesTable
                         'null' => 'heroicon-o-clock',
                     })
                     ->color(fn ($state) => match ($state) {
-                        1 => 'success',
+                        1 => 'info',
                         0 => 'danger',
                         'null' => 'gray',
                     })

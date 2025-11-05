@@ -134,8 +134,12 @@ class LeaveForm
                         if ($user && $user->staff_id) {
                             // ambil staff yang satu level jabatan atau lebih rendah
                             $query->where('id', '!=', $user->staff_id)
-                                ->where('unit_id', $user->staff->unit_id) // Masih Error untuk superadmin
                                 ->whereHas('chair', function ($q) use ($user) {
+                                    if ($user->staff->chair->level == 4){
+                                        $q->where('head_id', $user->staff->chair->head_id);
+                                    } else {
+                                        $q->where('head_id', $user->staff->chair_id);
+                                    }
                                     $q->where('level', '>=', $user->staff->chair->level);
                                 });
                         }
