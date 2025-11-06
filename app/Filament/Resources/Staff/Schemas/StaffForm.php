@@ -43,7 +43,8 @@ class StaffForm
                     ->required(),
                 DatePicker::make('birth_date')
                     ->label('Tanggal Lahir')
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 ToggleButtons::make('sex')
                     ->label('Jenis Kelamin')
                     ->options(['L' => 'Laki-laki', 'P' => 'Perempuan'])
@@ -52,16 +53,17 @@ class StaffForm
                 Select::make('marital')
                     ->label('Status Perkawinan')
                     ->options(['Lajang' => 'Lajang', 'Menikah' => 'Menikah', 'Cerai Hidup' => 'Cerai Hidup', 'Cerai Mati' => 'Cerai Mati'])
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 Textarea::make('address')
                     ->label('Alamat Lengkap')
                     ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
                     ->required(),
                 TextInput::make('email')
-                        ->label('Email Pribadi')
-                        ->email()
-                        ->placeholder('ex. tamam@gmail.com')
-                        ->required(),
+                    ->label('Email Pribadi')
+                    ->email()
+                    ->placeholder('ex. tamam@gmail.com')
+                    ->required(),
                 TextInput::make('phone')
                     ->label('No. Telepon')
                     ->tel()
@@ -77,32 +79,45 @@ class StaffForm
                 Select::make('other_phone_adverb')
                     ->label('Hubungan dengan Kerabat')
                     ->options(['Suami' => 'Suami', 'Istri' => 'Istri', 'Orang tua' =>  'Orang tua', 'Wali' => 'Wali', 'Saudara' => 'Saudara', 'Lainnya' => 'Lainnya'])
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 DatePicker::make('entry_date')
                     ->label('Tanggal Masuk Kerja')
                     ->maxDate(now())
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 DatePicker::make('retirement_date')
                     ->label('Tanggal Pensiun')
                     ->minDate(now())
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 Select::make('staff_status_id')
                     ->label('Status Kepegawaian')
                     ->relationship('staffStatus', 'name')
                     ->reactive()
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 Select::make('chair_id')
                     ->label('Jabatan')
                     ->relationship('chair', 'name')
-                    ->required(),
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
                 Select::make('group_id')
                     ->label('Kelompok Tenaga Kerja')
                     ->relationship('group', 'name')
-                    ->required(),
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
                 Select::make('unit_id')
                     ->label('Unit Kerja')
                     ->relationship('unit', 'name')
-                    ->required(),
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
                 Fieldset::make('Data Kontrak')
                     ->visible(fn (Get $get) => ($get('staff_status_id') ?? null) == 2)
                     ->schema([
@@ -113,11 +128,13 @@ class StaffForm
                         DatePicker::make('contract.start_date')
                             ->label('Tanggal Mulai')
                             ->maxDate(now())
-                            ->required(),
+                            ->required()
+                            ->native(false),
                         DatePicker::make('contract.end_date')
                             ->label('Tanggal Berakhir')
                             ->minDate(now())
-                            ->required(),
+                            ->required()
+                            ->native(false),
                         FileUpload::make('decree')
                             ->label('Surat Kontrak')
                             ->disk('public')
@@ -139,7 +156,8 @@ class StaffForm
                             ->required(),
                         DatePicker::make('appointment.decree_date')
                             ->label('Tanggal SK')
-                            ->required(),
+                            ->required()
+                            ->native(false),
                         TextInput::make('appointment.class')
                             ->label('Golongan')
                             ->placeholder('IIIa, IVb, dst.')
@@ -163,7 +181,8 @@ class StaffForm
                             ->label('Nomor SK Penyesuaian')
                             ->placeholder('ext. 21/02/SK/YMP/I/2016'),
                         DatePicker::make('adjustment.decree_date')
-                            ->label('Tanggal SK Penyesuaian'),
+                            ->label('Tanggal SK Penyesuaian')
+                            ->native(false),
                         TextInput::make('adjustment.class')
                             ->label('Golongan Baru')
                             ->placeholder('IIIa, IVb, dst.'),
@@ -187,7 +206,8 @@ class StaffForm
                                     ->label('Jenjang')
                                     ->options(['Dokter' => 'Dokter', 'Dokter Gigi' => 'Dokter Gigi','Spesialis' => 'Spesialis', 'S2' => 'S2', 'S1' => 'S1', 'Profesi Ners' => 'Profesi Ners', 'Profesi Apoteker' => 'Profesi Apoteker', 'DIV' => 'DIV', 'DIII' => 'DIII', 'DIII Anestesi' => 'DIII Anestesi', 'DIV Anestesi' => 'DIV Anestesi', 'SMK' => 'SMK', 'SMA' => 'SMA', 'SMP' => 'SMP'
                                     ])
-                                    ->required(),
+                                    ->required()
+                                    ->native(false),
                                 TextInput::make('entryEducation.institution')
                                     ->label('Institusi')
                                     ->placeholder('ext. Universitas Mitra Paramedika')
@@ -198,7 +218,8 @@ class StaffForm
                                     ->required(),
                                 DatePicker::make('entryEducation.certificate_date')
                                     ->label('Tanggal Ijazah')
-                                    ->required(),
+                                    ->required()
+                                    ->native(false),
                                 FileUpload::make('certification')
                                     ->label('Ijazah')
                                     ->disk('public')
@@ -226,7 +247,8 @@ class StaffForm
                                 Select::make('workEducation.level')
                                     ->label('Jenjang')
                                     ->options(['Dokter' => 'Dokter', 'Dokter Gigi' => 'Dokter Gigi','Spesialis' => 'Spesialis', 'S2' => 'S2', 'S1' => 'S1', 'Profesi Ners' => 'Profesi Ners', 'Profesi Apoteker' => 'Profesi Apoteker', 'DIV' => 'DIV', 'DIII' => 'DIII', 'DIII Anestesi' => 'DIII Anestesi', 'DIV Anestesi' => 'DIV Anestesi', 'SMK' => 'SMK', 'SMA' => 'SMA', 'SMP' => 'SMP'
-                                    ]),
+                                    ])
+                                    ->native(false),
                                 TextInput::make('workEducation.major')
                                     ->label('Jurusan')
                                     ->placeholder('ext. Keperawatan'),
@@ -237,7 +259,8 @@ class StaffForm
                                     ->label('Nomor Ijazah')
                                     ->placeholder('1234/ABC/ABCDE/KM/S-1/IV/25'),
                                 DatePicker::make('workEducation.certificate_date')
-                                    ->label('Tanggal Ijazah'),
+                                    ->label('Tanggal Ijazah')
+                                    ->native(false),
                                 FileUpload::make('certification')
                                     ->label('Ijazah')
                                     ->disk('public')
@@ -276,9 +299,9 @@ class StaffForm
                     ])
                     ->columnSpanFull(),
                     Checkbox::make('confirmation')
-                    ->label('Buat akun pengguna untuk karyawan ini')
-                    ->default(true)
-                    ->visible(fn (string $context): bool => $context === 'create'),
+                        ->label('Buat akun pengguna untuk karyawan ini')
+                        ->default(true)
+                        ->visible(fn (string $context): bool => $context === 'create'),
             ]);
     }
 }

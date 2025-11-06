@@ -14,6 +14,15 @@ class Staff extends Model
 
     protected $fillable = ['nik', 'nip', 'name', 'birth_place', 'birth_date', 'sex', 'marital', 'address', 'email', 'phone', 'other_phone', 'other_phone_adverb', 'entry_date', 'retirement_date', 'staff_status_id', 'chair_id', 'group_id', 'unit_id'];
 
+    protected static function booted()
+    {
+        static::created(function ($staff) {
+            StaffAdministration::create([
+                'staff_id' => $staff->id,
+            ]);
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -57,5 +66,10 @@ class Staff extends Model
 
     public function workExperience(): HasOne {
         return $this->hasOne(StaffWorkExperience::class); 
+    }
+
+    public function administration(): HasOne
+    {   
+        return $this->hasOne(StaffAdministration::class);
     }
 }

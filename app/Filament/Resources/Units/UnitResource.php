@@ -42,7 +42,8 @@ class UnitResource extends Resource
                     ->required(),
                 Select::make('leader_id')
                     ->label('Kepala Unit')
-                    ->relationship('staff', 'name'),
+                    ->relationship('leader', 'name')
+                    ->native(false),
             ]);
     }
 

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Role;
 use App\Models\Staff;
 use App\Models\StaffAdjustment;
+use App\Models\StaffAdministration;
 use App\Models\StaffAppointment;
 use App\Models\StaffContract;
 use App\Models\StaffEntryEducation;
@@ -122,6 +123,10 @@ class DatabaseSeeder extends Seeder
                             break;
                         default;
                     }
+
+                    StaffAdministration::create([
+                        'staff_id' => $staff->id,
+                    ]);
                 })
             ->create();
         }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Staff\Schemas;
 
+use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -65,6 +66,19 @@ class StaffInfolist
                     ->date()
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->contract),
+                TextEntry::make('contract.decree')
+                    ->label('Surat Kontrak')
+                    ->visible(fn ($record) => $record->contract)
+                    ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->suffixAction(
+                        Action::make('show')
+                            ->icon('heroicon-o-eye')
+                            ->label('Lihat')
+                            ->button()
+                            ->url(fn ($record) => asset('storage/' . $record->contract->decree))
+                            ->openUrlInNewTab()
+                            ->outlined()
+                    ),
 
                 // --- PENGANGKATAN ---
                 TextEntry::make('appointment.decree_number')
@@ -80,6 +94,19 @@ class StaffInfolist
                     ->label('Golongan')
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->appointment),
+                TextEntry::make('appointment.decree')
+                    ->label('Surat Pengangkatan Pegawai Tetap')
+                    ->visible(fn ($record) => $record->appointment)
+                    ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->suffixAction(
+                        Action::make('show')
+                            ->icon('heroicon-o-eye')
+                            ->label('Lihat')
+                            ->button()
+                            ->url(fn ($record) => asset('storage/' . $record->appointment->decree))
+                            ->openUrlInNewTab()
+                            ->outlined()
+                    ),
 
                 // --- PENYESUAIAN ---
                 TextEntry::make('adjustment.decree_number')
@@ -95,6 +122,19 @@ class StaffInfolist
                     ->label('Golongan Setelah Penyesuaian')
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->adjustment),
+                TextEntry::make('adjustment.decree')
+                    ->label('Surat Penyesuaian Golongan Pegawai Tetap')
+                    ->visible(fn ($record) => $record->adjustment)
+                    ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->suffixAction(
+                        Action::make('show')
+                            ->icon('heroicon-o-eye')
+                            ->label('Lihat')
+                            ->button()
+                            ->url(fn ($record) => asset('storage/' . $record->adjustment->decree))
+                            ->openUrlInNewTab()
+                            ->outlined()
+                    ),
 
                 // --- PENDIDIKAN SAAT MASUK ---
                 TextEntry::make('entryEducation.level')
@@ -106,14 +146,27 @@ class StaffInfolist
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->entryEducation),
                 TextEntry::make('entryEducation.certificate_number')
-                    ->label('Nomor Ijazah')
+                    ->label('Nomor Ijazah Pendidikan Saat Masuk')
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->entryEducation),
                 TextEntry::make('entryEducation.certificate_date')
-                    ->label('Tanggal Ijazah')
+                    ->label('Tanggal Ijazah Pendidikan Saat Masuk')
                     ->date()
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->entryEducation),
+                TextEntry::make('entryEducation.certificate')
+                    ->label('Ijazah Pendidikan Saat Masuk')
+                    ->visible(fn ($record) => $record->entryEducation)
+                    ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->suffixAction(
+                        Action::make('show')
+                            ->icon('heroicon-o-eye')
+                            ->label('Lihat')
+                            ->button()
+                            ->url(fn ($record) => asset('storage/' . $record->entryEducation->decree))
+                            ->openUrlInNewTab()
+                            ->outlined()
+                    ),
                 TextEntry::make('entryEducation.nonformal_education')
                     ->label('Pendidikan Nonformal')
                     ->placeholder('-')
@@ -129,22 +182,35 @@ class StaffInfolist
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->workEducation),
                 TextEntry::make('workEducation.major')
-                    ->label('Jurusan Pendidikan')
+                    ->label('Jurusan Pendidikan Saat Bekerja')
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->workEducation),
                 TextEntry::make('workEducation.institution')
-                    ->label('Institusi Pendidikan')
+                    ->label('Institusi Pendidikan Saat Bekerja')
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->workEducation),
                 TextEntry::make('workEducation.certificate_number')
-                    ->label('Nomor Ijazah')
+                    ->label('Nomor Ijazah Saat Bekerja')
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->workEducation),
                 TextEntry::make('workEducation.certificate_date')
-                    ->label('Tanggal Ijazah')
+                    ->label('Tanggal Ijazah Saat Bekerja')
                     ->date()
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->workEducation),
+                TextEntry::make('workEducation.certificate')
+                    ->label('Ijazah Pendidikan Saat Bekerja')
+                    ->visible(fn ($record) => $record->workEducation)
+                    ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->suffixAction(
+                        Action::make('show')
+                            ->icon('heroicon-o-eye')
+                            ->label('Lihat')
+                            ->button()
+                            ->url(fn ($record) => asset('storage/' . $record->workEducation->decree))
+                            ->openUrlInNewTab()
+                            ->outlined()
+                    ),
 
                 // --- PENGALAMAN KERJA ---
                 TextEntry::make('workExperience.institution')
@@ -159,6 +225,19 @@ class StaffInfolist
                     ->label('Keterangan')
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->workExperience),
+                TextEntry::make('workExperience.certificate')
+                    ->label('Ijazah Pendidikan Saat Masuk')
+                    ->visible(fn ($record) => $record->workExperience)
+                    ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->suffixAction(
+                        Action::make('show')
+                            ->icon('heroicon-o-eye')
+                            ->label('Lihat')
+                            ->button()
+                            ->url(fn ($record) => asset('storage/' . $record->workExperience->decree))
+                            ->openUrlInNewTab()
+                            ->outlined()
+                    ),
             ]);
     }
 }

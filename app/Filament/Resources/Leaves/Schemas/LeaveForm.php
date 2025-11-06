@@ -66,7 +66,8 @@ class LeaveForm
                     })
                     ->required()
                     ->dehydrated(true)
-                    ->reactive(),
+                    ->reactive()
+                    ->native(false),
                 Select::make('staff_id')
                     ->label('Nama Pegawai')
                     ->relationship('staff', 'name')
@@ -93,7 +94,8 @@ class LeaveForm
                     ->afterStateUpdated(function (callable $set, $state) {
                         // reset end_date ketika start_date berubah
                         $set('end_date', null);
-                    }),
+                    })
+                    ->native(false),
                 DatePicker::make('end_date')
                     ->label('Sampai Tanggal')
                     ->minDate(fn (callable $get) => $get('start_date'))
@@ -117,7 +119,8 @@ class LeaveForm
                     })
                     ->reactive()
                     ->disabled(fn (callable $get) => blank($get('start_date')))
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 TextInput::make('remaining')
                     ->label(fn (callable $get) => 'Sisa ' . $get('type'))
                     ->numeric()
@@ -144,7 +147,8 @@ class LeaveForm
                                 });
                         }
                     })
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 FileUpload::make('evidence')
                     ->label(fn (callable $get) => 'Surat ' . $get('type'))
                     ->disk('public')

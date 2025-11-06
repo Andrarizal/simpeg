@@ -39,11 +39,28 @@ class ChairResource extends Resource
             ->components([
                 TextInput::make('name')
                     ->label('Nama Jabatan')
-                    ->required(),
+                    ->required()
+                    ->inlineLabel()
+                    ->columnSpanFull(),
                 Select::make('level')
                     ->label('Kedudukan')
                     ->options(['1' => 'Direktur', '2' => 'Kepala Seksi', '3' => 'Koordinator', '4' => 'Karyawan'])
                     ->required()
+                    ->inlineLabel()
+                    ->columnSpanFull()
+                    ->native(false),
+                Select::make('head_id')
+                    ->label('Bawahan dari')
+                    ->searchable()
+                    ->options(fn (): array => Chair::query()
+                        ->limit(16)
+                        ->pluck('name', 'id')
+                        ->all())
+                    ->preload()
+                    ->required()
+                    ->inlineLabel()
+                    ->columnSpanFull()
+                    ->native(false),
             ]);
     }
 

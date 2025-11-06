@@ -30,10 +30,14 @@ class UserForm
                 Select::make('role_id')
                     ->label('Role')
                     ->relationship('role', 'name')
-                    ->required(),
+                    ->required()
+                    ->native(false),
                 Select::make('staff_id')
                     ->label('Nama Pegawai')
-                    ->relationship('staff', 'name'),
+                    ->relationship('staff', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
             ]);
     }
 }
