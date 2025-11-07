@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Staff\Schemas;
 
+use Carbon\Carbon;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -44,6 +45,11 @@ class StaffForm
                 DatePicker::make('birth_date')
                     ->label('Tanggal Lahir')
                     ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function (callable $set, $state) {
+                        // reset end_date ketika start_date berubah
+                        $set('retirement_date', Carbon::parse($state)->addYear(56)->format('Y-m-d'));
+                    })
                     ->native(false),
                 ToggleButtons::make('sex')
                     ->label('Jenis Kelamin')
@@ -55,8 +61,12 @@ class StaffForm
                     ->options(['Lajang' => 'Lajang', 'Menikah' => 'Menikah', 'Cerai Hidup' => 'Cerai Hidup', 'Cerai Mati' => 'Cerai Mati'])
                     ->required()
                     ->native(false),
-                Textarea::make('address')
-                    ->label('Alamat Lengkap')
+                Textarea::make('origin')
+                    ->label('Alamat Asli')
+                    ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
+                    ->required(),
+                Textarea::make('domicile')
+                    ->label('Alamat Domisili')
                     ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
                     ->required(),
                 TextInput::make('email')
@@ -90,7 +100,7 @@ class StaffForm
                     ->label('Tanggal Pensiun')
                     ->minDate(now())
                     ->required()
-                    ->native(false),
+                    ->disabled(),
                 Select::make('staff_status_id')
                     ->label('Status Kepegawaian')
                     ->relationship('staffStatus', 'name')

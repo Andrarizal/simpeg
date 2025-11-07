@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class StaffAdministrationResource extends Resource
@@ -62,5 +63,10 @@ class StaffAdministrationResource extends Resource
             'view' => ViewStaffAdministration::route('/{record}'),
             'edit' => EditStaffAdministration::route('/{record}/edit'),
         ];
+    }  
+
+    public static function canCreate(): bool
+    {
+        return false;
     }
 }

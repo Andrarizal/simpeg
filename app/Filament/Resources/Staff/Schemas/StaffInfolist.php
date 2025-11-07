@@ -27,8 +27,10 @@ class StaffInfolist
                     ->label('Jenis Kelamin'),
                 TextEntry::make('marital')
                     ->label('Status Perkawinan'),
-                TextEntry::make('address')
-                    ->label('Alamat'),
+                TextEntry::make('origin')
+                    ->label('Alamat Asli'),
+                TextEntry::make('domicile')
+                    ->label('Alamat Domisili'),
                 TextEntry::make('email')
                     ->label('Email Pribadi'),
                 TextEntry::make('phone')

@@ -12,7 +12,7 @@ class Staff extends Model
 
     use HasFactory;
 
-    protected $fillable = ['nik', 'nip', 'name', 'birth_place', 'birth_date', 'sex', 'marital', 'address', 'email', 'phone', 'other_phone', 'other_phone_adverb', 'entry_date', 'retirement_date', 'staff_status_id', 'chair_id', 'group_id', 'unit_id'];
+    protected $fillable = ['pas', 'nik', 'nip', 'name', 'birth_place', 'birth_date', 'sex', 'marital', 'origin', 'domicile', 'email', 'phone', 'other_phone', 'other_phone_adverb', 'entry_date', 'retirement_date', 'staff_status_id', 'chair_id', 'group_id', 'unit_id'];
 
     protected static function booted()
     {

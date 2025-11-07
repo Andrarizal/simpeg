@@ -20,7 +20,7 @@ class StaffAdministrationForm
                     ->inlineLabel()
                     ->columnSpanFull(),
                 FileUpload::make('sip')
-                    ->label('SIP')
+                    ->label('Surat Izin Praktek')
                     ->disk('public')
                     ->visibility('public')
                     ->directory('sip')
@@ -30,7 +30,7 @@ class StaffAdministrationForm
                     ->columnSpanFull()
                     ->helperText('Unggah SIP dalam format PDF'),
                 FileUpload::make('str')
-                    ->label('STR')
+                    ->label('Surat Tanda Registrasi')
                     ->disk('public')
                     ->visibility('public')
                     ->directory('str')
@@ -40,7 +40,7 @@ class StaffAdministrationForm
                     ->columnSpanFull()
                     ->helperText('Unggah STR dalam format PDF'),
                 FileUpload::make('mcu')
-                    ->label('MCU')
+                    ->label('Medical Check Up')
                     ->disk('public')
                     ->visibility('public')
                     ->directory('mcu')
@@ -50,7 +50,7 @@ class StaffAdministrationForm
                     ->columnSpanFull()
                     ->helperText('Unggah MCU dalam format PDF'),
                 FileUpload::make('spk')
-                    ->label('SPK')
+                    ->label('Surat Penugasan Klinis')
                     ->disk('public')
                     ->visibility('public')
                     ->directory('spk')
@@ -60,7 +60,7 @@ class StaffAdministrationForm
                     ->columnSpanFull()
                     ->helperText('Unggah SPK dalam format PDF'),
                 FileUpload::make('rkk')
-                    ->label('RKK')
+                    ->label('Rincian Kewenangan Klinis')
                     ->disk('public')
                     ->visibility('public')
                     ->directory('rkk')
@@ -70,7 +70,7 @@ class StaffAdministrationForm
                     ->columnSpanFull()
                     ->helperText('Unggah RKK dalam format PDF'),
                 FileUpload::make('utw')
-                    ->label('UTW')
+                    ->label('Uraian Tugas dan Wewenang')
                     ->disk('public')
                     ->visibility('public')
                     ->directory('utw')

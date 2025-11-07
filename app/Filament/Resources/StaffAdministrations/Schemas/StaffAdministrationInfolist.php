@@ -17,7 +17,7 @@ class StaffAdministrationInfolist
                     ->inlineLabel()
                     ->columnSpanFull(),
                 TextEntry::make('sip')
-                    ->label('SIP')
+                    ->label('Surat Izin Praktek')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
                         Action::make('show')
@@ -32,7 +32,7 @@ class StaffAdministrationInfolist
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->placeholder('Belum Mengupload'),
-                TextEntry::make('str')
+                TextEntry::make('Surat Tanda Registrasi')
                     ->label('STR')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
@@ -49,7 +49,7 @@ class StaffAdministrationInfolist
                     ->columnSpanFull()
                     ->placeholder('Belum Mengupload'),
                 TextEntry::make('mcu')
-                    ->label('MCU')
+                    ->label('Medical Check Up')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
                         Action::make('show')
@@ -65,7 +65,7 @@ class StaffAdministrationInfolist
                     ->columnSpanFull()
                     ->placeholder('Belum Mengupload'),
                 TextEntry::make('spk')
-                    ->label('SPK')
+                    ->label('Surat Penugasan Klinis')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
                         Action::make('show')
@@ -81,7 +81,7 @@ class StaffAdministrationInfolist
                     ->columnSpanFull()
                     ->placeholder('Belum Mengupload'),
                 TextEntry::make('rkk')
-                    ->label('RKK')
+                    ->label('Rencana Kewenangan Klinis')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
                         Action::make('show')
@@ -97,7 +97,7 @@ class StaffAdministrationInfolist
                     ->columnSpanFull()
                     ->placeholder('Belum Mengupload'),
                 TextEntry::make('utw')
-                    ->label('UTW')
+                    ->label('Uraian Tugas dan Wewenang')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
                         Action::make('show')

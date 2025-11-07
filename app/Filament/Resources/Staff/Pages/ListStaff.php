@@ -103,57 +103,58 @@ class ListStaff extends ListRecords
                                 'sex' => $row[5] ?? 'L',
                                 'marital' => $row[6] ?? 'Lajang',
                                 'phone' => $row[7] ?? null,
-                                'address' => $row[8] ?? null,
-                                'email' => $row[9] ?? null,
-                                'other_phone' => $row[10] ?? null,
-                                'other_phone_adverb' => $row[11] ?? 'Lainnya',
-                                'entry_date' => isset($row[12]) ? Carbon::createFromFormat('d/m/Y', trim($row[12])) : null,
-                                'retirement_date' => isset($row[13]) ? Carbon::createFromFormat('d/m/Y', trim($row[13])) : null,
-                                'staff_status_id' => $this->mapStatus($row[14]),
-                                'chair_id' => $this->mapChair($row[15]),
-                                'group_id' => $this->mapGroup($row[16]),
-                                'unit_id' => $this->mapUnit($row[17]),
+                                'origin' => $row[8] ?? null,
+                                'domicile' => $row[9] ?? null,
+                                'email' => $row[10] ?? null,
+                                'other_phone' => $row[11] ?? null,
+                                'other_phone_adverb' => $row[12] ?? 'Lainnya',
+                                'entry_date' => isset($row[13]) ? Carbon::createFromFormat('d/m/Y', trim($row[13])) : null,
+                                'retirement_date' => isset($row[14]) ? Carbon::createFromFormat('d/m/Y', trim($row[4]))->addYear(56)->format('Y-m-d') : null,
+                                'staff_status_id' => $this->mapStatus($row[15]),
+                                'chair_id' => $this->mapChair($row[16]),
+                                'group_id' => $this->mapGroup($row[17]),
+                                'unit_id' => $this->mapUnit($row[18]),
                             ];
 
                             $staff_entry_education = [
-                                'level' => $row[18],
-                                'institution' => $row[19] ?? null,
-                                'certificate_number' => $row[20] ?? null,
-                                'certificate_date' => Carbon::createFromFormat('d/m/Y', trim($row[21])),
-                                'nonformal_education' => $row[22] ?? null,
-                                'adverb' => $row[23] ?? null,
+                                'level' => $row[19],
+                                'institution' => $row[20] ?? null,
+                                'certificate_number' => $row[21] ?? null,
+                                'certificate_date' => Carbon::createFromFormat('d/m/Y', trim($row[22])),
+                                'nonformal_education' => $row[23] ?? null,
+                                'adverb' => $row[24] ?? null,
                             ];
 
                             $staff_work_education = [
-                                'level' => $row[24],
-                                'major' => $row[25] ?? null,
-                                'institution' => $row[26] ?? null,
-                                'certificate_number' => $row[27] ?? null,
-                                'certificate_date' => Carbon::createFromFormat('d/m/Y', trim($row[28])),
+                                'level' => $row[25],
+                                'major' => $row[26] ?? null,
+                                'institution' => $row[27] ?? null,
+                                'certificate_number' => $row[28] ?? null,
+                                'certificate_date' => Carbon::createFromFormat('d/m/Y', trim($row[29])),
                             ];
 
                             $staff_work_experience = [
-                                'institution' => $row[29],
-                                'work_length' => $row[30] ?? null,
-                                'admission' => $row[31] ?? null,
+                                'institution' => $row[30],
+                                'work_length' => $row[31] ?? null,
+                                'admission' => $row[32] ?? null,
                             ];
 
                             $staff_contract = [
-                                'contract_number' => $row[32],
-                                'start_date' => Carbon::createFromFormat('d/m/Y', trim($row[33])),
-                                'end_date' => Carbon::createFromFormat('d/m/Y', trim($row[33])),
+                                'contract_number' => $row[33],
+                                'start_date' => Carbon::createFromFormat('d/m/Y', trim($row[34])),
+                                'end_date' => Carbon::createFromFormat('d/m/Y', trim($row[35])),
                             ];
 
                             $staff_appointment = [
-                                'decree_number' => $row[35],
-                                'decree_date' => Carbon::createFromFormat('d/m/Y', trim($row[36])),
-                                'class' => $row[37] ?? null,
+                                'decree_number' => $row[36],
+                                'decree_date' => Carbon::createFromFormat('d/m/Y', trim($row[37])),
+                                'class' => $row[38] ?? null,
                             ];
 
                             $staff_adjustment = [
-                                'decree_number' => $row[38],
-                                'decree_date' => Carbon::createFromFormat('d/m/Y', trim($row[39])),
-                                'class' => $row[40] ?? null,
+                                'decree_number' => $row[39],
+                                'decree_date' => Carbon::createFromFormat('d/m/Y', trim($row[40])),
+                                'class' => $row[41] ?? null,
                             ];
                             
                             $newRow = Staff::updateOrCreate(
@@ -161,37 +162,37 @@ class ListStaff extends ListRecords
                                 $staff
                             );
 
-                            if (!empty($row[18])) {
+                            if (!empty($row[19])) {
                                 StaffEntryEducation::updateOrCreate(['staff_id' => $newRow['id']],
                                     $staff_entry_education
                                 );
                             }
 
-                            if (!empty($row[24])) {
+                            if (!empty($row[25])) {
                                 StaffWorkEducation::updateOrCreate(['staff_id' => $newRow['id']],
                                     $staff_work_education
                                 );
                             }
 
-                            if (!empty($row[29])) {
+                            if (!empty($row[30])) {
                                 StaffWorkExperience::updateOrCreate(['staff_id' => $newRow['id']],
                                     $staff_work_experience
                                 );
                             }
 
-                            if (!empty($row[32])) {
+                            if (!empty($row[33])) {
                                 StaffContract::updateOrCreate(['staff_id' => $newRow['id']],
                                     $staff_contract
                                 );
                             }
 
-                            if (!empty($row[35])) {
+                            if (!empty($row[36])) {
                                 StaffAppointment::updateOrCreate(['staff_id' => $newRow['id']],
                                     $staff_appointment
                                 );
                             }
 
-                            if (!empty($row[38])) {
+                            if (!empty($row[39])) {
                                 StaffAdjustment::updateOrCreate(['staff_id' => $newRow['id']],
                                     $staff_adjustment
                                 );

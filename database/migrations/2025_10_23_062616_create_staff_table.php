@@ -17,6 +17,7 @@ return new class extends Migration
 
         Schema::create('staff', function (Blueprint $table) {
             $table->id();
+            $table->string('pas')->nullable();
             $table->unsignedBigInteger('nik')->unique();
             $table->string('nip')->unique();
             $table->string('name');
@@ -24,7 +25,8 @@ return new class extends Migration
             $table->date('birth_date');
             $table->enum('sex', ['L', 'P']);
             $table->enum('marital', ['Lajang', 'Menikah', 'Cerai Hidup', 'Cerai Mati']);
-            $table->text('address');
+            $table->text('origin');
+            $table->text('domicile');
             $table->string('email')->unique();
             $table->string('phone')->unique();
             $table->string('other_phone')->unique();
