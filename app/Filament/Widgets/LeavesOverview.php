@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 
 class LeavesOverview extends StatsOverviewWidget
 {
+    protected static ?int $sort = 3;
+
     protected function getStats(): array
     {
         $user = Auth::user();
@@ -67,18 +69,4 @@ class LeavesOverview extends StatsOverviewWidget
             Stat::make('Total Izin Non-Sakit '. date('Y'), $usedPermission),
         ];
     }
-
-    public function getColumns(): int | array
-    {
-        return [
-            'default' => 1,
-            'md' => 2,
-            'xl' => 2,
-        ];
-    }
-
-    protected int|string|array $columnSpan = [
-        'default' => 2,
-        'md' => 1,
-    ];
 }

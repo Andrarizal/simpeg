@@ -6,6 +6,10 @@ if (!function_exists('shouldShowApprovalButton')) {
     {
         $user = Auth::user();
 
+        if ($record->status == 'Ditolak' || !$record->is_verified || !$record->is_replaced){
+            return false;
+        }
+        
         return match ($user->staff->chair->level) {
             4 => 
                 $record->status === 'Menunggu' &&

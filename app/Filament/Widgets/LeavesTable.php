@@ -1,29 +1,34 @@
 <?php
 
-namespace App\Filament\Resources\Leaves\Tables;
+namespace App\Filament\Widgets;
 
-use App\Models\Leave;
-use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Tables\Table;
+use Filament\Widgets\TableWidget;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\Leave;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
-class ReplacerTable
+class LeavesTable extends TableWidget
 {
-    public static function configure(Table $table): Table
+    protected static ?int $sort = 4;
+
+    public function table(Table $table): Table
     {
         return $table
+            ->heading('3 Pengajuan Cuti Terbaru')
             ->query(function (): Builder {
                 $query = Leave::query();
 
-                $query->where('replacement_id', Auth::user()->staff_id)
-                    ->orderBy('start_date', 'DESC');
+                $query->where('staff_id', Auth::user()->staff_id)
+                    ->orderBy('start_date', 'DESC')
+                    ->limit(3);
+
                 return $query;
             })
             ->columns([
@@ -95,6 +100,10 @@ class ReplacerTable
                             return 'gray';
                         }
                     }),
+                TextColumn::make('approver.name')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_verified')
                     ->label('Verifikasi SDM')
                     ->alignCenter()
@@ -114,10 +123,6 @@ class ReplacerTable
                         0 => 'Ditolak',
                         'null' => 'Belum direspon',
                     }),
-                TextColumn::make('approver.name')
-                    ->numeric()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('adverb')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -130,26 +135,18 @@ class ReplacerTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
+            ->paginated(false)
+            ->searchable(false)
             ->recordActions([
-                Action::make('approve')
-                    ->label('Bersedia')
-                    ->icon('heroicon-o-check')
-                    ->color('success')
-                    ->visible(fn ($record) => $record->is_replaced || $record->status == 'Ditolak' || $record->is_verified == 0 ? false : true)
-                    ->requiresConfirmation()
-                    ->action(function ($record) {
-                        $record->update([
-                            'is_replaced' => true,
-                        ]);
-                    }),
                 ViewAction::make(),
+                DeleteAction::make()
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
+
+    protected int|string|array $columnSpan = 'full';
 }

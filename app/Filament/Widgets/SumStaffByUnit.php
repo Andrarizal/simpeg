@@ -4,11 +4,13 @@ namespace App\Filament\Widgets;
 
 use App\Models\Staff;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SumStaffByUnit extends ChartWidget
 {
     protected ?string $heading = 'Jumlah Pegawai berdasarkan Unit Kerja';
+    protected static ?int $sort = 5;
 
     protected function getData(): array
     {
@@ -40,8 +42,8 @@ class SumStaffByUnit extends ChartWidget
         return 'bar';
     }
 
-    protected int|string|array $columnSpan = [
-        'default' => 2,
-        'md' => 1,
-    ];
+    public static function canView(): bool
+    {
+        return Auth::user()?->role_id == 1;
+    }
 }

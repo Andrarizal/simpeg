@@ -3,10 +3,13 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Schemas\Components\BrandLogo;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -18,6 +21,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -30,6 +34,12 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->sidebarCollapsibleOnDesktop()
             ->login()
+            ->userMenuItems([
+                Action::make('profile')
+                    ->label(fn() => Auth::user()?->name ?? 'Profil Saya')
+                    ->icon('heroicon-o-user')
+                    ->url(fn() => route('filament.admin.resources.profiles.index')),
+            ])
             ->colors([
                 'primary' => Color::Emerald,
             ])

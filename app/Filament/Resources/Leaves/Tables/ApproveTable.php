@@ -239,7 +239,7 @@ class ApproveTable
                     ->color('info')
                     ->visible(function ($record) {
                         if (Auth::user()->role_id === 1) {
-                            return $record->is_verified ? false : true;
+                            return $record->is_verified || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
                         }
                         return false;
                     })
@@ -256,7 +256,7 @@ class ApproveTable
                     ->color('danger')
                     ->visible(function ($record) {
                         if (Auth::user()->role_id === 1) {
-                            return $record->is_verified ? false : true;
+                            return $record->is_verified || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
                         }
                         return false;
                     })
@@ -268,7 +268,6 @@ class ApproveTable
                         ]);
                     }),
                 ViewAction::make(),
-                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
