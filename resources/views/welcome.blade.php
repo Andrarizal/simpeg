@@ -273,5 +273,37 @@
         @if (Route::has('login'))
             <div class="h-14.5 hidden lg:block"></div>
         @endif
+        <script>
+        async function reportIp() {
+            try {
+                // Ambil IP publik client
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+
+                // Kirim ke server Laravel
+                const result = await fetch('/report-ip', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ ip: data.ip })
+                });
+
+                const json = await result.json();
+
+                // Tampilkan di console browser
+                console.log('IP Publik Client:', json.client_ip);
+                console.log('IP yang Terlihat oleh Server:', json.server_ip);
+            } catch (err) {
+                console.error('Gagal mendeteksi IP:', err);
+            }
+        }
+
+        // Jalankan otomatis
+        reportIp();
+        </script>
+
+
     </body>
 </html>

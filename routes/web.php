@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Presence;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
@@ -18,11 +21,26 @@ Route::get('/storage/profile/{filename}', function ($filename) {
     return response()->file($path);
 })->middleware(['auth']);
 
-Route::get('/test-foto', function () {
-    $path = storage_path('app/private/profile/01K9EG1T0N8NKASDTW4WR8VSYG.jpg');
-    if (!file_exists($path)) {
-        return 'File tidak ditemukan';
-    }
+Route::get('/debug-ip', function () {
+    return [
+        'client_ip' => request()->getClientIp(),
+        'client_all' => request()->all(),
+        'user_agent' => request()->userAgent(),
+    ];
+});
 
-    return response()->file($path);
+Route::post('/report-ip', function (Request $request) {
+    $ipServer = $request->ip(); // IP publik menurut server
+    $ipReported = $request->input('ip'); // IP publik hasil deteksi client
+
+    return response()->json([
+        'server_ip' => $ipServer,
+        'client_ip' => $ipReported,
+    ]);
+});
+
+Route::post('/check-device', function (Request $request) {
+    return response()->json([
+        'server_ip' => $request->ip(),
+    ]);
 });

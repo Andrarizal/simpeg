@@ -9,6 +9,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -186,7 +188,12 @@ class ApproveTable
                     ->color('success')
                     ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
                     ->requiresConfirmation()
-                    ->action(function ($record) {
+                    ->form([
+                        Textarea::make('adverb')
+                            ->label('Catatan')
+                            ->rows(3),
+                    ])
+                    ->action(function (array $data, $record) {
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
@@ -195,26 +202,50 @@ class ApproveTable
                             case 4:
                                 $record->update([
                                     'status' => 'Diketahui Kepala Unit',
-                                    'approver_id' => $user->staff_id
+                                    'approver_id' => $user->staff_id,
+                                    'adverb' => $data['adverb']
                                 ]);
+
+                                Notification::make()
+                                    ->title('Cuti Diketahui')
+                                    ->success()
+                                    ->send();
                                 break;
                             case 3:
                                 $record->update([
                                     'status' => 'Diketahui Koordinator',
-                                    'approver_id' => $user->staff_id
+                                    'approver_id' => $user->staff_id,
+                                    'adverb' => $data['adverb']
                                 ]);
+
+                                Notification::make()
+                                    ->title('Cuti Diketahui')
+                                    ->success()
+                                    ->send();
                                 break;
                             case 2:
                                 $record->update([
                                     'status' => 'Disetujui Kepala Seksi',
-                                    'approver_id' => $user->staff_id
+                                    'approver_id' => $user->staff_id,
+                                    'adverb' => $data['adverb']
                                 ]);
+
+                                Notification::make()
+                                    ->title('Cuti Disetujui')
+                                    ->success()
+                                    ->send();
                                 break;
                             case 1:
                                 $record->update([
                                     'status' => 'Disetujui Direktur',
-                                    'approver_id' => $user->staff_id
+                                    'approver_id' => $user->staff_id,
+                                    'adverb' => $data['adverb']
                                 ]);
+
+                                Notification::make()
+                                    ->title('Cuti Disetujui')
+                                    ->success()
+                                    ->send();
                                 break;
                         }
                     }),
@@ -224,14 +255,26 @@ class ApproveTable
                     ->color('danger')
                     ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
                     ->requiresConfirmation()
-                    ->action(function ($record) {
+                    ->form([
+                        Textarea::make('adverb')
+                            ->label('Alasan')
+                            ->required()
+                            ->rows(3),
+                    ])
+                    ->action(function (array $data, $record) {
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
                         $record->update([
                             'status' => 'Ditolak',
-                            'approver_id' => $user->staff_id
+                            'approver_id' => $user->staff_id,
+                            'adverb' => $data['adverb']
                         ]);
+
+                        Notification::make()
+                            ->title('Cuti ditolak')
+                            ->success()
+                            ->send();
                     }),
                 Action::make('verified')
                     ->label('Verifikasi')
@@ -239,7 +282,7 @@ class ApproveTable
                     ->color('info')
                     ->visible(function ($record) {
                         if (Auth::user()->role_id === 1) {
-                            return $record->is_verified || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
+                            return $record->is_verified <= 1 || $record->is_replaced === 0 || $record->status === 'Ditolak' ? false : true;
                         }
                         return false;
                     })
@@ -249,6 +292,11 @@ class ApproveTable
                         $record->update([
                             'is_verified' => 1,
                         ]);
+
+                        Notification::make()
+                            ->title('Cuti diverifikasi')
+                            ->success()
+                            ->send();
                     }),
                 Action::make('cancel')
                     ->label('Batalkan')
@@ -256,16 +304,27 @@ class ApproveTable
                     ->color('danger')
                     ->visible(function ($record) {
                         if (Auth::user()->role_id === 1) {
-                            return $record->is_verified || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
+                            return $record->is_verified <= 1 || $record->is_replaced === 0 || $record->status === 'Ditolak' ? false : true;
                         }
                         return false;
                     })
-                    // ->visible(true)
                     ->requiresConfirmation()
-                    ->action(function ($record) {
+                    ->form([
+                        Textarea::make('adverb')
+                            ->label('Alasan')
+                            ->required()
+                            ->rows(3),
+                    ])
+                    ->action(function (array $data, $record) {
                         $record->update([
                             'is_verified' => 0,
+                            'adverb' => $data['adverb']
                         ]);
+
+                        Notification::make()
+                            ->title('Cuti dibatalkan')
+                            ->success()
+                            ->send();
                     }),
                 ViewAction::make(),
             ])
