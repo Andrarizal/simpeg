@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Overtimes;
 
+use App\Filament\Resources\Overtimes\Pages\ApproveOvertime;
 use App\Filament\Resources\Overtimes\Pages\CreateOvertime;
 use App\Filament\Resources\Overtimes\Pages\EditOvertime;
 use App\Filament\Resources\Overtimes\Pages\ListOvertimes;
@@ -23,7 +24,7 @@ class OvertimeResource extends Resource
     protected static ?string $model = Overtime::class;
 
     protected static ?string $modelLabel = 'Lembur';       
-    protected static ?string $pluralModelLabel = 'Lembur'; 
+    protected static ?string $pluralModelLabel = 'Daftar Lembur'; 
     protected static ?string $navigationLabel = 'Lembur';
     protected static ?int $navigationSort = 7;
     protected static UnitEnum|string|null $navigationGroup = 'Kepegawaian';
@@ -61,11 +62,7 @@ class OvertimeResource extends Resource
             'create' => CreateOvertime::route('/create'),
             'view' => ViewOvertime::route('/{record}'),
             'edit' => EditOvertime::route('/{record}/edit'),
+            'approve' => ApproveOvertime::route('/{record}/approve')
         ];
-    }
-
-    public static function canViewAny(): bool
-    {
-        return Auth::user()->staff->chair->level > 2;
     }
 }

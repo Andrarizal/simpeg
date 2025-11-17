@@ -60,17 +60,20 @@ class OvertimesTable
                     ->alignCenter()
                     ->getStateUsing(fn ($record) => $record->is_known ?? 'null')
                     ->icon(fn ($state) => match ($state) {
+                        2 => 'heroicon-o-check-circle',
                         1 => 'heroicon-o-check-circle',
                         0 => 'heroicon-o-x-circle',
                         'null' => 'heroicon-o-clock',
                     })
                     ->color(fn ($state) => match ($state) {
+                        2 => 'info',
                         1 => 'success',
                         0 => 'danger',
                         'null' => 'gray',
                     })
                     ->tooltip(fn ($state) => match ($state) {
-                        1 => 'Diketahui',
+                        2 => 'Diketahui Koordinator',
+                        1 => 'Diketahui Kepala Unit',
                         0 => 'Ditolak',
                         'null' => 'Belum direspon',
                     }),
@@ -134,41 +137,12 @@ class OvertimesTable
                             ->success()
                             ->send();
                     }),
+                    DeleteAction::make()
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkAction::make('ketahui')
-                    ->label('Tandai Diketahui')
-                    ->color('info')
-                    ->requiresConfirmation()
-                    ->action(function ($records) {
-                        foreach ($records as $record) {
-                            $record->update([
-                                'is_known' => 1,
-                            ]);
-                        }
-                        Notification::make()
-                            ->title('Data lembur ditandai diketahui.')
-                            ->success()
-                            ->send();
-                    }),
-
-                BulkAction::make('verifikasi')
-                    ->label('Verifikasi SDM')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->action(function ($records) {
-                        foreach ($records as $record) {
-                            $record->update([
-                                'is_verified' => 1,
-                            ]);
-                        }
-                        Notification::make()
-                            ->title('Data lembur diverifikasi.')
-                            ->success()
-                            ->send();
-                    }),
-                ])
+                    DeleteBulkAction::make(),
+                ]),
             ])
             ->defaultSort('overtime_date', 'desc');
     }

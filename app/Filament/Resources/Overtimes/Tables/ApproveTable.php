@@ -3,79 +3,88 @@
 namespace App\Filament\Resources\Overtimes\Tables;
 
 use App\Models\Overtime;
+use App\Models\Staff;
+use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class ApproveTable
 {
-    public static function configure(Table $table): Table
+    public static function configure(Table $table, ?Staff $staff): Table
     {
         return $table
-            ->query(function (): Builder {
-                $query = Overtime::query();
-                $query->where('staff_id', '!=', Auth::user()->staff_id); 
-
-                // Jika SDM
-                if (Auth::user()->role_id == 1){
-                    $query->orderBy('created_at', 'DESC');
-                // Jika Bukan SDM
-                } else {
-                    // Jika Kanit
-                    if (Auth::user()->staff->chair->level == 4){
-                        $query->whereHas('staff.chair', function ($q) {
-                            $q->where('head_id', Auth::user()->staff->chair->head_id);
-                        });
-                        // Jika Koor
-                    } else if (Auth::user()->staff->chair->level == 3) {
-                        $query->whereHas('staff.chair', function ($q) {
-                            $q->where('head_id', Auth::user()->staff->chair_id);
-                        });
-                        $query->whereHas('staff.unit', function ($q) {
-                            $q->whereColumn('staff.chair_id', 'units.leader_id');
-                        });
-                    }
-                }
-                return $query->orderBy('created_at', 'DESC');
-            })
+            ->query(fn() => Overtime::query()->where('staff_id', $staff->id))
             ->columns([
-                TextColumn::make('staff.name')
-                    ->label('Nama Pengaju')
-                    ->sortable(),
-                TextColumn::make('overtime_date')
-                    ->label('Tanggal')
-                    ->date()
-                    ->sortable(),
+                TextColumn::make('overtime_date')->label('Tanggal'),
+                TextColumn::make('command')->label('Perintah'),
                 TextColumn::make('start_time')
-                    ->label('Mulai')
-                    ->time()
-                    ->sortable(),
+                    ->label('Mulai'),
                 TextColumn::make('end_time')
                     ->label('Selesai')
-                    ->time()
-                    ->sortable(),
+                    ->getStateUsing(function ($record) {
+                        return $record->end_time ?: '---';
+                    }),
+
                 TextColumn::make('hours')
                     ->label('Total Jam')
-                    ->formatStateUsing(fn ($state) => $state . ' Jam')
-                    ->sortable(),
-                TextColumn::make('reason')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('status')
-                    ->badge()
+                    ->state(function ($record) {
+                        if (! $record || ! $record->end_time) {
+                            return '---';
+                        }
+
+                        $total = $record->getTotalHours();
+                        return $total ? "{$total} jam" : '-';
+                    }),
+                IconColumn::make('is_known')
+                    ->label('Mengetahui Atasan')
                     ->alignCenter()
+                    ->getStateUsing(fn ($record) => $record->is_known ?? 'null')
+                    ->icon(fn ($state) => match ($state) {
+                        2 => 'heroicon-o-check-circle',
+                        1 => 'heroicon-o-check-circle',
+                        0 => 'heroicon-o-x-circle',
+                        'null' => 'heroicon-o-clock',
+                    })
                     ->color(fn ($state) => match ($state) {
-                        'Menunggu' => 'warning',
-                        'Disetujui' => 'success',
-                        'Ditolak' => 'danger',
+                        2 => 'info',
+                        1 => 'success',
+                        0 => 'danger',
+                        'null' => 'gray',
+                    })
+                    ->tooltip(fn ($state) => match ($state) {
+                        2 => 'Diketahui Koordinator',
+                        1 => 'Diketahui Kepala Unit',
+                        0 => 'Ditolak',
+                        'null' => 'Belum direspon',
+                    }),
+                IconColumn::make('is_verified')
+                    ->label('Verifikasi SDM')
+                    ->alignCenter()
+                    ->getStateUsing(fn ($record) => $record->is_verified ?? 'null')
+                    ->icon(fn ($state) => match ($state) {
+                        1 => 'heroicon-o-check-circle',
+                        0 => 'heroicon-o-x-circle',
+                        'null' => 'heroicon-o-clock',
+                    })
+                    ->color(fn ($state) => match ($state) {
+                        1 => 'info',
+                        0 => 'danger',
+                        'null' => 'gray',
+                    })
+                    ->tooltip(fn ($state) => match ($state) {
+                        1 => 'Diverifikasi',
+                        0 => 'Ditolak',
+                        'null' => 'Belum direspon',
                     }),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -87,57 +96,67 @@ class ApproveTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('month_year')
+                    ->label('Bulan')
+                    ->options(
+                        collect(range(0, 11))
+                            ->mapWithKeys(fn($i) => [
+                                now()->subMonths($i)->format('Y-m') =>
+                                    now()->subMonths($i)->translatedFormat('F Y'),
+                            ])
+                    )
+                    ->default(now()->format('Y-m'))
+                    ->query(function (Builder $query, $data) {
+                        $query->where('month_year', $data['value']);
+                    })
+                    ->indicateUsing(function ($data) {
+                        return [
+                            'Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'),
+                        ];
+                    })
+                    ->selectablePlaceholder(false)
+                    ->native(false),
             ])
+            ->hiddenFilterIndicators()
             ->recordActions([
                 Action::make('approve')
-                    ->label('Setujui')
+                    ->label('Ketahui')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn ($record) => $record->status == 'Menunggu' ? true : false)
+                    ->visible(fn ($record) => ($record->is_known || Auth::user()->staff->chair->level < 3 || Auth::user()->role_id === 1) ? false : true)
                     ->requiresConfirmation()
-                    ->form([
-                        Textarea::make('adverb')
-                            ->label('Catatan')
-                            ->rows(3),
-                    ])
                     ->action(function (array $data, $record) {
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
-                        $record->update([
-                            'status' => 'Disetujui',
-                            'adverb' => $data['adverb']
-                        ]);
+                        if ($user->staff->chair->level === 4){
+                            $record->update([
+                                'is_known' => 1,
+                            ]);
+                        } else {
+                            $record->update([
+                                'is_known' => 2,
+                            ]);
+                        }
 
                         Notification::make()
-                            ->title('Lembur disetujui')
+                            ->title('Lembur diketahui')
                             ->success()
                             ->send();
                     }),
-                Action::make('reject')
-                    ->label('Tolak')
-                    ->icon('heroicon-o-no-symbol')
-                    ->color('danger')
-                    ->visible(fn ($record) => $record->status == 'Menunggu' ? true : false)
+                Action::make('verification')
+                    ->label('Verifikasi')
+                    ->icon('heroicon-o-check')
+                    ->color('info')
+                    ->visible(fn ($record) => ($record->is_verified || Auth::user()->staff->chair->level < 4 || Auth::user()->role_id > 1) ? false : true)
                     ->requiresConfirmation()
-                    ->form([
-                        Textarea::make('adverb')
-                            ->label('Alasan')
-                            ->required()
-                            ->rows(3),
-                    ])
-                    ->action(function (array $data, $record) {
-                        $user = Auth::user();
-                        $user->staff_id = $user->staff_id ?? 1;
-
+                    ->action(function ($record) {
                         $record->update([
-                            'status' => 'Ditolak',
-                            'adverb' => $data['adverb']
+                            'is_verified' => 1,
                         ]);
 
                         Notification::make()
-                            ->title('Lembur ditolak')
+                            ->title('Lembur diverifikasi')
                             ->success()
                             ->send();
                     }),
@@ -145,7 +164,50 @@ class ApproveTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    BulkAction::make('ketahui')
+                    ->label('Ketahui')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn () => Auth::user()->staff->chair->level === 3 || (Auth::user()->staff->chair->level === 4 && Auth::user()->staff->unit->leader_id === Auth::user()->staff->chair_id))
+                    ->disabled(fn (Collection $records) => $records->doesntContain('is_known', 1) || $records->doesntContain('is_known', 2))
+                    ->action(function ($records) {
+                        foreach ($records as $record) {
+                            $user = Auth::user();
+                            $user->staff_id = $user->staff_id ?? 1;
+
+                            if ($user->staff->chair->level === 4){
+                                $record->update([
+                                    'is_known' => 1,
+                                ]);
+                            } else {
+                                $record->update([
+                                    'is_known' => 2,
+                                ]);
+                            }
+                        }
+                        Notification::make()
+                            ->title('Data lembur ditandai diketahui.')
+                            ->success()
+                            ->send();
+                    }),
+
+                    BulkAction::make('verifikasi')
+                        ->label('Verifikasi ')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->visible(fn () => Auth::user()->role_id === 1 && Auth::user()->staff->chair->level === 4)
+                        ->disabled(fn (Collection $records) => $records->doesntContain('is_verified', 1))
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'is_verified' => 1,
+                                ]);
+                            }
+                            Notification::make()
+                                ->title('Data lembur diverifikasi.')
+                                ->success()
+                                ->send();
+                        }),
                 ]),
             ]);
     }

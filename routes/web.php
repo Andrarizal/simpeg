@@ -39,8 +39,15 @@ Route::post('/report-ip', function (Request $request) {
     ]);
 });
 
-Route::post('/check-device', function (Request $request) {
-    return response()->json([
-        'server_ip' => $request->ip(),
+Route::post('/store-device-info', function (Request $request) {
+    session([
+        'device_info' => [
+            'ip' => $request->ip,
+            'device_id' => $request->device_id,
+            'device_info' => $request->device_info,
+            'platform' => $request->platform,
+        ]
     ]);
-});
+
+    return response()->json(['status' => 'ok']);
+})->name('store.device.info');

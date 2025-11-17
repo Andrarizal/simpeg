@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Presences;
 use App\Filament\Resources\Presences\Pages\ManagePresences;
 use App\Models\Presence;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -19,7 +20,9 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class PresenceResource extends Resource
@@ -49,10 +52,10 @@ class PresenceResource extends Resource
     {
         return $table
             ->recordTitleAttribute('Presence')
+            ->query(function (): Builder {
+                return Presence::where('staff_id', Auth::user()->staff_id);
+            })
             ->columns([
-                TextColumn::make('staff.name')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('presence_date')
                     ->label('Tanggal')
                     ->date()
@@ -65,12 +68,6 @@ class PresenceResource extends Resource
                     ->label('Pulang')
                     ->time()
                     ->sortable(),
-                TextColumn::make('ssid')
-                    ->label('SSID')
-                    ->searchable(),
-                TextColumn::make('ip')
-                    ->label('IP Address')
-                    ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -81,19 +78,37 @@ class PresenceResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('month_year')
+                    ->label('Bulan')
+                    ->options(
+                        collect(range(0, 11))
+                            ->mapWithKeys(fn ($i) => [
+                                now()->subMonths($i)->format('Y-m') =>
+                                    now()->subMonths($i)->translatedFormat('F Y'),
+                            ])
+                    )
+                    ->default(now()->format('Y-m'))
+                    ->query(function (Builder $query, array $data) {
+                        if (empty($data['value'])) return;
+
+                        $date = Carbon::createFromFormat('Y-m', $data['value']);
+
+                        $query->whereMonth('presence_date', $date->month)
+                            ->whereYear('presence_date', $date->year);
+                    })
+                    ->indicateUsing(function (array $data) {
+                        if (empty($data['value'])) return [];
+
+                        return [
+                            'Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'),
+                        ];
+                    })
+                    ->selectablePlaceholder(false)
+                    ->native(false)
             ])
+            ->hiddenFilterIndicators()
             ->recordActions([
-                Action::make('check_out')
-                    ->label('Check Out')
-                    ->color('warning')
-                    ->icon('heroicon-o-logout')
-                    ->requiresConfirmation()
-                    ->action(function () {
-                        $attendance = Presence::where('staff_id', Auth::user()->staff_id)
-                            ->whereDate('date', now())
-                            ->first();
-                    }),
+                
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
