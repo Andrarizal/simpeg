@@ -20,8 +20,12 @@ return new class extends Migration
             $table->date('presence_date');
             $table->time('check_in')->nullable();
             $table->time('check_out')->nullable();
-            $table->string('fingerprint')->nullable();
+            $table->enum('method', ['network', 'coordinate']);
             $table->string('ip')->nullable();
+            $table->string('fingerprint')->nullable();
+            $table->string('lattitude')->nullable();
+            $table->string('longitude')->nullable();
+            $table->string('radius')->nullable();
             $table->timestamps();
 
             // Satu staff hanya bisa absen sekali per hari

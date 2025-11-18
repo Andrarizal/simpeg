@@ -8,6 +8,7 @@ use App\Models\Presence;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Support\Facades\Auth;
@@ -27,40 +28,6 @@ class ManagePresences extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('exportPdf')
-                ->label('Export PDF')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('warning')
-                ->action(function ($livewire) {
-                    $month = $livewire->tableFilters['month_year']['value'] ?? now()->format('Y-m');
-
-                    $data = Presence::query()
-                        ->with(['staff.chair', 'staff.unit'])
-                        ->where('staff_id', Auth::user()->staff_id)
-                        ->whereMonth('presence_date', substr($month, 5, 2))
-                        ->whereYear('presence_date', substr($month, 0, 4))
-                        ->orderBy('presence_date')
-                        ->get();
-
-                    $html = view('exports.presences', compact('data', 'month'))->render();
-
-                    $mpdf = new Mpdf([
-                        'mode' => 'utf-8',
-                        'format' => 'A4',
-                        'margin_left'   => 25, // 2.5 cm
-                        'margin_right'  => 20, // 2 cm
-                        'margin_top'    => 25, // 2.5 cm
-                        'margin_bottom' => 20, // 2 cm
-                    ]);
-
-                    $mpdf->WriteHTML($html);
-
-                    $pdfData = $mpdf->Output('', 'S');
-
-                    return response()->streamDownload(function () use ($pdfData) {
-                        echo $pdfData;
-                    }, "rekap-absen-$month.pdf");
-                }),
             Action::make('ip-status')
                 ->label('IP Info')
                 ->color('gray')
@@ -108,6 +75,7 @@ class ManagePresences extends ManageRecords
                         'staff_id' => Auth::user()->staff_id,
                         'presence_date' => now()->toDateString(),
                         'check_in' => now()->toTimeString(),
+                        'method' => 'network',
                         'ip' => $device['ip'],
                         'fingerprint' => $device['device_id'],
                     ];
@@ -134,6 +102,27 @@ class ManagePresences extends ManageRecords
                         ->success()
                         ->send();
                 }),
+            Action::make('check_in_gps')
+                ->label('Check In dengan GPS')
+                ->icon('heroicon-o-map-pin')
+                ->color('info')
+                ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->count() === 0)
+                ->modalHeading('Absensi via Koordinat Lokasi')
+                ->modalWidth('2xl')
+                ->modalSubmitAction(false)
+                ->modalCancelAction(false)
+                ->modalContent(fn () => view('filament.components.map-modal')),
+            Action::make('check_out_gps')
+                ->label('Check Out dengan GPS')
+                ->icon('heroicon-o-map-pin')
+                ->color('info')
+                ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->whereNull('check_out')->count() > 0)
+                ->modalHeading('Absensi via Koordinat Lokasi')
+                ->modalWidth('2xl')
+                ->modalSubmitAction(false)
+                ->modalCancelAction(false)
+                ->modalContent(fn () => view('filament.components.map-modal')),
+                
         ];
     }
 }

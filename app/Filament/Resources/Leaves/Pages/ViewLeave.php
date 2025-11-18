@@ -3,10 +3,13 @@
 namespace App\Filament\Resources\Leaves\Pages;
 
 use App\Filament\Resources\Leaves\LeaveResource;
+use App\Models\Leave;
+use App\Models\Staff;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
+use Mpdf\Mpdf;
 
 class ViewLeave extends ViewRecord
 {
@@ -100,6 +103,39 @@ class ViewLeave extends ViewRecord
                     $record->update([
                         'is_verified' => 0,
                     ]);
+                }),
+            Action::make('exportPdf')
+                ->label('Export PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('warning')
+                ->visible(function ($record) {
+                    if (Auth::user()->staff_id === $record->staff_id) {
+                        return true;
+                    }
+                    return false;
+                })
+                ->action(function ($record) {
+                    $head = Staff::select('name')->where('chair_id', $record->staff->chair->head_id)->first()->name;
+                    $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+
+                    $html = view('exports.leaves', compact('record', 'head', 'sdm'))->render();
+
+                    $mpdf = new Mpdf([
+                        'mode' => 'utf-8',
+                        'format' => 'A4',
+                        'margin_left'   => 25, // 2.5 cm
+                        'margin_right'  => 20, // 2 cm
+                        'margin_top'    => 25, // 2.5 cm
+                        'margin_bottom' => 20, // 2 cm
+                    ]);
+
+                    $mpdf->WriteHTML($html);
+
+                    $pdfData = $mpdf->Output('', 'S');
+
+                    return response()->streamDownload(function () use ($pdfData) {
+                        echo $pdfData;
+                    }, 'permohonan-' . $record->type . '-' . $record->staff->name . '.pdf');
                 }),
         ];
     }

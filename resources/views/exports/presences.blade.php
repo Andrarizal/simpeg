@@ -52,6 +52,7 @@
                 <th>Hari dan Tanggal</th>
                 <th>Masuk</th>
                 <th>Pulang</th>
+                <th>Metode Absen</th>
             </tr>
         </thead>
 
@@ -62,6 +63,7 @@
                 <td>{{ \Carbon\Carbon::parse($p->presence_date)->translatedFormat('l, d F Y') }}</td>
                 <td style="text-align: center;">{{ $p->check_in }}</td>
                 <td style="text-align: center;">{{ $p->check_out ?? '-' }}</td>
+                <td style="text-align: center;">{{ $p->method === 'network' ? 'Jaringan' : 'Lokasi' }}</td>
             </tr>
             @endforeach
         </tbody>

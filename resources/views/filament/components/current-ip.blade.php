@@ -1,5 +1,5 @@
 <div
-    x-data="{ ipClient: null, ipServer: null, deviceInfo: null }"
+    x-data="{ ipClient: null, ipServer: null, deviceInfo: null, radius: null, user_lat: null, user_lng: null }"
     x-init="
         async () => {
             try {

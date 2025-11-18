@@ -24,6 +24,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Mpdf\Mpdf;
 
 class PresenceResource extends Resource
 {
@@ -36,18 +37,6 @@ class PresenceResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'Presence';
 
-    public static function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                Hidden::make('staff_id')->default(Auth::user()->staff_id),
-                Hidden::make('presence_date')->default(now()->toDateString()),
-                Hidden::make('check_in')->default(now()),
-                Hidden::make('ssid'),
-                Hidden::make('ip'),
-            ]);
-    }
-
     public static function table(Table $table): Table
     {
         return $table
@@ -55,6 +44,42 @@ class PresenceResource extends Resource
             ->query(function (): Builder {
                 return Presence::where('staff_id', Auth::user()->staff_id);
             })
+            ->headerActions([
+                Action::make('exportPdf')
+                ->label('Export PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('warning')
+                ->action(function ($livewire) {
+                    $month = $livewire->tableFilters['month_year']['value'] ?? now()->format('Y-m');
+
+                    $data = Presence::query()
+                        ->with(['staff.chair', 'staff.unit'])
+                        ->where('staff_id', Auth::user()->staff_id)
+                        ->whereMonth('presence_date', substr($month, 5, 2))
+                        ->whereYear('presence_date', substr($month, 0, 4))
+                        ->orderBy('presence_date')
+                        ->get();
+
+                    $html = view('exports.presences', compact('data', 'month'))->render();
+
+                    $mpdf = new Mpdf([
+                        'mode' => 'utf-8',
+                        'format' => 'A4',
+                        'margin_left'   => 25, // 2.5 cm
+                        'margin_right'  => 20, // 2 cm
+                        'margin_top'    => 25, // 2.5 cm
+                        'margin_bottom' => 20, // 2 cm
+                    ]);
+
+                    $mpdf->WriteHTML($html);
+
+                    $pdfData = $mpdf->Output('', 'S');
+
+                    return response()->streamDownload(function () use ($pdfData) {
+                        echo $pdfData;
+                    }, "rekap-absen-$month.pdf");
+                }),
+            ])
             ->columns([
                 TextColumn::make('presence_date')
                     ->label('Tanggal')
@@ -67,6 +92,10 @@ class PresenceResource extends Resource
                 TextColumn::make('check_out')
                     ->label('Pulang')
                     ->time()
+                    ->sortable(),
+                TextColumn::make('method')
+                    ->label('Metode Presensi')
+                    ->formatStateUsing(fn ($state) => $state === 'network' ? 'Jaringan' : 'Lokasi')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()

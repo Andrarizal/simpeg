@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Livewire\DeviceCaptureWidget;
 use App\Models\Presence;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -19,6 +20,13 @@ class Dashboard extends BaseDashboard
     public function getColumns(): int | array
     {
         return 2;
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            DeviceCaptureWidget::class,
+        ];
     }
 
     protected function getHeaderActions(): array
@@ -64,6 +72,7 @@ class Dashboard extends BaseDashboard
                         'staff_id' => Auth::user()->staff_id,
                         'presence_date' => now()->toDateString(),
                         'check_in' => now()->toTimeString(),
+                        'method' => 'network',
                         'ip' => $device['ip'],
                         'fingerprint' => $device['device_id'],
                     ];
