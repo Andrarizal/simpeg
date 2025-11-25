@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Leaves\Tables;
 
 use App\Models\Leave;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -138,11 +139,12 @@ class ReplacerTable
                     ->label('Bersedia')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn ($record) => $record->is_replaced || $record->status == 'Ditolak' || $record->is_verified == 0 ? false : true)
+                    ->visible(fn ($record) => $record->is_replaced || $record->status == 'Ditolak' || $record->is_verified === 0 ? false : true)
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update([
                             'is_replaced' => true,
+                            'replacement_at' => Carbon::now()
                         ]);
                     }),
                 ViewAction::make(),

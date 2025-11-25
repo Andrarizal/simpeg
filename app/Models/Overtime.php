@@ -8,21 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Overtime extends Model
 {
-    protected $fillable = ['staff_id', 'overtime_date', 'start_time', 'end_time', 'command', 'hours', 'month_year', 'is_known', 'is_verified'];
+    protected $fillable = ['staff_id', 'overtime_date', 'start_time', 'end_time', 'command', 'hours', 'month_year', 'is_known', 'known_by', 'known_at', 'is_verified', 'verified_by', 'verified_at'];
 
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);
     }
 
+    public function knowner(): BelongsTo {
+        return $this->belongsTo(Staff::class);
+    }
+
+    public function verifier(): BelongsTo {
+        return $this->belongsTo(Staff::class);
+    }
+
     protected static function booted()
     {
-        // static::saving(function ($overtime) {
-        //     if ($overtime->start_time && $overtime->end_time) {
-        //         $start = strtotime($overtime->start_time);
-        //         $end = strtotime($overtime->end_time);
-        //         $overtime->hours = round(($end - $start) / 3600, 2);
-        //     }
-        // });
         static::creating(function ($overtime) {
             if (! $overtime->month_year && $overtime->overtime_date) {
                 $overtime->month_year = Carbon::parse($overtime->overtime_date)->format('Y-m');

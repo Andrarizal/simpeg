@@ -24,8 +24,18 @@ class StaffAdministrationInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->sip))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview SIP - ' . $record->staff->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                $url = $record->sip ? asset('storage/' . $record->sip) : null;
+                                
+                                return view('filament.components.preview-pdf-2', [
+                                    // GANTI INI: Gunakan route name yang baru dibuat
+                                    'url' => route('preview.administration', ['record' => $record->id])
+                                ]);
+                            })
                             ->color('warning')
                             ->outlined()
                     )

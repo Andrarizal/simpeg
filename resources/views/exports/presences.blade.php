@@ -20,13 +20,13 @@
             <td style="width: 60%; text-align: center; border: 0; vertical-align: top;">
                 <h3 style="margin: 0; font-size: 16px; font-weight: normal;">YAYASAN RSU MITRA PARAMEDIKA</h3>
                 <h2 style="margin: 0; font-size: 28px; font-weight: bold;"> RSU MITRA PARAMEDIKA</h2>
-                <p style="margin: 0; font-size: 14px;">
+                <p style="margin: 0; font-size: 12px;">
                     Jl. Raya Ngemplak, Area Sawah, Widodomartani, Kec. Ngemplak,
                 </p>
-                <p style="margin: 0; font-size: 14px;">
+                <p style="margin: 0; font-size: 12px;">
                     Sleman, Yogyakarta Telp. (0274) 4461098
                 </p>
-                <p style="margin: 0; font-size: 14px;">
+                <p style="margin: 0; font-size: 12px;">
                     Web: rsumipayk.co.id Email: rsumitraparamedika@yahoo.com
                 </p>
             </td>

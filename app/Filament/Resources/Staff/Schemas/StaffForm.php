@@ -145,7 +145,7 @@ class StaffForm
                             ->minDate(now())
                             ->required()
                             ->native(false),
-                        FileUpload::make('decree')
+                        FileUpload::make('contract.decree')
                             ->label('Surat Kontrak')
                             ->disk('public')
                             ->visibility('public')
@@ -172,7 +172,7 @@ class StaffForm
                             ->label('Golongan')
                             ->placeholder('IIIa, IVb, dst.')
                             ->required(),
-                        FileUpload::make('decree')
+                        FileUpload::make('appointment.decree')
                             ->label('Surat Pengangkatan Pegawai Tetap')
                             ->disk('public')
                             ->visibility('public')
@@ -196,7 +196,7 @@ class StaffForm
                         TextInput::make('adjustment.class')
                             ->label('Golongan Baru')
                             ->placeholder('IIIa, IVb, dst.'),
-                        FileUpload::make('decree')
+                        FileUpload::make('adjustment.decree')
                             ->label('Surat Penyesuaian')
                             ->disk('public')
                             ->visibility('public')
@@ -230,7 +230,7 @@ class StaffForm
                                     ->label('Tanggal Ijazah')
                                     ->required()
                                     ->native(false),
-                                FileUpload::make('certification')
+                                FileUpload::make('entryEducation.certification')
                                     ->label('Ijazah')
                                     ->disk('public')
                                     ->visibility('public')
@@ -271,7 +271,7 @@ class StaffForm
                                 DatePicker::make('workEducation.certificate_date')
                                     ->label('Tanggal Ijazah')
                                     ->native(false),
-                                FileUpload::make('certification')
+                                FileUpload::make('workEducation.certification')
                                     ->label('Ijazah')
                                     ->disk('public')
                                     ->visibility('public')
@@ -296,7 +296,7 @@ class StaffForm
                                     ->placeholder('ext. 2 Tahun'),
                                 TextInput::make('workExperience.admission')
                                     ->label('Pengakuan'),
-                                FileUpload::make('certification')
+                                FileUpload::make('workExperience.certification')
                                     ->label('Sertifikat')
                                     ->disk('public')
                                     ->visibility('public')

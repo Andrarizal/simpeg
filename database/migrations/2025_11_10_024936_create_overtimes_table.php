@@ -24,7 +24,18 @@ return new class extends Migration
             $table->decimal('hours', 8, 1)->nullable();
             $table->string('month_year');
             $table->unsignedTinyInteger('is_known')->nullable();
+            $table->unsignedTinyInteger('known_by')->nullable();
+            $table->foreignId('known_by')->nullable()->constrained(
+                table: 'staff',
+                indexName: 'overtimes_known_by'
+            )->nullOnDelete();
+            $table->date('known_at')->nullable();
             $table->unsignedTinyInteger('is_verified')->nullable();
+            $table->foreignId('verified_by')->nullable()->constrained(
+                table: 'staff',
+                indexName: 'overtimes_verified_by'
+            )->nullOnDelete();
+            $table->date('verified_at')->nullable();
             $table->timestamps();
 
             $table->index(['month_year', 'staff_id']);

@@ -1,15 +1,13 @@
 <?php
 
 use App\Models\Presence;
+use App\Models\StaffAdministration;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('welcome');
-});
 
 Route::get('/storage/profile/{filename}', function ($filename) {
     $path = storage_path('app/private/profile/' . $filename);
@@ -120,3 +118,30 @@ Route::post('/check-in-by-gps', function (Request $request){
     }
     return response()->json(['status' => 'ok']);
 });
+
+Route::get('/preview-pdf/{token}', function ($token) {
+    $path = storage_path("app/private/livewire-tmp/$token.pdf");
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/pdf',
+    ]);
+})->name('preview.pdf');
+
+Route::get('/preview-administration/{record}', function (StaffAdministration $record) {
+    // 1. Pastikan file ada
+    $path = storage_path('app/public/' . $record->sip);
+    
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    // 2. Return file dengan header 'inline' (PENTING!)
+    // Fungsi response()->file() otomatis mengatur Content-Type jadi application/pdf
+    // dan Content-Disposition jadi inline.
+    return response()->file($path);
+    
+})->name('preview.administration')->middleware('auth');

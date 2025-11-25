@@ -23,18 +23,30 @@ return new class extends Migration
             $table->date('end_date');
             $table->text('reason');
             $table->unsignedTinyInteger('remaining')->nullable();
+            $table->string('evidence')->nullable();
+            $table->unsignedTinyInteger('is_replaced')->nullable()->default(null);
             $table->foreignId('replacement_id')->constrained(
                 table: 'staff',
                 indexName: 'leaves_replacement_id'
             )->cascadeOnDelete();
-            $table->string('evidence')->nullable();
-            $table->unsignedTinyInteger('is_replaced')->nullable()->default(null);
+            $table->date('replacement_at')->nullable();
             $table->enum('status', ['Menunggu', 'Diketahui Kepala Unit', 'Diketahui Koordinator', 'Disetujui Kepala Seksi', 'Disetujui Direktur', 'Ditolak']);
+            $table->foreignId('known_by')->nullable()->constrained(
+                table: 'staff',
+                indexName: 'leaves_known_by'
+            )->nullOnDelete();
+            $table->date('known_at')->nullable();
             $table->foreignId('approver_id')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'leaves_approver_id'
             )->nullOnDelete();
+            $table->date('approve_at')->nullable();
             $table->unsignedTinyInteger('is_verified')->nullable()->default(null);
+            $table->foreignId('verified_by')->nullable()->constrained(
+                table: 'staff',
+                indexName: 'overtimes_verified_by'
+            )->nullOnDelete();
+            $table->date('verified_at')->nullable();
             $table->string('adverb')->nullable();
             $table->timestamps();
         });

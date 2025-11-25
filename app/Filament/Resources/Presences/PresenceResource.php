@@ -24,6 +24,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Mpdf\Mpdf;
 
 class PresenceResource extends Resource
@@ -49,7 +50,9 @@ class PresenceResource extends Resource
                 ->label('Export PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('warning')
-                ->action(function ($livewire) {
+                ->modalHeading('Preview Cuti')
+                ->modalWidth('5xl')
+                ->modalContent(function ($livewire) {
                     $month = $livewire->tableFilters['month_year']['value'] ?? now()->format('Y-m');
 
                     $data = Presence::query()
@@ -73,12 +76,23 @@ class PresenceResource extends Resource
 
                     $mpdf->WriteHTML($html);
 
-                    $pdfData = $mpdf->Output('', 'S');
+                    $token = Str::uuid()->toString();
+                    $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
 
-                    return response()->streamDownload(function () use ($pdfData) {
-                        echo $pdfData;
-                    }, "rekap-absen-$month.pdf");
-                }),
+                    file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+
+                    $livewire->pdfToken = $token;
+
+                    return view('filament.components.preview-pdf', [
+                        'token' => $token,
+                    ]);
+                })
+                ->modalHeading(false)
+                ->modalCancelAction(false)
+                ->modalSubmitAction(false)
+                ->modalCloseButton(false)
+                ->closeModalByClickingAway(false)
+                ->closeModalByEscaping(false),
             ])
             ->columns([
                 TextColumn::make('presence_date')

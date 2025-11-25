@@ -123,9 +123,18 @@ class ApproveTable
                     ->label('Ketahui')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn ($record) => ($record->is_known || Auth::user()->staff->chair->level < 3 || Auth::user()->role_id === 1) ? false : true)
+                    ->visible(function ($record) {
+                        if (Auth::user()->role_id === 1) return false;
+
+                        if (Auth::user()->staff->chair->level === 4){
+                            return $record->is_known > 0 ? false : true;
+                        } else if (Auth::user()->staff->chair->level === 3){
+                            return $record->is_known === 1 ? true : false;
+                        }
+                        return false;
+                    })
                     ->requiresConfirmation()
-                    ->action(function (array $data, $record) {
+                    ->action(function ($record) {
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
@@ -138,6 +147,11 @@ class ApproveTable
                                 'is_known' => 2,
                             ]);
                         }
+
+                        $record->update([
+                            'known_by' => $user->staff_id,
+                            'known_at' => Carbon::now()
+                        ]);
 
                         Notification::make()
                             ->title('Lembur diketahui')
@@ -153,6 +167,8 @@ class ApproveTable
                     ->action(function ($record) {
                         $record->update([
                             'is_verified' => 1,
+                            'verified_by' => Auth::user()->staff_id,
+                            'verified_at' => Carbon::now()
                         ]);
 
                         Notification::make()

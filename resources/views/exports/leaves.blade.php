@@ -20,13 +20,13 @@
             <td style="width: 60%; text-align: center; border: 0; vertical-align: top;">
                 <h3 style="margin: 0; font-size: 16px; font-weight: normal;">YAYASAN RSU MITRA PARAMEDIKA</h3>
                 <h2 style="margin: 0; font-size: 28px; font-weight: bold;"> RSU MITRA PARAMEDIKA</h2>
-                <p style="margin: 0; font-size: 14px;">
+                <p style="margin: 0; font-size: 12px;">
                     Jl. Raya Ngemplak, Area Sawah, Widodomartani, Kec. Ngemplak,
                 </p>
-                <p style="margin: 0; font-size: 14px;">
+                <p style="margin: 0; font-size: 12px;">
                     Sleman, Yogyakarta Telp. (0274) 4461098
                 </p>
-                <p style="margin: 0; font-size: 14px;">
+                <p style="margin: 0; font-size: 12px;">
                     Web: rsumipayk.co.id Email: rsumitraparamedika@yahoo.com
                 </p>
             </td>
@@ -69,11 +69,11 @@
                 <td colspan="2"><b>Rincian Tanggal:</b><br>{{ \Carbon\Carbon::parse($record->start_date)->translatedFormat('d F Y') }} - {{ \Carbon\Carbon::parse($record->end_date)->translatedFormat('d F Y') }}</td>
             </tr>
             <tr>
-                <th style="width: 25%">Sisa Cuti Saat ini</th>
+                <th style="width: 25%">Sisa {{ $record->type }} Saat ini</th>
                 <td colspan="2">{{ $record->remaining }}</td>
             </tr>
             <tr>
-                <th style="width: 25%">Sisa Cuti Jika Disetujui</th>
+                <th style="width: 25%">Sisa {{ $record->type }} Jika Disetujui</th>
                 <td colspan="2">{{ ($record->remaining - \Carbon\Carbon::parse($record->start_date)->diffInDays($record->end_date)) }}</td>
             </tr>
         </tbody>
@@ -83,11 +83,19 @@
         <tbody>
             <tr>
                 <th>Nama Pengganti</th>
+                <th>TTD Pengganti</th>
                 <th>No Telp Pengganti</th>
             </tr>
             <tr>
-                <td>{{ $record->replacement->name }}</td>
-                <td style="width: 33%">{{ $record->replacement->phone }}</td>
+                <td style="width: 40%; text-align: center">{{ $record->replacement->name }}</td>
+                <td align="center" style="width: 25%">
+                    <?php
+                    $replace = $record->is_replaced === 1 ? true : false;
+                    if ($replace){ ?>
+                        <img src="data:image/svg+xml;base64,{{ $qrCode['replace'] }}" style="width: 72px">
+                    <?php } ?>
+                </td>
+                <td style="width: 35%; text-align: center">{{ $record->replacement->phone }}</td>
             </tr>
         </tbody>
     </table>
@@ -106,8 +114,21 @@
                 <th>Ditolak</th>
             </tr>
             <tr>
-                <td>{{ str_contains($record->status, 'Disetujui') ? '✓' : '' }}</td>
-                <td>{{ str_contains($record->status, 'Ditolak') ? '✓' : '' }}</td>
+                <?php if (str_contains($record->status, 'Disetujui')) { ?>
+                    <td style="text-align: center; font-weight: bold; font-size: 30px;">✓</td>
+                <?php } else if (str_contains($record->status, 'Ditolak')) { ?>
+                    <td></td>
+                <?php } else { ?>
+                    <td style="text-align: center; color: #ccc">(Menunggu)</td>
+                <?php } ?>
+
+                <?php if (str_contains($record->status, 'Ditolak')) { ?>
+                    <td style="text-align: center;font-weight: bold; font-size: 30px;">✓</td>
+                <?php } else if (str_contains($record->status, 'Disetujui')) { ?>
+                    <td></td>
+                <?php } else { ?>
+                    <td style="text-align: center; color: #ccc">(Menunggu)</td>
+                <?php } ?>
             </tr>
         </tbody>
     </table>
@@ -122,36 +143,32 @@
             <tr>
                 <td style="text-align: center">Atasan Langsung</td>
                 <td style="text-align: center">Wadir SDM</td>
-                <td style="text-align: center">Direktur</td>
+                <td style="text-align: center">{{ $record->staff->chair->level === 4 ? 'Kepala Seksi' : 'Direktur'}}</td>
             </tr>
             <tr>
                 <td style="text-align: center; vertical-align: bottom">
                     <?php
                     $known = str_contains($record->status, 'Disetujui') || str_contains($record->status, 'Diketahui') ? true : false;
                     if ($known){ ?>
-                        <img src="{{ public_path('img/rsumpyk.png') }}" style="
-                            position: absolute;
-                            transform: scale(1.5) rotate(-10deg);
-                            width: 64px;
-                            opacity: 0.25;
-                            z-index: 10;
-                            pointer-events: none;
-                            filter: grayscale(1) brightness(0) sepia(1) hue-rotate(180deg) saturate(600%);">
+                        <img src="data:image/svg+xml;base64,{{ $qrCode['known'] }}" style="width: 84px">
+                    <?php } else { ?>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
                     <?php } ?>
-                    <p style="margin: 0; font-size: 14px;">{{ $head }}</p>
+                    <p style="margin: 0; font-size: 14px;">{{ $head->name }}</p>
                 </td>
                 <td style="text-align: center; vertical-align: bottom">
                     <?php
                     $verified = $record->is_verified === 1 ? true : false;
                     if ($verified){ ?>
-                        <img src="{{ public_path('img/rsumpyk.png') }}" style="
-                            position: absolute;
-                            transform: scale(1.5) rotate(-10deg);
-                            width: 64px;
-                            opacity: 0.25;
-                            z-index: 10;
-                            pointer-events: none;
-                            filter: grayscale(1) brightness(0) sepia(1) hue-rotate(180deg) saturate(600%);">
+                        <img src="data:image/svg+xml;base64,{{ $qrCode['verified'] }}" style="width: 84px">
+                    <?php } else { ?>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
                     <?php } ?>
                     <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
                 </td>
@@ -159,20 +176,17 @@
                     <?php
                     $approve = str_contains($record->status, 'Disetujui') ? true : false;
                     if ($approve){ ?>
-                        <img src="{{ public_path('img/rsumpyk.png') }}" style="
-                            position: absolute;
-                            transform: scale(1.5) rotate(-10deg);
-                            width: 64px;
-                            opacity: 0.25;
-                            z-index: 10;
-                            pointer-events: none;
-                            filter: grayscale(1) brightness(0) sepia(1) hue-rotate(180deg) saturate(600%);">
+                        <img src="data:image/svg+xml;base64,{{ $qrCode['approve'] }}" style="width: 84px">
+                    <?php } else { ?>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
                     <?php } ?>
-                    <p style="margin: 0; font-size: 14px;">{{ $head }}</p>
+                    <p style="margin: 0; font-size: 14px;">{{ $approver }}</p>
                 </td>
             </tr>
         </tbody>
     </table>
-    <br><br>
 </body>
 </html>

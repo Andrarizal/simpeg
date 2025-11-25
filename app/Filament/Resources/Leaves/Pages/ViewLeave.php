@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leaves\Pages;
 
+use App\Filament\Pages\Signature;
 use App\Filament\Resources\Leaves\LeaveResource;
 use App\Models\Leave;
 use App\Models\Staff;
@@ -9,11 +10,15 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Mpdf\Mpdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ViewLeave extends ViewRecord
 {
     protected static string $resource = LeaveResource::class;
+
+    public ?string $pdfToken = null;
 
     protected function getHeaderActions(): array
     {
@@ -114,11 +119,69 @@ class ViewLeave extends ViewRecord
                     }
                     return false;
                 })
-                ->action(function ($record) {
-                    $head = Staff::select('name')->where('chair_id', $record->staff->chair->head_id)->first()->name;
+                ->modalHeading('Preview Cuti')
+                ->modalWidth('5xl')
+                ->modalContent(function ($record) {
+                    $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
                     $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
 
-                    $html = view('exports.leaves', compact('record', 'head', 'sdm'))->render();
+                    $approver = '';
+                    if ($record->staff->chair->level === 4){
+                        $approver = Staff::where('chair_id', $head->chair->head_id)->first()->name;
+                    } else {
+                        $approver = Staff::where('chair_id', 1)->first()->name;
+                    }
+
+                    $signData = [
+                        'replace' => null,
+                        'known' => null,
+                        'approve' => null,
+                        'verified' => null,
+                    ];
+
+                    if ($record->is_replaced) {
+                        $replaceData = [
+                            'replace_by' => $record->replacement_id,
+                            'replace_at' => $record->replacement_at
+                        ];
+                        $replace_url = Signature::getUrl($replaceData);
+                        $signData['replace'] = base64_encode(QrCode::format('svg')->size(100)->generate($replace_url));
+                    }
+
+                    if ($record->known_by) {
+                        $knownData = [
+                            'known_by' => $record->known_by,
+                            'known_at' => $record->known_at
+                        ];
+                        $known_url = Signature::getUrl($knownData);
+                        $signData['known'] = base64_encode(QrCode::format('svg')->size(100)->generate($known_url));
+                    }
+
+                    if (str_contains($record->status, 'Disetujui')) {
+                        $approveData = [
+                            'approve_by' => $record->approver_id,
+                            'approve_at' => $record->approve_at
+                        ];
+                        $approve_url = Signature::getUrl($approveData);
+                        $signData['approve'] = base64_encode(QrCode::format('svg')->size(100)->generate($approve_url));
+                    }
+
+                    if ($record->is_verified) {
+                        $verifiedData = [
+                            'verified_by' => $record->verified_by,
+                            'verified_at' => $record->verified_at
+                        ];
+                        $verified_url = Signature::getUrl($verifiedData);
+                        $signData['verified'] = base64_encode(QrCode::format('svg')->size(100)->generate($verified_url));
+                    }
+
+                    $html = view('exports.leaves', [
+                        'record' => $record,
+                        'head' => $head,
+                        'sdm' => $sdm,
+                        'approver' => $approver,
+                        'qrCode' => $signData
+                    ])->render();
 
                     $mpdf = new Mpdf([
                         'mode' => 'utf-8',
@@ -131,12 +194,36 @@ class ViewLeave extends ViewRecord
 
                     $mpdf->WriteHTML($html);
 
-                    $pdfData = $mpdf->Output('', 'S');
+                    $token = Str::uuid()->toString();
+                    $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
 
-                    return response()->streamDownload(function () use ($pdfData) {
-                        echo $pdfData;
-                    }, 'permohonan-' . $record->type . '-' . $record->staff->name . '.pdf');
-                }),
+                    file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+
+                    $this->pdfToken = $token;
+
+                    return view('filament.components.preview-pdf', [
+                        'token' => $token,
+                    ]);
+                })
+                ->modalHeading(false)
+                ->modalCancelAction(false)
+                ->modalSubmitAction(false)
+                ->modalCloseButton(false)
+                ->closeModalByClickingAway(false)
+                ->closeModalByEscaping(false),
         ];
+    }
+
+    
+    public function closePreviewAndCleanup() {
+        if ($this->pdfToken) {
+            $path = storage_path("app/private/livewire-tmp/{$this->pdfToken}.pdf");
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+            $this->pdfToken = null;
+        }
+
+        $this->unmountAction();
     }
 }

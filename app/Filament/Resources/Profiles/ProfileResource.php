@@ -25,7 +25,7 @@ class ProfileResource extends Resource
     protected static ?int $navigationSort = 1;
     protected static UnitEnum|string|null $navigationGroup = 'Kepegawaian';
     
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::User;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserCircle;
 
     protected static ?string $recordTitleAttribute = 'Profile';
 

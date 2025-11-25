@@ -117,6 +117,6 @@ return [
 
     'system_route_prefix' => 'filament',
 
-    'panel' => 'admin',
+    'panel' => '/',
 
 ];

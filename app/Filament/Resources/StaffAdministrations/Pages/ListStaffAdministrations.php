@@ -22,7 +22,7 @@ class ListStaffAdministrations extends ListRecords
 
             if ($staff) {
                 $this->redirect(
-                    route('filament.admin.resources.staff-administrations.edit', $staff)
+                    route('filament.admin.resources.staff-administrations.view', $staff)
                 );
             }
         }

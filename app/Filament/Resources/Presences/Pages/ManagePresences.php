@@ -17,6 +17,8 @@ use Mpdf\Mpdf;
 class ManagePresences extends ManageRecords
 {
     protected static string $resource = PresenceResource::class;
+    
+    public ?string $pdfToken = null;
 
     protected function getHeaderWidgets(): array
     {
@@ -124,5 +126,18 @@ class ManagePresences extends ManageRecords
                 ->modalContent(fn () => view('filament.components.map-modal')),
                 
         ];
+    }
+
+    
+    public function closePreviewAndCleanup() {
+        if ($this->pdfToken) {
+            $path = storage_path("app/private/livewire-tmp/{$this->pdfToken}.pdf");
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+            $this->pdfToken = null;
+        }
+
+        $this->unmountAction();
     }
 }

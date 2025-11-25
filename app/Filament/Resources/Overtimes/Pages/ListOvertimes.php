@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Overtimes\Pages;
 
+use App\Filament\Pages\Signature;
 use App\Filament\Resources\Overtimes\OvertimeResource;
 use App\Filament\Resources\Overtimes\Tables\OvertimesTable;
 use App\Filament\Resources\Overtimes\Tables\StaffsTable;
@@ -13,11 +14,17 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Mpdf\Mpdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ListOvertimes extends ListRecords
 {
     protected static string $resource = OvertimeResource::class;
+
+    public ?string $pdfToken = null;
+    public ?bool $verified = true;
+    public ?bool $known = true;
 
     protected function getHeaderActions(): array
     {
@@ -27,7 +34,9 @@ class ListOvertimes extends ListRecords
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('warning')
                 ->visible(fn () => $this->activeTab === 'pengajuan' ?? false)
-                ->action(function ($livewire) {
+                ->modalHeading('Preview Cuti')
+                ->modalWidth('5xl')
+                ->modalContent(function ($livewire) {
                     $month = $livewire->tableFilters['month_year']['value'] ?? now()->format('m-Y');
 
                     $data = Overtime::query()
@@ -40,7 +49,41 @@ class ListOvertimes extends ListRecords
                     $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()->name;
                     $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
 
-                    $html = view('exports.overtimes', compact('data', 'month', 'head', 'sdm'))->render();
+                    foreach ($data as $i => $p) {
+                        $this->verified = $p->is_verified ?? false;
+                        $this->known = $p->is_known === 2 ?? false;
+                    }
+
+                    $signData = [
+                        'known' => null,
+                        'verified' => null,
+                    ];
+
+                    if ($this->known) {
+                        $knownData = [
+                            'known_by' => $data[0]['known_by'],
+                            'known_at' => $data[0]['known_at']
+                        ];
+                        $known_url = Signature::getUrl($knownData);
+                        $signData['known'] = base64_encode(QrCode::format('svg')->size(100)->generate($known_url));
+                    } 
+
+                    if ($this->verified) {
+                        $verifiedData = [
+                            'verified_by' => $data[0]['verified_by'],
+                            'verified_at' => $data[0]['verified_at']
+                        ];
+                        $verified_url = Signature::getUrl($verifiedData);
+                        $signData['verified'] = base64_encode(QrCode::format('svg')->size(100)->generate($verified_url));
+                    } 
+
+                    $html = view('exports.overtimes', [
+                        'data' => $data,
+                        'month' => $month,
+                        'head' => $head,
+                        'sdm' => $sdm,
+                        'qrCode' => $signData
+                    ])->render();
 
                     $mpdf = new Mpdf([
                         'mode' => 'utf-8',
@@ -53,12 +96,23 @@ class ListOvertimes extends ListRecords
 
                     $mpdf->WriteHTML($html);
 
-                    $pdfData = $mpdf->Output('', 'S');
+                    $token = Str::uuid()->toString();
+                    $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
 
-                    return response()->streamDownload(function () use ($pdfData) {
-                        echo $pdfData;
-                    }, "rekap-lembur-$month.pdf");
-                }),
+                    file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+
+                    $this->pdfToken = $token;
+
+                    return view('filament.components.preview-pdf', [
+                        'token' => $token,
+                    ]);
+                })
+                ->modalHeading(false)
+                ->modalCancelAction(false)
+                ->modalSubmitAction(false)
+                ->modalCloseButton(false)
+                ->closeModalByClickingAway(false)
+                ->closeModalByEscaping(false),
             CreateAction::make()
                 ->label('Ajukan Lembur')
                 ->visible(function () {
@@ -104,5 +158,17 @@ class ListOvertimes extends ListRecords
         }
 
         return $table;
+    }
+
+    public function closePreviewAndCleanup() {
+        if ($this->pdfToken) {
+            $path = storage_path("app/private/livewire-tmp/{$this->pdfToken}.pdf");
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+            $this->pdfToken = null;
+        }
+
+        $this->unmountAction();
     }
 }

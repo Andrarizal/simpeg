@@ -2,22 +2,18 @@
 
 namespace App\Filament\Resources\StaffAdministrations;
 
-use App\Filament\Resources\StaffAdministrations\Pages\CreateStaffAdministration;
 use App\Filament\Resources\StaffAdministrations\Pages\EditStaffAdministration;
 use App\Filament\Resources\StaffAdministrations\Pages\ListStaffAdministrations;
 use App\Filament\Resources\StaffAdministrations\Pages\ViewStaffAdministration;
 use App\Filament\Resources\StaffAdministrations\Schemas\StaffAdministrationForm;
 use App\Filament\Resources\StaffAdministrations\Schemas\StaffAdministrationInfolist;
 use App\Filament\Resources\StaffAdministrations\Tables\StaffAdministrationsTable;
-use App\Models\Staff;
 use App\Models\StaffAdministration;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class StaffAdministrationResource extends Resource

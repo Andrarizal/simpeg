@@ -90,8 +90,8 @@
     <br><br>
 
     <div style="width: 100%">
-        <div align="left" style="width: 50%;float: left;max-height: 130px; text-align: center; vertical-align: top;">
-            <div style="position: relative; z-index: 2; width: 100%;">
+        <div align="left" style="width: 50%;float: left;height: 130px; text-align: center; vertical-align: top;">
+            <div style="position: relative; width: 100%;">
                 <p style="margin: 0; font-size: 14px; z-index: 1">Mengetahui Atasan</p>
                 <?php
                 $known = true;
@@ -99,19 +99,14 @@
                     $known = $p->is_known === 2 ?? false;
                 }
                 if ($known){ ?>
-                    <img src="{{ public_path('img/rsumpyk.png') }}" style="
-                        position: absolute;
-                        transform: translateY(-20%);
-                        width: 100px;
-                        opacity: 0.25;
-                        z-index: 10;
-                        pointer-events: none;
-                        filter: grayscale(1) brightness(0) sepia(1) hue-rotate(180deg) saturate(600%);">
+                    <img src="data:image/svg+xml;base64,{{ $qrCode['known'] }}" style="width: 96px">
+                <?php } else { ?>
+                    <div style="height: 15%"></div>
                 <?php } ?>
-                <p style="margin: 0; font-size: 14px; margin-top: -10%">{{ $head }}</p>
+                <p style="margin: 0; font-size: 14px;">{{ $head }}</p>
             </div>
         </div>
-        <div align="left" style="width: 50%;float: left;max-height: 130px; text-align: center; vertical-align: top;">
+        <div align="left" style="width: 50%;float: left;height: 130px; text-align: center; vertical-align: top;">
             <div style="position: relative; width: 100%;">
                 <p style="margin: 0; font-size: 14px; z-index: 1">Verifikasi SDM</p>
                 <?php
@@ -120,16 +115,11 @@
                     $verified = $p->is_verified ?? false;
                 }
                 if ($verified){ ?>
-                <img src="{{ public_path('img/rsumpyk.png') }}" style="
-                    position: absolute;
-                    transform: translateY(-20%);
-                    width: 100px;
-                    opacity: 0.25;
-                    z-index: 10;
-                    pointer-events: none;
-                    filter: grayscale(1) brightness(0) sepia(1) hue-rotate(180deg) saturate(600%);">
+                <img src="data:image/svg+xml;base64,{{ $qrCode['verified'] }}" style="width: 96px;">
+                <?php } else { ?>
+                    <div style="height: 15  %"></div>
                 <?php } ?>
-                <p style="margin: 0; font-size: 14px; margin-top: -10%">{{ $sdm }}</p>
+                <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
             </div>
         </div>
     </div>
