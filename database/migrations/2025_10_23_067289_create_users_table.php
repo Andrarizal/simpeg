@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreignId('staff_id')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'users_staff_id'
-            )->nullOnDelete();
+            )->cascadeOnDelete();
             $table->timestamps();
         });
 

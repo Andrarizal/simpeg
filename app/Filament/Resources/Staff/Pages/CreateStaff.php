@@ -29,7 +29,7 @@ class CreateStaff extends CreateRecord
             StaffContract::create([
                 'staff_id' => $row->id,
                 'contract_number' => $data['contract']['contract_number'],
-                'decree' => $data['contract']['decree'],
+                'decree' => collect($data['contract']['decree'])->first() ?? null,
                 'start_date' => $data['contract']['start_date'] ?? null,
                 'end_date' => $data['contract']['end_date'] ?? null,
             ]);
@@ -40,7 +40,7 @@ class CreateStaff extends CreateRecord
                 'staff_id' => $row->id,
                 'decree_number' => $data['appointment']['decree_number'],
                 'decree_date' => $data['appointment']['decree_date'] ?? null,
-                'decree' => $data['appointment']['decree'] ?? null,
+                'decree' => collect($data['appointment']['decree'])->first() ?? null,
                 'class' => $data['appointment']['class'] ?? null,
             ]);
         }
@@ -50,7 +50,7 @@ class CreateStaff extends CreateRecord
                 'staff_id' => $row->id,
                 'decree_number' => $data['adjustment']['decree_number'],
                 'decree_date' => $data['adjustment']['decree_date'] ?? null,
-                'decree' => $data['adjustment']['decree'] ?? null,
+                'decree' => collect($data['adjustment']['decree'])->first() ?? null,
                 'class' => $data['adjustment']['class'] ?? null,
             ]);
         }
@@ -62,7 +62,7 @@ class CreateStaff extends CreateRecord
                 'institution' => $data['entryEducation']['institution'] ?? null,
                 'certificate_number' => $data['entryEducation']['certificate_number'] ?? null,
                 'certificate_date' => $data['entryEducation']['certificate_date'] ?? null,
-                'certification' => $data['entryEducation']['certification'] ?? null,
+                'certificate' => collect($data['entryEducation']['certificate'])->first() ?? null,
                 'nonformal_education' => $data['entryEducation']['nonformal_education'] ?? null,
                 'adverb' => $data['entryEducation']['adverb']?? null,
             ]);
@@ -76,7 +76,7 @@ class CreateStaff extends CreateRecord
                 'institution' => $data['workEducation']['institution'] ?? null,
                 'certificate_number' => $data['workEducation']['certificate_number'] ?? null,
                 'certificate_date' => $data['workEducation']['certificate_date'] ?? null,
-                'certification' => $data['workEducation']['certification'] ?? null,
+                'certificate' => collect($data['workEducation']['certificate'])->first() ?? null,
             ]);
         }
 
@@ -85,7 +85,7 @@ class CreateStaff extends CreateRecord
                 'staff_id' => $row->id,
                 'institution' => $data['workExperience']['institution'],
                 'work_length' => $data['workExperience']['work_length'] ?? null,
-                'certification' => $data['workExperience']['certification'] ?? null,
+                'certificate' => collect($data['workExperience']['certificate'])->first() ?? null,
                 'admission' => $data['workExperience']['admission'] ?? null,
             ]);
         }

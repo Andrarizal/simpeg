@@ -77,8 +77,19 @@ class StaffInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->contract->decree))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview Surat Kontrak - ' . $record->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'contract',
+                                        'id' => $record->id,
+                                        'field' => 'decree'
+                                    ])
+                                ]);
+                            })
                             ->outlined()
                     ),
 
@@ -105,8 +116,19 @@ class StaffInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->appointment->decree))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview Surat Pengangkatan Pegawai Tetap - ' . $record->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'appointment',
+                                        'id' => $record->id,
+                                        'field' => 'decree'
+                                    ])
+                                ]);
+                            })
                             ->outlined()
                     ),
 
@@ -133,8 +155,19 @@ class StaffInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->adjustment->decree))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview Surat Penyesuaian Golongan Pegawai Tetap - ' . $record->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'adjustment',
+                                        'id' => $record->id,
+                                        'field' => 'decree'
+                                    ])
+                                ]);
+                            })
                             ->outlined()
                     ),
 
@@ -165,8 +198,19 @@ class StaffInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->entryEducation->decree))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview Ijazah Pendidikan Saat Masuk - ' . $record->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'entry_education',
+                                        'id' => $record->id,
+                                        'field' => 'certificate'
+                                    ])
+                                ]);
+                            })
                             ->outlined()
                     ),
                 TextEntry::make('entryEducation.nonformal_education')
@@ -209,8 +253,19 @@ class StaffInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->workEducation->decree))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview Ijazah Pendidikan Saat Bekerja - ' . $record->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'work_education',
+                                        'id' => $record->id,
+                                        'field' => 'certificate'
+                                    ])
+                                ]);
+                            })
                             ->outlined()
                     ),
 
@@ -228,7 +283,7 @@ class StaffInfolist
                     ->placeholder('-')
                     ->visible(fn ($record) => $record->workExperience),
                 TextEntry::make('workExperience.certificate')
-                    ->label('Ijazah Pendidikan Saat Masuk')
+                    ->label('Sertifikat')
                     ->visible(fn ($record) => $record->workExperience)
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
@@ -237,8 +292,19 @@ class StaffInfolist
                             ->label('Lihat')
                             ->button()
                             ->url(fn ($record) => asset('storage/' . $record->workExperience->decree))
-                            ->openUrlInNewTab()
-                            ->outlined()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview Sertifikat - ' . $record->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'experience',
+                                        'id' => $record->id,
+                                        'field' => 'certificate'
+                                    ])
+                                ]);
+                            })
                     ),
             ]);
     }

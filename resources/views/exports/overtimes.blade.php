@@ -117,7 +117,7 @@
                 if ($verified){ ?>
                 <img src="data:image/svg+xml;base64,{{ $qrCode['verified'] }}" style="width: 96px;">
                 <?php } else { ?>
-                    <div style="height: 15  %"></div>
+                    <div style="height: 15%"></div>
                 <?php } ?>
                 <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
             </div>

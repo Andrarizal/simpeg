@@ -29,11 +29,12 @@ class StaffAdministrationInfolist
                             ->modalSubmitAction(false)
                             ->modalCancelAction(false)
                             ->modalContent(function ($record) {
-                                $url = $record->sip ? asset('storage/' . $record->sip) : null;
-                                
                                 return view('filament.components.preview-pdf-2', [
-                                    // GANTI INI: Gunakan route name yang baru dibuat
-                                    'url' => route('preview.administration', ['record' => $record->id])
+                                    'url' => route('preview.administration', [
+                                        'model' => 'administration',
+                                        'id' => $record->id,
+                                        'field' => 'sip'
+                                    ])
                                 ]);
                             })
                             ->color('warning')
@@ -43,15 +44,26 @@ class StaffAdministrationInfolist
                     ->columnSpanFull()
                     ->placeholder('Belum Mengupload'),
                 TextEntry::make('Surat Tanda Registrasi')
-                    ->label('STR')
+                    ->label('Surat Tanda Registrasi')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
                     ->suffixAction(
                         Action::make('show')
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->str))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview STR - ' . $record->staff->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'administration',
+                                        'id' => $record->id,
+                                        'field' => 'str'
+                                    ])
+                                ]);
+                            })
                             ->color('warning')
                             ->outlined()
                     )
@@ -66,8 +78,19 @@ class StaffAdministrationInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->mcu))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview MCU - ' . $record->staff->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'administration',
+                                        'id' => $record->id,
+                                        'field' => 'mcu'
+                                    ])
+                                ]);
+                            })
                             ->color('warning')
                             ->outlined()
                     )
@@ -82,8 +105,19 @@ class StaffAdministrationInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->spk))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview SPK - ' . $record->staff->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'administration',
+                                        'id' => $record->id,
+                                        'field' => 'spk'
+                                    ])
+                                ]);
+                            })
                             ->color('warning')
                             ->outlined()
                     )
@@ -98,8 +132,19 @@ class StaffAdministrationInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->rkk))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview RKK - ' . $record->staff->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'administration',
+                                        'id' => $record->id,
+                                        'field' => 'rkk'
+                                    ])
+                                ]);
+                            })
                             ->color('warning')
                             ->outlined()
                     )
@@ -114,8 +159,19 @@ class StaffAdministrationInfolist
                             ->icon('heroicon-o-eye')
                             ->label('Lihat')
                             ->button()
-                            ->url(fn ($record) => asset('storage/' . $record->utw))
-                            ->openUrlInNewTab()
+                            ->modalWidth('5xl')
+                            ->modalHeading(fn ($record) => 'Preview UTW - ' . $record->staff->name)
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false)
+                            ->modalContent(function ($record) {
+                                return view('filament.components.preview-pdf-2', [
+                                    'url' => route('preview.administration', [
+                                        'model' => 'administration',
+                                        'id' => $record->id,
+                                        'field' => 'utw'
+                                    ])
+                                ]);
+                            })
                             ->color('warning')
                             ->outlined()
                     )

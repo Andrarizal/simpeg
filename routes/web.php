@@ -1,8 +1,13 @@
 <?php
 
 use App\Models\Presence;
+use App\Models\StaffAdjustment;
 use App\Models\StaffAdministration;
-use Filament\Facades\Filament;
+use App\Models\StaffAppointment;
+use App\Models\StaffContract;
+use App\Models\StaffEntryEducation;
+use App\Models\StaffWorkEducation;
+use App\Models\StaffWorkExperience;
 use Filament\Notifications\Notification;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
@@ -131,17 +136,38 @@ Route::get('/preview-pdf/{token}', function ($token) {
     ]);
 })->name('preview.pdf');
 
-Route::get('/preview-administration/{record}', function (StaffAdministration $record) {
-    // 1. Pastikan file ada
-    $path = storage_path('app/public/' . $record->sip);
+Route::get('/preview-administration/{model}/{id}/{field}', function ($model, $id, $field) {
+    $allowedModels = [
+        'administration' => StaffAdministration::class,
+        'entry_education' => StaffEntryEducation::class,
+        'work_education' => StaffWorkEducation::class,
+        'experience' => StaffWorkExperience::class,
+        'contract' => StaffContract::class,
+        'appointment' => StaffAppointment::class,
+        'adjustment' => StaffAdjustment::class,
+    ];
+
+    if (!array_key_exists($model, $allowedModels)) {
+        abort(404);
+    }
+
+    $class = $allowedModels[$model];
+    $record = '';
+    if ($model === 'administration'){
+        $record = $class::findOrFail($id);
+    } else {
+        $record = $class::where('staff_id', $id)->first();
+    }
+
+    if (!isset($record->$field)) {
+        abort(404);
+    }
+
+    $path = storage_path('app/public/' . $record->$field);
     
     if (!file_exists($path)) {
         abort(404);
     }
 
-    // 2. Return file dengan header 'inline' (PENTING!)
-    // Fungsi response()->file() otomatis mengatur Content-Type jadi application/pdf
-    // dan Content-Disposition jadi inline.
     return response()->file($path);
-    
 })->name('preview.administration')->middleware('auth');

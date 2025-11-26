@@ -14,6 +14,8 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class StaffForm
@@ -56,11 +58,6 @@ class StaffForm
                     ->options(['L' => 'Laki-laki', 'P' => 'Perempuan'])
                     ->inline()
                     ->required(),
-                Select::make('marital')
-                    ->label('Status Perkawinan')
-                    ->options(['Lajang' => 'Lajang', 'Menikah' => 'Menikah', 'Cerai Hidup' => 'Cerai Hidup', 'Cerai Mati' => 'Cerai Mati'])
-                    ->required()
-                    ->native(false),
                 Textarea::make('origin')
                     ->label('Alamat Asli')
                     ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
@@ -89,6 +86,11 @@ class StaffForm
                 Select::make('other_phone_adverb')
                     ->label('Hubungan dengan Kerabat')
                     ->options(['Suami' => 'Suami', 'Istri' => 'Istri', 'Orang tua' =>  'Orang tua', 'Wali' => 'Wali', 'Saudara' => 'Saudara', 'Lainnya' => 'Lainnya'])
+                    ->required()
+                    ->native(false),
+                Select::make('marital')
+                    ->label('Status Perkawinan')
+                    ->options(['Lajang' => 'Lajang', 'Menikah' => 'Menikah', 'Cerai Hidup' => 'Cerai Hidup', 'Cerai Mati' => 'Cerai Mati'])
                     ->required()
                     ->native(false),
                 DatePicker::make('entry_date')
@@ -230,7 +232,7 @@ class StaffForm
                                     ->label('Tanggal Ijazah')
                                     ->required()
                                     ->native(false),
-                                FileUpload::make('entryEducation.certification')
+                                FileUpload::make('entryEducation.certificate')
                                     ->label('Ijazah')
                                     ->disk('public')
                                     ->visibility('public')
@@ -271,7 +273,7 @@ class StaffForm
                                 DatePicker::make('workEducation.certificate_date')
                                     ->label('Tanggal Ijazah')
                                     ->native(false),
-                                FileUpload::make('workEducation.certification')
+                                FileUpload::make('workEducation.certificate')
                                     ->label('Ijazah')
                                     ->disk('public')
                                     ->visibility('public')
@@ -296,7 +298,7 @@ class StaffForm
                                     ->placeholder('ext. 2 Tahun'),
                                 TextInput::make('workExperience.admission')
                                     ->label('Pengakuan'),
-                                FileUpload::make('workExperience.certification')
+                                FileUpload::make('workExperience.certificate')
                                     ->label('Sertifikat')
                                     ->disk('public')
                                     ->visibility('public')

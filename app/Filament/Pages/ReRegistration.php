@@ -11,11 +11,13 @@ use App\Models\StaffStatus;
 use App\Models\StaffWorkEducation;
 use App\Models\StaffWorkExperience;
 use App\Models\Unit;
+use App\Models\User;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -64,6 +66,7 @@ class ReRegistration extends Page implements HasSchemas
         // E. ISI FORM SECARA OTOMATIS (AUTO-FILL)
         // Kita isi wadah $data dengan data dari database
         $this->form->fill([
+            'token' => $token,
             'nik' => $preStaff->nik,
             'nip' => $preStaff->nip,
             'name' => $preStaff->name,
@@ -90,6 +93,7 @@ class ReRegistration extends Page implements HasSchemas
                         ->schema([
                             Section::make('Profil Pegawai')
                                 ->schema([
+                                    Hidden::make('token'),
                                     FileUpload::make('pas')
                                         ->label('Foto Profil')
                                         ->image()
@@ -126,6 +130,7 @@ class ReRegistration extends Page implements HasSchemas
                                     TextInput::make('password')
                                         ->label('Password')
                                         ->password()
+                                        ->revealable()
                                         ->minLength(6)
                                         ->required(),
                                 ]),
@@ -248,7 +253,7 @@ class ReRegistration extends Page implements HasSchemas
                                                     ->label('Tanggal Ijazah')
                                                     ->required()
                                                     ->native(false),
-                                                FileUpload::make('entryEducation.certification')
+                                                FileUpload::make('entryEducation.certificate')
                                                     ->label('Ijazah')
                                                     ->disk('public')
                                                     ->visibility('public')
@@ -285,7 +290,7 @@ class ReRegistration extends Page implements HasSchemas
                                                     DatePicker::make('workEducation.certificate_date')
                                                         ->label('Tanggal Ijazah')
                                                         ->native(false),
-                                                    FileUpload::make('workEducation.certification')
+                                                    FileUpload::make('workEducation.certificate')
                                                         ->label('Ijazah')
                                                         ->disk('public')
                                                         ->visibility('public')
@@ -311,7 +316,7 @@ class ReRegistration extends Page implements HasSchemas
                                                         ->placeholder('ext. 2 Tahun'),
                                                     TextInput::make('workExperience.admission')
                                                         ->label('Pengakuan'),
-                                                    FileUpload::make('workExperience.certification')
+                                                    FileUpload::make('workExperience.certificate')
                                                         ->label('Sertifikat')
                                                         ->disk('public')
                                                         ->visibility('public')
@@ -345,15 +350,13 @@ class ReRegistration extends Page implements HasSchemas
         $data = $this->form->validate(); 
         $validated = $data['data'];
 
-        dd($validated);
-
-        Staff::create([
-            'pas' => $validated['pas'] ?? null,
+        $staff = Staff::create([
+            'pas' => collect($validated['pas'])->first() ?? null,
             'nik' => $validated['nik'],
             'nip' => $validated['nip'],
             'name' => $validated['name'],
             'sex' => $validated['sex'],
-            'birth_place' => $validated['birth_place]'],
+            'birth_place' => $validated['birth_place'],
             'birth_date' => $validated['birth_date'],
             'marital' => $validated['marital'],
             'email' => $validated['email'],
@@ -370,14 +373,22 @@ class ReRegistration extends Page implements HasSchemas
             'unit_id' => $validated['unit_id'],
         ]);
 
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+            'role_id' => 2,
+            'staff_id' => $staff->id
+        ]);
+
         if (!empty($validated['entryEducation']['level'])) {
             StaffEntryEducation::create([
-                'staff_id' => $row->id,
+                'staff_id' => $staff->id,
                 'level' => $validated['entryEducation']['level'],
                 'institution' => $validated['entryEducation']['institution'] ?? null,
                 'certificate_number' => $validated['entryEducation']['certificate_number'] ?? null,
                 'certificate_date' => $validated['entryEducation']['certificate_date'] ?? null,
-                'certification' => $validated['entryEducation']['certification'] ?? null,
+                'certificate' => collect($validated['entryEducation']['certificate'])->first() ?? null,
                 'nonformal_education' => $validated['entryEducation']['nonformal_education'] ?? null,
                 'adverb' => $validated['entryEducation']['adverb']?? null,
             ]);
@@ -385,30 +396,34 @@ class ReRegistration extends Page implements HasSchemas
 
         if (!empty($validated['workEducation']['level'])) {
             StaffWorkEducation::create([
-                'staff_id' => $row->id,
+                'staff_id' => $staff->id,
                 'level' => $validated['workEducation']['level'],
                 'major' => $validated['workEducation']['major'] ?? null,
                 'institution' => $validated['workEducation']['institution'] ?? null,
                 'certificate_number' => $validated['workEducation']['certificate_number'] ?? null,
                 'certificate_date' => $validated['workEducation']['certificate_date'] ?? null,
-                'certification' => $validated['workEducation']['certification'] ?? null,
+                'certificate' => collect($validated['workEducation']['certificate'])->first() ?? null,
             ]);
         }
 
         if (!empty($validated['workExperience']['institution'])) {
             StaffWorkExperience::create([
-                'staff_id' => $row->id,
+                'staff_id' => $staff->id,
                 'institution' => $validated['workExperience']['institution'],
                 'work_length' => $validated['workExperience']['work_lenght'] ?? null,
-                'certification' => $validated['workExperience']['certification'] ?? null,
+                'certificate' => collect($validated['workExperience']['certificate'])->first() ?? null,
                 'admission' => $validated['workExperience']['admission'] ?? null,
             ]);
         }
+
+        PreStaff::where('token', $validated['token'])->delete();
 
         Notification::make()
             ->title('Berhasil Registrasi Ulang. Silahkan login menggunakan email dan password yang telah dibuat!')
             ->success()
             ->send();
+
+        return redirect('/login');
     }
 
     // Layout & Middleware methods tetap sama...
