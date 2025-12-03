@@ -47,27 +47,6 @@ Route::post('/store-device-info', function (Request $request) {
     return response()->json(['status' => 'ok']);
 })->name('store.device.info');
 
-Route::post('/check-radius', function (Request $request) {
-    $earthRadius = 6371000; // meter
-
-    $dLat = deg2rad($request->lat - setting('lat'));
-    $dLon = deg2rad($request->lng - setting('lng'));
-
-    $a = sin($dLat / 2) * sin($dLat / 2) +
-         cos(deg2rad($request->lat)) * cos(deg2rad(setting('lat'))) *
-         sin($dLon / 2) * sin($dLon / 2);
-
-    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-
-    return response()->json([
-            'user_lat' => $request->lat,
-            'user_lng' => $request->lng,
-            'sys_lat' => setting('lat'),
-            'sys_lng' => setting('lng'),
-            'radius' => $earthRadius * $c
-        ]);
-})->withoutMiddleware(VerifyCsrfToken::class);
-
 Route::post('/check-in-by-gps', function (Request $request){
     if ($request->mode === "check-out"){
         $today = now()->toDateString();
@@ -171,3 +150,20 @@ Route::get('/preview-administration/{model}/{id}/{field}', function ($model, $id
 
     return response()->file($path);
 })->name('preview.administration')->middleware('auth');
+
+Route::middleware('auth')->get('/latest-notification', function (Request $request) {
+    // Ambil 1 notifikasi terakhir yang belum dibaca milik user yang login
+    $notification = $request->user()->unreadNotifications()->latest()->first();
+
+    if ($notification) {
+        // Filament menyimpan data di kolom JSON 'data' dengan key 'title' dan 'body'
+        return response()->json([
+            'status' => 'found',
+            'title' => $notification->data['title'] ?? 'Notifikasi Baru',
+            'body' => $notification->data['body'] ?? 'Anda memiliki notifikasi baru.',
+            'url' =>  $notification->data['actions'][0]['url'] ?? null // Opsional: ambil link tombol pertama
+        ]);
+    }
+
+    return response()->json(['status' => 'empty']);
+});

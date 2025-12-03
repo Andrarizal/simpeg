@@ -32,10 +32,11 @@ class StaffsTable
                         $query->leftJoin('overtimes', function ($join) {
                             $user = Auth::user();
                             $chairLevel = $user->staff->chair->level;
-                            $isLeaderUnit = $user->staff->unit->leader_id === $user->staff->chair_id;
 
-                            if ($chairLevel >= 3 || $isLeaderUnit) {
-                                // Kepala Seksi → ambil lembur yang is_known NULL atau 1
+                            if ($user->role_id === 1){
+                                $join->on('overtimes.staff_id', '=', 'staff.id')
+                                    ->whereNull('overtimes.is_verified');
+                            } else {
                                 $join->on('overtimes.staff_id', '=', 'staff.id')
                                     ->where(function ($q) use ($chairLevel) {
                                         $q->whereNull('overtimes.is_known');
@@ -43,10 +44,6 @@ class StaffsTable
                                             $q->orWhere('overtimes.is_known', 1);
                                         }
                                     });
-                            } else {
-                                // Direktur / SDM → ambil lembur yang belum diverifikasi
-                                $join->on('overtimes.staff_id', '=', 'staff.id')
-                                    ->whereNull('overtimes.is_verified');
                             }
                         })
                         ->select('staff.id', 'staff.name', 'chairs.name as chair_name')

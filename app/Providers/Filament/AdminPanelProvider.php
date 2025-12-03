@@ -11,12 +11,14 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -60,7 +62,172 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => Blade::render(<<<'HTML'
+                    <script>
+                        window.GlobalGPS = {
+                            lat: null,
+                            lng: null,
+                            acc: null,
+                            timestamp: 0,
+                            isReady: false,
+                            watchId: null,
+                            
+                            start() {
+                                if (this.watchId) return;
+                                if (!navigator.geolocation) return;
+
+                                console.log('🌍 Global GPS Engine Started...');
+
+                                this.watchId = navigator.geolocation.watchPosition(
+                                    (pos) => {
+                                        this.lat = pos.coords.latitude;
+                                        this.lng = pos.coords.longitude;
+                                        this.acc = pos.coords.accuracy;
+                                        this.timestamp = Date.now();
+                                        this.isReady = true;
+
+                                        // Broadcast Event ke AlpineJS (agar halaman presensi bisa dengar)
+                                        window.dispatchEvent(new CustomEvent('gps-update', { 
+                                            detail: { 
+                                                lat: this.lat, 
+                                                lng: this.lng, 
+                                                acc: this.acc,
+                                                time: this.timestamp
+                                            } 
+                                        }));
+                                    },
+                                    (err) => console.error('Global GPS Error:', err),
+                                    {
+                                        enableHighAccuracy: true, 
+                                        maximumAge: 0,
+                                        timeout: 20000
+                                    }
+                                );
+                            }
+                        };
+
+                        navigator.permissions.query({name:'geolocation'}).then(result => {
+                            if (result.state === 'granted') {
+                                window.GlobalGPS.start();
+                            }
+                        });
+
+                        document.addEventListener('DOMContentLoaded', async () => {
+                            // --- 1. VARIABEL GLOBAL UNTUK MENYIMPAN STATE ---
+                            // Kita simpan jumlah notifikasi terakhir di sini agar tidak hilang saat HTML di-refresh Livewire
+                            let previousNotificationCount = 0; 
+                            let isFirstLoad = true;
+
+                            if ('serviceWorker' in navigator) {
+                                try {
+                                    await navigator.serviceWorker.register('/sw.js');
+                                    console.log('Service Worker Registered');
+                                } catch (error) {
+                                    console.error('SW Register Failed:', error);
+                                }
+                            }
+                            
+                            // --- 2. REQUEST PERMISSION ---
+                            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                                Notification.requestPermission();
+                            }
+
+                            const showSystemNotification = async () => {
+                                if (Notification.permission !== "granted") return;
+
+                                try {
+                                    const response = await fetch('/latest-notification');
+                                    const data = await response.json();
+
+                                    if (data.status === 'found') {
+                                        if ('serviceWorker' in navigator) {
+                                            const registration = await navigator.serviceWorker.ready;
+                                            
+                                            // Tampilkan via Service Worker
+                                            await registration.showNotification(data.title, {
+                                                body: data.body,
+                                                icon: "/img/rsumpyk.png", // Ganti path logo
+                                                vibrate: [200, 100, 200, 100, 200],
+                                                tag: "simantap-" + Date.now(),
+                                                // Renotify: Jika tag kebetulan sama, paksa bunyi lagi
+                                                renotify: true,
+                                                data: { url: data.url ?? window.location.href } // Simpan URL untuk di-klik
+                                            });
+                                        } else {
+                                            const notif = new Notification(data.title, {
+                                                body: data.body,
+                                                icon: "/img/rsumpyk.png", // Pastikan path ini benar
+                                                tag: "simantap-" + Date.now() 
+                                            });
+
+                                            notif.onclick = () => { 
+                                                window.focus(); 
+                                                if(data.url) window.location.href = data.url; // Redirect jika ada link
+                                                notif.close(); 
+                                            };
+                                        }
+                                    } else {
+                                        console.error('data not found');
+                                    }
+                                } catch (error) {
+                                    console.error('Gagal mengambil detail notifikasi:', error);
+                                }
+                            };
+
+                            const checkNotifications = () => {
+                                // Selector spesifik sesuai HTML yang Anda kirim
+                                // Kita cari span di dalam div class 'fi-icon-btn-badge-ctn'
+                                const badgeSpan = document.querySelector('.fi-icon-btn-badge-ctn span.fi-badge');
+
+                                if (badgeSpan) {
+                                    // Ambil angka dari teks (misal "1", "5", "99+")
+                                    // Gunakan regex untuk mengambil hanya angka (jika ada karakter lain)
+                                    const text = badgeSpan.innerText.trim();
+                                    const currentCount = parseInt(text.replace(/[^0-9]/g, '')) || 0;
+
+                                    // LOGIKA DETEKSI KENAIKAN
+                                    // Jika ini bukan load pertama DAN angka sekarang LEBIH BESAR dari sebelumnya
+                                    if (!isFirstLoad && currentCount > previousNotificationCount) {
+                                        console.log('Notifikasi baru! Mengambil detail...');
+                                        showSystemNotification();
+                                    }
+
+                                    // Update state global
+                                    previousNotificationCount = currentCount;
+                                    isFirstLoad = false;
+                                } else {
+                                    // Jika badge hilang (berarti 0 notifikasi)
+                                    previousNotificationCount = 0;
+                                }
+                            };
+
+                            // --- 3. JALANKAN MUTATION OBSERVER ---
+                            // Karena Livewire mengubah DOM, kita pantau terus menerus
+                            const observer = new MutationObserver((mutations) => {
+                                // Setiap ada perubahan di DOM, kita cek ulang angkanya
+                                checkNotifications();
+                            });
+
+                            const targetNode = document.querySelector('body');
+                            if (targetNode) {
+                                observer.observe(targetNode, { 
+                                    childList: true, 
+                                    subtree: true, 
+                                    characterData: true 
+                                });
+                            }
+                            
+                            // Cek sekali di awal (jika sudah ada notif saat login)
+                            checkNotifications();
+                        });
+                    </script>
+                HTML)
+            )
             ->favicon(asset('img/rsumpyk.svg'))
-            ->brandLogo(fn () => view('filament.schemas.components.brand-logo'));
+            ->brandLogo(fn () => view('filament.schemas.components.brand-logo'))
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('5s');
     }
 }

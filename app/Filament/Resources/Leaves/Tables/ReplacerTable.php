@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leaves\Tables;
 
+use App\Filament\Resources\Leaves\LeaveResource;
 use App\Models\Leave;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -9,6 +10,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -146,6 +148,23 @@ class ReplacerTable
                             'is_replaced' => true,
                             'replacement_at' => Carbon::now()
                         ]);
+
+                        Notification::make()
+                            ->title($record->type . ' Anda bersedia digantikan')
+                            ->body('Pengganti Anda telah menyatakan ketersediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                            ->success()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(LeaveResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->staff->user);
+
+                        Notification::make()
+                            ->title('Ketersediaan berhasil ditambahkan')
+                            ->success()
+                            ->send();
                     }),
                 ViewAction::make(),
             ])

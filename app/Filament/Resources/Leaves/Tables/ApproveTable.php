@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leaves\Tables;
 
+use App\Filament\Resources\Leaves\LeaveResource;
 use App\Models\Chair;
 use App\Models\Leave;
 use Carbon\Carbon;
@@ -209,6 +210,18 @@ class ApproveTable
                                 ]);
 
                                 Notification::make()
+                                    ->title($record->type . ' Anda telah diketahui Kepala Unit')
+                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah diketahui Kepala Unit')
+                                    ->info()
+                                    ->actions([
+                                        Action::make('read')
+                                            ->button()
+                                            ->url(LeaveResource::getUrl('index'))
+                                            ->markAsRead()
+                                    ])
+                                    ->sendToDatabase($record->staff->user);
+
+                                Notification::make()
                                     ->title($record->type . ' Diketahui')
                                     ->success()
                                     ->send();
@@ -222,6 +235,18 @@ class ApproveTable
                                     'known_at' => Carbon::now(),
                                     'adverb' => $data['adverb']
                                 ]);
+
+                                Notification::make()
+                                    ->title($record->type . ' Anda telah diketahui Koordinator')
+                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah diketahui Koordinator')
+                                    ->info()
+                                    ->actions([
+                                        Action::make('read')
+                                            ->button()
+                                            ->url(LeaveResource::getUrl('index'))
+                                            ->markAsRead()
+                                    ])
+                                    ->sendToDatabase($record->staff->user);
 
                                 Notification::make()
                                     ->title($record->type . ' Diketahui')
@@ -244,6 +269,18 @@ class ApproveTable
                                 }
 
                                 Notification::make()
+                                    ->title($record->type . ' Anda telah disetujui Kepala Seksi')
+                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah disetujui Kepala Seksi')
+                                    ->success()
+                                    ->actions([
+                                        Action::make('read')
+                                            ->button()
+                                            ->url(LeaveResource::getUrl('index'))
+                                            ->markAsRead()
+                                    ])
+                                    ->sendToDatabase($record->staff->user);
+
+                                Notification::make()
                                     ->title($record->type . ' Disetujui')
                                     ->success()
                                     ->send();
@@ -257,11 +294,25 @@ class ApproveTable
                                 ]);
 
                                 Notification::make()
+                                    ->title($record->type . ' Anda telah disetujui Direktur')
+                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah disetujui Direktur')
+                                    ->success()
+                                    ->actions([
+                                        Action::make('read')
+                                            ->button()
+                                            ->url(LeaveResource::getUrl('index'))
+                                            ->markAsRead()
+                                    ])
+                                    ->sendToDatabase($record->staff->user);
+
+                                Notification::make()
                                     ->title($record->type . ' Disetujui')
                                     ->success()
                                     ->send();
                                 break;
                         }
+
+                        
                     }),
                 Action::make('reject')
                     ->label('Tolak')
@@ -287,6 +338,18 @@ class ApproveTable
                         ]);
 
                         Notification::make()
+                            ->title($record->type . ' Anda telah ditolak')
+                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah ditolak')
+                            ->danger()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(LeaveResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->staff->user);
+
+                        Notification::make()
                             ->title($record->type . ' ditolak')
                             ->success()
                             ->send();
@@ -309,6 +372,18 @@ class ApproveTable
                             'verified_by' => Auth::user()->staff_id,
                             'verified_at' => Carbon::now()
                         ]);
+
+                        Notification::make()
+                            ->title($record->type . ' Anda telah diverifikasi SDM')
+                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
+                            ->success()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(LeaveResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->staff->user);
 
                         Notification::make()
                             ->title($record->type . ' diverifikasi')
@@ -337,6 +412,18 @@ class ApproveTable
                             'is_verified' => 0,
                             'adverb' => $data['adverb']
                         ]);
+
+                        Notification::make()
+                            ->title($record->type . ' Anda telah dibatalkan SDM')
+                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah dibatalkan SDM')
+                            ->danger()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(LeaveResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->staff->user);
 
                         Notification::make()
                             ->title($record->type . ' dibatalkan')

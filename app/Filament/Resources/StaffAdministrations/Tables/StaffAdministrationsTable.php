@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources\StaffAdministrations\Tables;
 
+use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -110,6 +112,23 @@ class StaffAdministrationsTable
                         $record->update([
                             'is_verified' => 1,
                         ]);
+
+                        Notification::make()
+                            ->title('Administrasi Diverifikasi')
+                            ->body('Administrasi Anda telah diverifikasi SDM')
+                            ->success()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(StaffAdministrationResource::getUrl('view', [$record->staff_id]))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->staff->user);
+
+                        Notification::make()
+                            ->title('Administrasi diverifikasi')
+                            ->success()
+                            ->send();
                     }),
                 ViewAction::make(),
                 EditAction::make()
