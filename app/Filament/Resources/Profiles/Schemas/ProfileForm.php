@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Profiles\Schemas;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -16,6 +17,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Mpdf\Tag\TextArea as TagTextArea;
 
 class ProfileForm
 {
@@ -176,7 +178,7 @@ class ProfileForm
                                                     ->label('Tanggal Ijazah')
                                                     ->required()
                                                     ->native(false),
-                                                FileUpload::make('certification')
+                                                FileUpload::make('entryEducation.certificate')
                                                     ->label('Ijazah')
                                                     ->disk('public')
                                                     ->visibility('public')
@@ -213,7 +215,7 @@ class ProfileForm
                                                     DatePicker::make('workEducation.certificate_date')
                                                         ->label('Tanggal Ijazah')
                                                         ->native(false),
-                                                    FileUpload::make('certification')
+                                                    FileUpload::make('workEducation.certificate')
                                                         ->label('Ijazah')
                                                         ->disk('public')
                                                         ->visibility('public')
@@ -239,7 +241,7 @@ class ProfileForm
                                                         ->placeholder('ext. 2 Tahun'),
                                                     TextInput::make('workExperience.admission')
                                                         ->label('Pengakuan'),
-                                                    FileUpload::make('certification')
+                                                    FileUpload::make('workExperience.certificate')
                                                         ->label('Sertifikat')
                                                         ->disk('public')
                                                         ->visibility('public')
@@ -248,6 +250,50 @@ class ProfileForm
                                                         ->maxSize(2048) // maksimal 2MB
                                                         ->helperText('Unggah sertifikat dalam format PDF'),
                                                 ]),
+                                        ]),
+                                        // --- TAB PENGALAMAN ---
+                                    Tab::make('Riwayat Pelatihan')
+                                        ->icon('heroicon-o-swatch')
+                                        ->schema([
+                                            Repeater::make('training')
+                                                ->hiddenLabel()
+                                                ->relationship()
+                                                ->schema([
+                                                    Grid::make(2)
+                                                        ->schema([
+                                                            TextInput::make('name')
+                                                                ->label('Nama Pelatihan')
+                                                                ->required(),
+                                                            DatePicker::make('training_date')
+                                                                ->label('Tanggal Pelatihan')
+                                                                ->maxDate(now())
+                                                                ->required()
+                                                                ->native(false),
+                                                            TextInput::make('duration')
+                                                                ->label('Durasi')
+                                                                ->required()
+                                                                ->numeric(),
+                                                            TextInput::make('notes')
+                                                                ->label('Keterangan'),
+                                                            TextArea::make('description')
+                                                                ->label('Deskripsi')
+                                                                ->rows(3),
+                                                            FileUpload::make('certificate')
+                                                                ->label('Sertifikat')
+                                                                ->disk('public')
+                                                                ->visibility('public')
+                                                                ->directory('pelatihan')
+                                                                ->acceptedFileTypes(['application/pdf'])
+                                                                ->maxSize(2048) // maksimal 2MB
+                                                                ->helperText('Unggah sertifikat dalam format PDF'),
+                                                        ]),
+                                                ])
+                                                ->addActionLabel('Tambah Pelatihan Baru')
+                                                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                                                ->collapsed(false)
+                                                ->deleteAction(
+                                                    fn ($action) => $action->requiresConfirmation(),
+                                                ),
                                         ]),
                                     Tab::make('Perjanjian Kontrak')
                                         ->icon('heroicon-o-clipboard-document-check')
@@ -271,7 +317,7 @@ class ProfileForm
                                                         ->minDate(now())
                                                         ->disabled()
                                                         ->native(false),
-                                                    FileUpload::make('decree')
+                                                    FileUpload::make('contract.decree')
                                                         ->label('Surat Kontrak')
                                                         ->disabled()
                                                         ->disk('public')
@@ -297,7 +343,7 @@ class ProfileForm
                                                         ->label('Golongan')
                                                         ->placeholder('IIIa, IVb, dst.')
                                                         ->disabled(),
-                                                    FileUpload::make('decree')
+                                                    FileUpload::make('appointment.decree')
                                                         ->label('Surat Pengangkatan Pegawai Tetap')
                                                         ->disabled()
                                                         ->disk('public')
@@ -324,7 +370,7 @@ class ProfileForm
                                                         ->label('Golongan Baru')
                                                         ->disabled()
                                                         ->placeholder('IIIa, IVb, dst.'),
-                                                    FileUpload::make('decree')
+                                                    FileUpload::make('adjustment.decree')
                                                         ->label('Surat Penyesuaian')
                                                         ->disabled()
                                                         ->disk('public')

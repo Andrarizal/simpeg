@@ -73,6 +73,10 @@ class EditProfile extends EditRecord
             $data['workExperience'] = $staff->workExperience->toArray();
         }
 
+        if ($staff->training) {
+            $data['training'] = $staff->training->toArray();
+        }
+
         return $data;
     }
 }

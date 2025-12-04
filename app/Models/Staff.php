@@ -78,4 +78,15 @@ class Staff extends Model
     {
         return $this->hasMany(Overtime::class);
     }
+
+    public function training(): HasMany {
+        return $this->hasMany(StaffTraining::class);
+    }
+
+    // Helper untuk menghitung jam tahun ini
+    public function getTrainingHoursYearAttribute() {
+        return $this->trainings()
+            ->whereYear('training_date', now()->year)
+            ->sum('duration');
+    }
 }
