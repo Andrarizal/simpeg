@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('performance_reviews', function (Blueprint $table) {
+        Schema::create('performance_appraisals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('target_id')->constrained(
-                table: 'performance_targets',
-                indexName: 'performance_reviews_target_id'
+                table: 'staff_performances',
+                indexName: 'performance_appraisals_target_id'
             );
-            $table->foreignId('reviewer_id')->constrained(
+            $table->foreignId('appraiser_id')->constrained(
                 table: 'staff',
-                indexName: 'performance_reviews_reviewer_id'
+                indexName: 'performance_appraisals_appraiser_id'
             );
             $table->decimal('score', 5, 2);
             $table->text('notes')->nullable();
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('performance_reviews');
+        Schema::dropIfExists('performance_appraisals');
     }
 };

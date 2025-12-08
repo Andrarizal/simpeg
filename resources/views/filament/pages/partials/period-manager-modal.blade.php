@@ -1,0 +1,1 @@
+@livewire('performance-period-manager')

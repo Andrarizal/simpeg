@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('performance_periods', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('year');
-            $table->enum('period', ['Januari-Juni', 'Juli-Desember']);
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->enum('status', ['Open', 'Closed'])->default('Open');
+            $table->unsignedTinyInteger('status');
+            $table->decimal('score', 5, 2)->nullable();
             $table->timestamps();
         });
     }

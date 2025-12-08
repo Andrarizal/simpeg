@@ -11,20 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('performance_targets', function (Blueprint $table) {
+        Schema::create('staff_performances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
-                indexName: 'performance_targets_staff_id'
+                indexName: 'staff_performances_staff_id'
             );
             $table->foreignId('period_id')->constrained(
                 table: 'performance_periods',
-                indexName: 'performance_targets_period_id'
+                indexName: 'staff_performances_period_id'
             );
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('value');
-            $table->unsignedInteger('weight');
+            $table->string('title');
+            $table->text('description');
             $table->timestamps();
         });
     }
@@ -34,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('performance_targets');
+        Schema::dropIfExists('staff_performances');
     }
 };

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class LeavesOverview extends StatsOverviewWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 2;
 
     protected function getStats(): array
     {
