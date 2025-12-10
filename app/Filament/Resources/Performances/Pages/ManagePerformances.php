@@ -364,6 +364,25 @@ class ManagePerformances extends ManageRecords
                     'score' => $this->averageScore, // <--- Ini otomatis dinamis
                 ]))
                 ->recordActions([
+                    Action::make('approve')
+                        ->label('Setujui Nilai')
+                        ->icon('heroicon-o-check')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->appraisal->appraiser->chair->level > Auth::user()->staff->chair->level)
+                        ->requiresConfirmation()
+                        ->action(function ($record) {
+                            $user = Auth::user();
+                            $user->staff_id = $user->staff_id ?? 1;
+
+                            $record->appraisal->update([
+                                'appraiser_id' => $user->staff_id
+                            ]);
+
+                            Notification::make()
+                                ->title('Nilai berhasil disetujui')
+                                ->success()
+                                ->send();
+                        }),
                     ViewAction::make(),
                     EditAction::make()
                         ->visible(fn ($record) => $record->staff_id === Auth::user()->staff_id),

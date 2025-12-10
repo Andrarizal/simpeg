@@ -18,6 +18,7 @@ return new class extends Migration
                 table: 'chairs',
                 indexName: 'units_leader_id'
             )->nullOnDelete();
+            $table->enum('work_system', ['Tetap', 'Shift'])->default('Tetap');
             $table->timestamps();
         });
     }

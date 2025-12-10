@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Units;
 
 use App\Filament\Resources\Units\Pages\ManageUnits;
+use App\Filament\Resources\Units\Pages\ManageUnitSchedules;
 use App\Models\Unit;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -36,6 +38,7 @@ class UnitResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
                 TextInput::make('name')
                     ->label('Nama Unit')
@@ -43,6 +46,10 @@ class UnitResource extends Resource
                 Select::make('leader_id')
                     ->label('Kepala Unit')
                     ->relationship('leader', 'name')
+                    ->native(false),
+                Select::make('work_system')
+                    ->label('Sistem Kerja')
+                    ->options(['Tetap', 'Shift'])
                     ->native(false),
             ]);
     }
@@ -58,6 +65,9 @@ class UnitResource extends Resource
                 TextColumn::make('leader.name')
                     ->label('Kepala Unit')
                     ->sortable(),
+                TextColumn::make('work_system')
+                    ->label('Sistem Kerja')
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -71,6 +81,11 @@ class UnitResource extends Resource
                 //
             ])
             ->recordActions([
+                Action::make('manage_shifts')
+                    ->label('Jadwal')
+                    ->icon('heroicon-m-clock')
+                    ->color('info')
+                    ->url(fn (Unit $record): string => UnitResource::getUrl('shifts', ['record' => $record])),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
@@ -85,6 +100,7 @@ class UnitResource extends Resource
     {
         return [
             'index' => ManageUnits::route('/'),
+            'shifts' => ManageUnitSchedules::route('/{record}/shifts'),
         ];
     }
 

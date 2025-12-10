@@ -65,6 +65,37 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => Blade::render(<<<'HTML'
+                        <style>
+                        .no-arrow select,
+                        .no-arrow .fi-input,
+                        .no-arrow .fi-ta-col-select-input {
+                            
+                            background-image: none !important; 
+                            background-position: 0 0 !important;
+                            background-size: 0 0 !important;
+                            
+                            appearance: none !important;
+                            -webkit-appearance: none !important;
+                            -moz-appearance: none !important;
+                            
+                            padding-top: 4px !important;
+                            padding-bottom: 4px !important;
+                            padding-left: 0 !important;
+                            padding-right: 0 !important;
+                            
+                            text-align: center !important;
+                            text-align-last: center !important; /* Khusus Chrome */
+                            
+                            min-width: 40px !important;
+                            width: 100% !important;
+                        }
+                        
+                        /* Hilangkan border focus ring jika ingin terlihat bersih total */
+                        .no-arrow select:focus {
+                            ring: 0 !important;
+                            border-color: transparent !important;
+                        }
+                    </style>
                     <script>
                         window.GlobalGPS = {
                             lat: null,

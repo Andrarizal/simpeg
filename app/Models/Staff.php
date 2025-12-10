@@ -83,6 +83,10 @@ class Staff extends Model
         return $this->hasMany(StaffTraining::class);
     }
 
+    public function schedule(): HasMany {
+        return $this->hasMany(Schedule::class);
+    }
+
     // Helper untuk menghitung jam tahun ini
     public function getTrainingHoursYearAttribute() {
         return $this->trainings()
