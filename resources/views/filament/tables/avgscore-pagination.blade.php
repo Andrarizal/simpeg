@@ -1,10 +1,10 @@
 @php
     $score = $this->averageScore; 
     $colorClass = match (true) {
-        $score >= 80 => 'bg-info-50 text-info-700 ring-info-600/20',
-        $score >= 70 => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-        $score >= 50 => 'bg-amber-50 text-amber-700 ring-amber-600/20',
-        default      => 'bg-red-50 text-red-700 ring-red-600/20',
+        $score >= 80 => 'bg-info-200/10 text-info-200 ring-info-600/20',
+        $score >= 70 => 'bg-emerald-200/10 text-emerald-200 ring-emerald-600/20',
+        $score >= 50 => 'bg-amber-200/10 text-amber-200 ring-amber-600/20',
+        default      => 'bg-red-200/10 text-red-200 ring-red-600/20',
     };
 @endphp
 

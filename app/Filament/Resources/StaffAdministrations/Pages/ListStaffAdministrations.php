@@ -4,6 +4,7 @@ namespace App\Filament\Resources\StaffAdministrations\Pages;
 
 use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
 use App\Models\Staff;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,5 +27,17 @@ class ListStaffAdministrations extends ListRecords
                 );
             }
         }
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('mine')
+                ->label('Administrasi Saya')
+                ->icon('heroicon-m-wallet')
+                ->color('warning')
+                ->visible(fn() => Auth::user()->role_id == 1)
+                ->url(StaffAdministrationResource::getUrl('view', ['record' => Auth::user()->staff_id]))
+        ];
     }
 }

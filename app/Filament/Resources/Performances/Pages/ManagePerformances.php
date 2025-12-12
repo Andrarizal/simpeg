@@ -42,7 +42,6 @@ class ManagePerformances extends ManageRecords
             $this->activeTab = request()->query('activeTab');
         }
 
-        // 2. Jalankan mount bawaan Filament (PENTING: taruh di bawah)
         parent::mount();
     }
 

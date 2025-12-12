@@ -18,14 +18,15 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
-use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\HtmlString;
 
 class ManageUnitSchedules extends Page implements HasForms, HasTable
 {
@@ -35,14 +36,11 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
 
     protected string $view = 'filament.resources.units.pages.manage-unit-schedule';
 
-    protected static ?string $title = 'Jadwal';
-
     public Unit $record;
     public Collection $staffList;
     public $month;
     public $year;
     public $schedules = [];
-    public $shiftOptions = [];
     public $daysInMonth = [];
     
     public function mount(Unit $record): void
@@ -50,6 +48,12 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
         $this->record = $record;
         $this->month = now()->month();
         $this->year = now()->year();
+    }
+
+    public function getTitle(): string
+    {
+        // Mengakses nama record secara dinamis
+        return 'Jadwal Unit: ' . $this->record->name;
     }
 
     protected function getHeaderActions(): array
@@ -220,45 +224,33 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
         $year  = (int) ($this->tableFilters['year']['value']  ?? now()->year);
         
         $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
-        
-        $shiftOptions = Shift::where('unit_id', $this->record->id)
-            ->pluck('code', 'id')
-            ->toArray();
+        $unitId = $this->record->id;
 
+        $shiftOptions = Shift::where('unit_id', $unitId)
+            ->pluck('code', 'id')
+            ->mapWithKeys(fn ($code, $id) => [$id => $code])
+            ->toArray();
+        
         $dateColumns = [];
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $dateObj = Carbon::createFromDate($year, $month, $day);
             $dateString = $dateObj->toDateString();
             $headerLabel = $day . ' (' . $dateObj->locale('id')->isoFormat('ddd') . ')'; 
 
-            $dateColumns[] = SelectColumn::make("schedule_{$day}")
+            $dateColumns[] = ViewColumn::make("col_{$day}")
                 ->label($headerLabel)
-                ->options($shiftOptions)
                 ->alignment('center')
-                ->disabled(fn() => $year <= now()->year && $month < now()->month)
-                ->extraAttributes([
-                        'style' => 'flex: none !important; width: 90px !important; min-width: 90px !important;',
-                        'class' => 'no-arrow'
-                    ])
                 ->state(function (Staff $record) use ($dateString) {
-                    return $record->schedule
-                        ->firstWhere('schedule_date', $dateString)
-                        ?->shift_id;
+                    return $record->schedule->firstWhere('schedule_date', $dateString)?->shift_id;
                 })
-                ->updateStateUsing(function (Staff $record, $state) use ($dateString) {
-                    if ($state) {
-                        Schedule::updateOrCreate(
-                            ['staff_id' => $record->id, 'schedule_date' => $dateString],
-                            ['shift_id' => $state]
-                        );
-                    } else {
-                        Schedule::where('staff_id', $record->id)
-                            ->where('schedule_date', $dateString)
-                            ->delete();
-                    }
+                ->disabled(function() use ($year, $month, $day) {
+                    return $year <= now()->year && $month < now()->month;
                 })
-                ->placeholder('-')
-                ->selectablePlaceholder(true);
+                ->view('filament.components.native-select')
+                ->viewData([
+                    'date' => $dateString,
+                    'options' => $shiftOptions,
+                ]);
         }
 
         return $table
@@ -277,8 +269,15 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                         ->searchable()
                         ->sortable()
                         ->description(fn (Staff $record) => $record->chair->name ?? '-')
+                        ->extraHeaderAttributes([
+                            'class' => 'sticky left-0 z-20 bg-gray-50 bg-gray-100 dark:bg-gray-800',
+                        ])
+                        
+                        ->extraAttributes([
+                            'class' => 'sticky-col-name', 
+                        ]),
                 ],
-                $dateColumns 
+                $dateColumns
             ))
             ->paginated(false)
             ->filters([
@@ -290,7 +289,6 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                     ->default(now()->month)
                     ->selectablePlaceholder(false)
                     ->query(fn($query) => $query),
-
                 SelectFilter::make('year')
                     ->label('Tahun')
                     ->options(collect(range(now()->year - 1, now()->year + 5))->mapWithKeys(fn($y) => 
@@ -329,7 +327,65 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                         ',
                     ])
             )
-            ->filtersFormColumns(2)
             ->hiddenFilterIndicators();
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        if (! $this->record) {
+            return null;
+        }
+
+        // 1. Buat elemen HTML terpisah untuk setiap shift (Bukan string yang disambung)
+        $shiftItems = $this->record->shift
+        ->sortBy(function ($row) {
+            $isLibur = $row->code === 'L' || !$row->start_time;
+            return ($isLibur ? 'Z' : 'A') . '-' . ($row->start_time ?? '00:00');
+        })
+        ->map(function ($row) {
+            $start = Carbon::parse($row->start_time ?? '00:00:00')->format('H:i');
+            $end   = Carbon::parse($row->end_time ?? '00:00:00')->format('H:i');
+
+            // PENTING: class 'whitespace-nowrap' menjaga agar teks "Nama: Jam" tidak putus ke bawah
+            return "
+                <div class='flex items-center gap-1 whitespace-nowrap bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-md border border-gray-200 dark:border-white/10'>
+                    <span class='font-bold text-primary-600 dark:text-primary-400'>{$row->code} ($row->name):</span>
+                    <span class='text-gray-700 dark:text-gray-300'>{$start}-{$end}</span>
+                </div>
+            ";
+        })->implode(''); // Gabungkan tanpa separator (separator diurus oleh gap parent)
+
+        // 2. Bungkus dengan Flex Container yang mengizinkan wrapping tapi rapi (gap-2)
+        return new HtmlString("
+            <div class='flex flex-wrap items-center gap-2 mt-2 text-xs'>
+                <div class='flex items-center justify-center w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-full shrink-0'>
+                    <svg class='w-4 h-4 text-gray-500' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'>
+                        <path fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z' clip-rule='evenodd' />
+                    </svg>
+                </div>
+                
+                {$shiftItems}
+            </div>
+        ");
+    }
+
+    public function updateShift($staffId, $date, $value)
+    {
+        // Jika value kosong, hapus
+        if (empty($value) || $value === '-') {
+            Schedule::where('staff_id', $staffId)
+                ->where('schedule_date', $date)
+                ->delete();
+            return;
+        }
+
+        // Simpan Data
+        Schedule::updateOrCreate(
+            ['staff_id' => $staffId, 'schedule_date' => $date],
+            ['shift_id' => $value]
+        );
+        
+        // Opsional: Notifikasi kecil
+        Notification::make()->title('Saved')->success()->send();
     }
 }

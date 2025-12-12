@@ -95,6 +95,38 @@ class AdminPanelProvider extends PanelProvider
                             ring: 0 !important;
                             border-color: transparent !important;
                         }
+                        
+                        .fi-ta-cell:has(.sticky-col-name) {
+                            position: sticky !important;
+                            left: 0 !important;
+                            /* Z-index rendah agar tidak menutupi header/dropdown */
+                            z-index: 10 !important; 
+                            
+                            background-color: white; 
+                        }
+                        .dark .fi-ta-cell:has(.sticky-col-name) {
+                            background-color: rgb(24 24 27);
+                        }
+
+                        /* --- 2. CONFIG STICKY HEADER (Judul) --- */
+                        .fi-ta-header-cell:has(.sticky-col-name) {
+                            position: sticky !important;
+                            left: 0 !important;
+                            /* Z-index sedang, di atas data tapi di bawah dropdown */
+                            z-index: 20 !important; 
+                            background-color: inherit;
+                        }
+
+                        /* --- 3. SOLUSI ANDA: BOOST FILTER Z-INDEX --- */
+                        /* Kita paksa Panel Dropdown (Filter/Action) punya level tertinggi */
+                        .fi-dropdown-panel {
+                            z-index: 100 !important; /* Angka ini harus > 20 */
+                        }
+                        
+                        /* Opsional: Jika Header tabel sticky juga menutupi, naikkan header tabel container */
+                        .fi-ta-header-ctn {
+                            z-index: 30 !important;
+                        }
                     </style>
                     <script>
                         window.GlobalGPS = {
