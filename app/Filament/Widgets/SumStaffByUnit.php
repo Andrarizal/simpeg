@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class SumStaffByUnit extends ChartWidget
 {
     protected ?string $heading = 'Jumlah Pegawai berdasarkan Unit Kerja';
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected function getData(): array
     {

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PerformancePeriodStats extends StatsOverviewWidget
 {
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 6;
 
     protected function getStats(): array
     {

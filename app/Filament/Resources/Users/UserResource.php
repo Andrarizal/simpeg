@@ -55,6 +55,6 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->role_id === 1;
+        return Auth::user()?->role_id == 1;
     }
 }

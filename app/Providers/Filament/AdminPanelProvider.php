@@ -172,7 +172,7 @@ class AdminPanelProvider extends PanelProvider
                         };
 
                         navigator.permissions.query({name:'geolocation'}).then(result => {
-                            if (result.state === 'granted') {
+                            if (result.state == 'granted') {
                                 window.GlobalGPS.start();
                             }
                         });
@@ -204,7 +204,7 @@ class AdminPanelProvider extends PanelProvider
                                     const response = await fetch('/latest-notification');
                                     const data = await response.json();
 
-                                    if (data.status === 'found') {
+                                    if (data.status == 'found') {
                                         if ('serviceWorker' in navigator) {
                                             const registration = await navigator.serviceWorker.ready;
                                             

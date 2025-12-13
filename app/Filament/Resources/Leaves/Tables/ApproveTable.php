@@ -100,7 +100,7 @@ class ApproveTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(function ($state, $record) {
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             return 'Diketahui Kepala Seksi';
                         }
                         return $state;
@@ -109,7 +109,7 @@ class ApproveTable
                     ->alignCenter()
                     ->color(function ($state, $record) {
                         $display = $state;
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             $display = 'Diketahui Kepala Seksi';
                         }
 
@@ -359,12 +359,11 @@ class ApproveTable
                     ->icon('heroicon-o-check')
                     ->color('info')
                     ->visible(function ($record) {
-                        if (Auth::user()->role_id === 1) {
-                            return $record->is_verified === 0 || $record->is_verified === 1 || $record->is_replaced === 0 || $record->status === 'Ditolak' ? false : true;
+                        if (Auth::user()->role_id == 1) {
+                            return $record->is_verified == 0 || $record->is_verified == 1 || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
                         }
                         return false;
                     })
-                    // ->visible(true)
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update([
@@ -395,8 +394,8 @@ class ApproveTable
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->visible(function ($record) {
-                        if (Auth::user()->role_id === 1) {
-                            return $record->is_verified === 0 || $record->is_verified === 1 || $record->is_replaced === 0 || $record->status === 'Ditolak' ? false : true;
+                        if (Auth::user()->role_id == 1) {
+                            return $record->is_verified == 0 || $record->is_verified == 1 || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
                         }
                         return false;
                     })
@@ -434,7 +433,6 @@ class ApproveTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                DeleteBulkAction::make(),
                 ]),
             ]);
     }

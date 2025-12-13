@@ -80,7 +80,7 @@ class ViewLeave extends ViewRecord
                 ->icon('heroicon-o-check')
                 ->color('info')
                 ->visible(function ($record) {
-                    if (Auth::user()->role_id === 1) {
+                    if (Auth::user()->role_id == 1) {
                         return $record->is_verified ? false : true;
                     }
                     return false;
@@ -97,7 +97,7 @@ class ViewLeave extends ViewRecord
                 ->icon('heroicon-o-no-symbol')
                 ->color('danger')
                 ->visible(function ($record) {
-                    if (Auth::user()->role_id === 1) {
+                    if (Auth::user()->role_id == 1) {
                         return $record->is_verified ? false : true;
                     }
                     return false;
@@ -114,7 +114,7 @@ class ViewLeave extends ViewRecord
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('warning')
                 ->visible(function ($record) {
-                    if (Auth::user()->staff_id === $record->staff_id) {
+                    if (Auth::user()->staff_id == $record->staff_id) {
                         return true;
                     }
                     return false;
@@ -126,7 +126,7 @@ class ViewLeave extends ViewRecord
                     $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
 
                     $approver = '';
-                    if ($record->staff->chair->level === 4){
+                    if ($record->staff->chair->level == 4){
                         $approver = Staff::where('chair_id', $head->chair->head_id)->first()->name;
                     } else {
                         $approver = Staff::where('chair_id', 1)->first()->name;

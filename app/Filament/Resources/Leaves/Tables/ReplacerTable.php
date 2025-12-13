@@ -73,7 +73,7 @@ class ReplacerTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(function ($state, $record) {
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             return 'Diketahui Kepala Seksi';
                         }
                         return $state;
@@ -82,7 +82,7 @@ class ReplacerTable
                     ->alignCenter()
                     ->color(function ($state, $record) {
                         $display = $state;
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             $display = 'Diketahui Kepala Seksi';
                         }
 
@@ -133,15 +133,12 @@ class ReplacerTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
             ->recordActions([
                 Action::make('approve')
                     ->label('Bersedia')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn ($record) => $record->is_replaced || $record->status == 'Ditolak' || $record->is_verified === 0 ? false : true)
+                    ->visible(fn ($record) => $record->is_replaced || $record->status == 'Ditolak' || $record->is_verified == 0 ? false : true)
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update([

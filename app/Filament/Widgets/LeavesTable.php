@@ -2,14 +2,10 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Leave;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Auth;
@@ -35,9 +31,6 @@ class LeavesTable extends TableWidget
                 TextColumn::make('type')
                     ->label('Jenis')
                     ->sortable(),
-                TextColumn::make('staff.name')
-                    ->label('Nama')
-                    ->sortable(),
                 TextColumn::make('start_date')
                     ->label('Dari Tanggal')
                     ->date()
@@ -52,9 +45,10 @@ class LeavesTable extends TableWidget
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('replacement.name')
                     ->label('Nama Pengganti')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_replaced')
-                    ->label('Bersedia')
+                    ->label('Pengganti Bersedia')
                     ->alignCenter()
                     ->getStateUsing(fn ($record) => $record->is_replaced ?? 'null')
                     ->icon(fn ($state) => match ($state) {
@@ -75,7 +69,7 @@ class LeavesTable extends TableWidget
                 TextColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(function ($state, $record) {
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             return 'Diketahui Kepala Seksi';
                         }
                         return $state;
@@ -84,7 +78,7 @@ class LeavesTable extends TableWidget
                     ->alignCenter()
                     ->color(function ($state, $record) {
                         $display = $state;
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             $display = 'Diketahui Kepala Seksi';
                         }
 
@@ -136,16 +130,7 @@ class LeavesTable extends TableWidget
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->paginated(false)
-            ->searchable(false)
-            ->recordActions([
-                ViewAction::make(),
-                DeleteAction::make()
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->searchable(false);
     }
 
     protected int|string|array $columnSpan = 'full';

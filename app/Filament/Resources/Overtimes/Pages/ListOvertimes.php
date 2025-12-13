@@ -33,7 +33,7 @@ class ListOvertimes extends ListRecords
                 ->label('Export PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('warning')
-                ->visible(fn () => $this->activeTab === 'pengajuan' ?? false)
+                ->visible(fn () => $this->activeTab == 'pengajuan' ?? false)
                 ->modalHeading('Preview Cuti')
                 ->modalWidth('5xl')
                 ->modalContent(function ($livewire) {
@@ -51,7 +51,7 @@ class ListOvertimes extends ListRecords
 
                     foreach ($data as $i => $p) {
                         $this->verified = $p->is_verified ?? false;
-                        $this->known = $p->is_known === 2 ?? false;
+                        $this->known = $p->is_known == 2 ?? false;
                     }
 
                     $signData = [
@@ -131,10 +131,10 @@ class ListOvertimes extends ListRecords
 
         $arrOfTabs = [];
         
-        if (($user->staff->chair->level === 4 && $user->staff->unit->leader_id === $user->staff->chair_id) || $user->staff->chair->level === 4 && $user->role_id === 1){
+        if (($user->staff->chair->level == 4 && $user->staff->unit->leader_id == $user->staff->chair_id) || $user->staff->chair->level == 4 && $user->role_id == 1){
             $arrOfTabs['pengajuan'] = Tab::make('Pengajuan Anda')
                 ->icon('heroicon-o-document-text');
-            $arrOfTabs['persetujuan'] = Tab::make('Perlu ' . ($user->role_id === 1 ? 'Verifikasi' : 'Persetujuan'))
+            $arrOfTabs['persetujuan'] = Tab::make('Perlu ' . ($user->role_id == 1 ? 'Verifikasi' : 'Persetujuan'))
                 ->icon('heroicon-o-clipboard-document-check');
         }
 
@@ -149,11 +149,11 @@ class ListOvertimes extends ListRecords
         }
         $table = parent::getTable();
 
-        if ($this->activeTab === 'pengajuan') {
+        if ($this->activeTab == 'pengajuan') {
             return OvertimesTable::configure($table);
         }
 
-        if ($this->activeTab === 'persetujuan') {
+        if ($this->activeTab == 'persetujuan') {
             return StaffsTable::configure($table);
         }
 

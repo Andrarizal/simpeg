@@ -26,21 +26,21 @@ class StaffsTable
                         ->where('chairs.level', '=', 4);
                         if (Auth::user()->role_id != 1){
                             $query->leftJoin('units', 'staff.unit_id', '=', 'units.id')
-                                ->where($staff->chair->level === 4 ? 'units.leader_id' : 'chairs.head_id', $staff->chair_id)
+                                ->where($staff->chair->level == 4 ? 'units.leader_id' : 'chairs.head_id', $staff->chair_id)
                                 ->where('staff.id', '!=', $staff->id);
                         }
                         $query->leftJoin('overtimes', function ($join) {
                             $user = Auth::user();
                             $chairLevel = $user->staff->chair->level;
 
-                            if ($user->role_id === 1){
+                            if ($user->role_id == 1){
                                 $join->on('overtimes.staff_id', '=', 'staff.id')
                                     ->whereNull('overtimes.is_verified');
                             } else {
                                 $join->on('overtimes.staff_id', '=', 'staff.id')
                                     ->where(function ($q) use ($chairLevel) {
                                         $q->whereNull('overtimes.is_known');
-                                        if ($chairLevel === 3){
+                                        if ($chairLevel == 3){
                                             $q->orWhere('overtimes.is_known', 1);
                                         }
                                     });

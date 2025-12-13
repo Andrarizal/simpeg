@@ -106,7 +106,7 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                                 ->native(),
                             Hidden::make('id'),
                         ])
-                        ->maxItems(fn () => $this->record->work_system === 'Tetap' ? 1 : null)
+                        ->maxItems(fn () => $this->record->work_system == 'Tetap' ? 1 : null)
                         ->minItems(1)
                         ->columns(3)
                         ->collapsible()
@@ -144,7 +144,7 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                 ->label('Generate')
                 ->icon('heroicon-m-bolt')
                 ->color('warning')
-                ->visible(fn () => $this->record->work_system === 'Tetap')
+                ->visible(fn () => $this->record->work_system == 'Tetap')
                 ->modalHeading('Generate Jadwal Otomatis')
                 ->modalWidth('sm')
                 ->modalDescription('Fitur ini akan mengisi jadwal seluruh pegawai di unit ini secara otomatis (Senin-Sabtu Masuk, Minggu Libur).')
@@ -336,26 +336,23 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
             return null;
         }
 
-        // 1. Buat elemen HTML terpisah untuk setiap shift (Bukan string yang disambung)
         $shiftItems = $this->record->shift
         ->sortBy(function ($row) {
-            $isLibur = $row->code === 'L' || !$row->start_time;
+            $isLibur = $row->code == 'L' || !$row->start_time;
             return ($isLibur ? 'Z' : 'A') . '-' . ($row->start_time ?? '00:00');
         })
         ->map(function ($row) {
             $start = Carbon::parse($row->start_time ?? '00:00:00')->format('H:i');
             $end   = Carbon::parse($row->end_time ?? '00:00:00')->format('H:i');
 
-            // PENTING: class 'whitespace-nowrap' menjaga agar teks "Nama: Jam" tidak putus ke bawah
             return "
                 <div class='flex items-center gap-1 whitespace-nowrap bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-md border border-gray-200 dark:border-white/10'>
                     <span class='font-bold text-primary-600 dark:text-primary-400'>{$row->code} ($row->name):</span>
                     <span class='text-gray-700 dark:text-gray-300'>{$start}-{$end}</span>
                 </div>
             ";
-        })->implode(''); // Gabungkan tanpa separator (separator diurus oleh gap parent)
+        })->implode('');
 
-        // 2. Bungkus dengan Flex Container yang mengizinkan wrapping tapi rapi (gap-2)
         return new HtmlString("
             <div class='flex flex-wrap items-center gap-2 mt-2 text-xs'>
                 <div class='flex items-center justify-center w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-full shrink-0'>
@@ -372,7 +369,7 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
     public function updateShift($staffId, $date, $value)
     {
         // Jika value kosong, hapus
-        if (empty($value) || $value === '-') {
+        if (empty($value) || $value == '-') {
             Schedule::where('staff_id', $staffId)
                 ->where('schedule_date', $date)
                 ->delete();

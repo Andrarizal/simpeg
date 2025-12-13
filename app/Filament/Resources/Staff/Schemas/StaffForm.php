@@ -313,7 +313,7 @@ class StaffForm
                     Checkbox::make('confirmation')
                         ->label('Buat akun pengguna untuk karyawan ini')
                         ->default(true)
-                        ->visible(fn (string $context): bool => $context === 'create'),
+                        ->visible(fn (string $context): bool => $context == 'create'),
             ]);
     }
 }

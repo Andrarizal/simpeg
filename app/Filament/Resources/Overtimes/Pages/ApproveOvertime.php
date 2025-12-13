@@ -56,7 +56,7 @@ class ApproveOvertime extends Page implements HasTable
 
                     foreach ($data as $i => $p) {
                         $this->verified = $p->is_verified ?? false;
-                        $this->known = $p->is_known === 2 ?? false;
+                        $this->known = $p->is_known == 2 ?? false;
                     }
 
                     $signData = [

@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Overtimes\Tables;
 use App\Filament\Resources\Overtimes\OvertimeResource;
 use App\Models\Overtime;
 use App\Models\Staff;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -19,7 +18,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class ApproveTable
 {
@@ -127,12 +125,12 @@ class ApproveTable
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(function ($record) {
-                        if (Auth::user()->role_id === 1) return false;
+                        if (Auth::user()->role_id == 1) return false;
 
-                        if (Auth::user()->staff->chair->level === 4){
+                        if (Auth::user()->staff->chair->level == 4){
                             return $record->is_known > 0 ? false : true;
-                        } else if (Auth::user()->staff->chair->level === 3){
-                            return $record->is_known === 1 || (!$record->is_known && !$record->staff->unit->leader_id)  ? true : false;
+                        } else if (Auth::user()->staff->chair->level == 3){
+                            return $record->is_known == 1 || (!$record->is_known && !$record->staff->unit->leader_id)  ? true : false;
                         }
                         return false;
                     })
@@ -141,7 +139,7 @@ class ApproveTable
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
-                        if ($user->staff->chair->level === 4){
+                        if ($user->staff->chair->level == 4){
                             $record->update([
                                 'is_known' => 1,
                             ]);
@@ -158,7 +156,7 @@ class ApproveTable
 
                         Notification::make()
                             ->title('Pengajuan Lembur Diketahui')
-                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diketahui oleh ' . $user->staff->chair->level === 4 ? 'Kepala Unit' : 'Koordinator')
+                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diketahui oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
                             ->success()
                             ->actions([
                                 Action::make('read')
@@ -210,50 +208,50 @@ class ApproveTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('ketahui')
-                    ->label('Ketahui')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(fn () => Auth::user()->staff->chair->level === 3 || (Auth::user()->staff->chair->level === 4 && Auth::user()->staff->unit->leader_id === Auth::user()->staff->chair_id))
-                    ->disabled(fn (Collection $records) => !$records->doesntContain('is_known', 1) || !$records->doesntContain('is_known', 2))
-                    ->action(function ($records) {
-                        foreach ($records as $record) {
-                            $user = Auth::user();
-                            $user->staff_id = $user->staff_id ?? 1;
+                        ->label('Ketahui')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->visible(fn () => Auth::user()->staff->chair->level == 3 || (Auth::user()->staff->chair->level == 4 && Auth::user()->staff->unit->leader_id == Auth::user()->staff->chair_id))
+                        ->disabled(fn (Collection $records) => !$records->doesntContain('is_known', 1) || !$records->doesntContain('is_known', 2))
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $user = Auth::user();
+                                $user->staff_id = $user->staff_id ?? 1;
 
-                            if ($user->staff->chair->level === 4){
-                                $record->update([
-                                    'is_known' => 1,
-                                ]);
-                            } else {
-                                $record->update([
-                                    'is_known' => 2,
-                                ]);
+                                if ($user->staff->chair->level == 4){
+                                    $record->update([
+                                        'is_known' => 1,
+                                    ]);
+                                } else {
+                                    $record->update([
+                                        'is_known' => 2,
+                                    ]);
+                                }
                             }
-                        }
 
-                        Notification::make()
-                            ->title('Pengajuan Lembur Diketahui')
-                            ->body('Lembur Anda untuk bulan ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('F Y') . ' telah diketahui oleh ' . $user->staff->chair->level === 4 ? 'Kepala Unit' : 'Koordinator')
-                            ->success()
-                            ->actions([
-                                Action::make('read')
-                                    ->button()
-                                    ->url(OvertimeResource::getUrl('index'))
-                                    ->markAsRead()
-                            ])
-                            ->sendToDatabase($record->staff->user);
+                            Notification::make()
+                                ->title('Pengajuan Lembur Diketahui')
+                                ->body('Lembur Anda untuk bulan ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('F Y') . ' telah diketahui oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
+                                ->success()
+                                ->actions([
+                                    Action::make('read')
+                                        ->button()
+                                        ->url(OvertimeResource::getUrl('index'))
+                                        ->markAsRead()
+                                ])
+                                ->sendToDatabase($record->staff->user);
 
-                        Notification::make()
-                            ->title('Data lembur ditandai diketahui.')
-                            ->success()
-                            ->send();
-                    }),
+                            Notification::make()
+                                ->title('Data lembur ditandai diketahui.')
+                                ->success()
+                                ->send();
+                        }),
 
                     BulkAction::make('verifikasi')
                         ->label('Verifikasi ')
                         ->color('info')
                         ->requiresConfirmation()
-                        ->visible(fn () => Auth::user()->role_id === 1 && Auth::user()->staff->chair->level === 4)
+                        ->visible(fn () => Auth::user()->role_id == 1 && Auth::user()->staff->chair->level == 4)
                         ->disabled(fn (Collection $records) => !$records->doesntContain('is_verified', 1))
                         ->action(function ($records) {
                             foreach ($records as $record) {

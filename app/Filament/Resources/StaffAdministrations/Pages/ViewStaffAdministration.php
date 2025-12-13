@@ -19,7 +19,7 @@ class ViewStaffAdministration extends ViewRecord
                 ->label('Verifikasi')
                 ->color('info')
                 ->visible(function ($record) {
-                    if (Auth::user()->role_id === 1) {
+                    if (Auth::user()->role_id == 1) {
                         return $record->is_verified ? false : true;
                     }
                     return false;

@@ -70,7 +70,7 @@ class LeavesTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(function ($state, $record) {
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             return 'Diketahui Kepala Seksi';
                         }
                         return $state;
@@ -79,7 +79,7 @@ class LeavesTable
                     ->alignCenter()
                     ->color(function ($state, $record) {
                         $display = $state;
-                        if ($state === 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
+                        if ($state == 'Disetujui Kepala Seksi' && optional($record->staff->chair)->level == 3) {
                             $display = 'Diketahui Kepala Seksi';
                         }
 

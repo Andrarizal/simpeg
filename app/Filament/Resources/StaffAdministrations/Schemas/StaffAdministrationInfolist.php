@@ -183,7 +183,7 @@ class StaffAdministrationInfolist
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->formatStateUsing(fn ($state, $record) =>
-                        ($record->is_verified === 1
+                        ($record->is_verified == 1
                             ? '(Terverifikasi)'
                             : '(Belum Terverifikasi)')
                     ),

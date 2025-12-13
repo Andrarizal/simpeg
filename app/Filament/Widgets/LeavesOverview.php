@@ -23,7 +23,7 @@ class LeavesOverview extends StatsOverviewWidget
         $maxPermission = setting('max_permission_days');
 
         // cocokkan tahun masuk dengan tahun sekarang
-        if (date('Y', strtotime($staff->entry_date)) === strval(now()->year)) {
+        if (date('Y', strtotime($staff->entry_date)) == strval(now()->year)) {
             // kurangi sisa cuti dengan bulan yang sudah lewat
             $maxLeave -= date('m', strtotime($staff->entry_date));
             // kurangi sisa izin dengan bulan yang sudah lewat

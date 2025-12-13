@@ -71,7 +71,7 @@ class DatabaseSeeder extends Seeder
                     'unit_id' => $units[$i]
                 ])
                 ->afterCreating(function ($staff) {
-                    $role = $staff->chair->level === 4 ? 2 : 1;
+                    $role = $staff->chair->level == 4 ? 2 : 1;
 
                     $role = str_contains($staff->chair->name, 'SDM') ? 1 : 2;
 

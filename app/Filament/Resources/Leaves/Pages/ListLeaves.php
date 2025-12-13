@@ -50,15 +50,15 @@ class ListLeaves extends ListRecords
         $activeTab = $this->activeTab ?? 'pengajuan';
         $table = parent::getTable();
 
-        if ($activeTab === 'pengajuan') {
+        if ($activeTab == 'pengajuan') {
             return LeavesTable::configure($table);
         }
 
-        if ($activeTab === 'pengganti') {
+        if ($activeTab == 'pengganti') {
             return ReplacerTable::configure($table);
         }
 
-        if ($activeTab === 'persetujuan') {
+        if ($activeTab == 'persetujuan') {
             return ApproveTable::configure($table);
         }
 

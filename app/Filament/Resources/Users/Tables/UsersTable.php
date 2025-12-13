@@ -15,12 +15,6 @@ class UsersTable
     {
         return $table
             ->columns([
-                TextColumn::make('no')
-                    ->label('#')
-                    ->rowIndex()
-                    ->sortable(false)
-                    ->toggleable(false)
-                    ->width('80px'),
                 TextColumn::make('name')
                     ->label('Nama')
                     ->searchable(),
@@ -39,12 +33,11 @@ class UsersTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn ($record) => $record->role_id != 1),
                 DeleteAction::make()
+                    ->visible(fn ($record) => $record->role_id != 1),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

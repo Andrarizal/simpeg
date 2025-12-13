@@ -168,7 +168,7 @@ class LeaveForm
                         'Ditolak' => 'Ditolak',
                     ])
                     ->required()
-                    ->default(fn() => $chair === 1 ? 'Disetujui Direktur' : 'Menunggu')
+                    ->default(fn() => $chair == 1 ? 'Disetujui Direktur' : 'Menunggu')
                     ->visible(fn() => $chair > 1 ? false : true)
                     ->disabled(fn() => $chair > 1 ?  : false)
                     ->dehydrated(true),
@@ -179,12 +179,12 @@ class LeaveForm
     {
         if (!$staff) return null;
 
-        if ($type === 'Cuti') {
+        if ($type == 'Cuti') {
             // ambil max cuti dari table master dengan helper setting
             $maxLeave = setting('max_leave_days');
 
             // cocokkan tahun masuk dengan tahun sekarang
-            if (date('Y', strtotime($staff->entry_date)) === strval(now()->year)) {
+            if (date('Y', strtotime($staff->entry_date)) == strval(now()->year)) {
                 // kurangi sisa cuti dengan bulan yang sudah lewat
                 $maxLeave -= date('m', strtotime($staff->entry_date));
             }
@@ -206,12 +206,12 @@ class LeaveForm
             return max($maxLeave - $usedLeave, 0);
         }
 
-        if ($type === 'Izin') {
+        if ($type == 'Izin') {
             // ambil max izin dari table master dengan helper setting
             $maxLeave = setting('max_permission_days');
 
             // cocokkan tahun masuk dengan tahun sekarang
-            if (date('Y', strtotime($staff->entry_date)) === strval(now()->year)) {
+            if (date('Y', strtotime($staff->entry_date)) == strval(now()->year)) {
                 // kurangi sisa cuti dengan bulan yang sudah lewat
                 $maxLeave -= ceil(date('m', strtotime($staff->entry_date)) / 2);
             }

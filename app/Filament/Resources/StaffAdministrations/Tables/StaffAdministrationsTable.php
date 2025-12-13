@@ -4,6 +4,7 @@ namespace App\Filament\Resources\StaffAdministrations\Tables;
 
 use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -12,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class StaffAdministrationsTable
@@ -101,7 +103,7 @@ class StaffAdministrationsTable
                     ->icon('heroicon-o-check')
                     ->color('info')
                     ->visible(function ($record) {
-                        if (Auth::user()->role_id === 1) {
+                        if (Auth::user()->role_id == 1) {
                             return $record->is_verified ? false : true;
                         }
                         return false;
@@ -134,9 +136,41 @@ class StaffAdministrationsTable
                 EditAction::make()
                     ->label('Perbarui'),
             ])
+            ->checkIfRecordIsSelectableUsing(
+                fn ($record) => $record->is_verified != 1
+            )
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    BulkAction::make('verified')
+                        ->label('Verifikasi yang dipilih')
+                        ->icon('heroicon-o-check')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'is_verified' => 1,
+                                ]);
+                            }
+
+                            Notification::make()
+                                ->title('Administrasi Diverifikasi')
+                                ->body('Administrasi Anda telah diverifikasi SDM')
+                                ->success()
+                                ->actions([
+                                    Action::make('read')
+                                        ->button()
+                                        ->url(StaffAdministrationResource::getUrl('view', [$record->staff_id]))
+                                        ->markAsRead()
+                                ])
+                                ->sendToDatabase($record->staff->user);
+
+                            Notification::make()
+                                ->title('Administrasi diverifikasi')
+                                ->success()
+                                ->send();
+                        }),
                 ]),
             ]);
     }

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Performances\Pages;
 
 use App\Filament\Resources\Performances\PerformanceResource;
-use App\Livewire\PerformancePeriodStats;
 use App\Models\Chair;
 use App\Models\PerformanceAppraisal;
 use App\Models\PerformancePeriod;
@@ -29,7 +28,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\HtmlString;
 
 class ManagePerformances extends ManageRecords
 {
@@ -37,7 +35,6 @@ class ManagePerformances extends ManageRecords
 
     public function mount(): void
     {
-        // 1. Paksa isi variable activeTab dari URL Query String
         if (request()->has('activeTab')) {
             $this->activeTab = request()->query('activeTab');
         }
@@ -121,14 +118,14 @@ class ManagePerformances extends ManageRecords
         $user = Auth::user();
         $user->staff_id = $user->staff_id ?? 1;
 
-        $isAppraiser = ($user->staff->chair->level === 4 && $user->staff->unit->leader_id === $user->staff->chair_id) 
-           || ($user->staff->chair->level === 4 && $user->role_id === 1) 
+        $isAppraiser = ($user->staff->chair->level == 4 && $user->staff->unit->leader_id == $user->staff->chair_id) 
+           || ($user->staff->chair->level == 4 && $user->role_id == 1) 
            || $user->staff->chair->level < 4;
 
         $tabs = [];
         
         if ($isAppraiser){
-            $label = $user->role_id === 1 ? 'Tinjauan' : 'Penilaian';
+            $label = $user->role_id == 1 ? 'Tinjauan' : 'Penilaian';
             
             $tabs['sendiri'] = Tab::make('Kinerja Saya')
                 ->icon('heroicon-o-document-text');
@@ -142,7 +139,6 @@ class ManagePerformances extends ManageRecords
     public function updatedActiveTab(): void
     {
         parent::updatedActiveTab(); 
-        // Paksa Redirect menggunakan $this->activeTab yang sudah berubah
         $this->redirect(static::getResource()::getUrl('index', ['activeTab' => $this->activeTab]));
     }
 
@@ -150,7 +146,7 @@ class ManagePerformances extends ManageRecords
     {
         $activeTab = $this->activeTab ?? 'sendiri';
 
-        if ($activeTab === 'penilaian') {
+        if ($activeTab == 'penilaian') {
             return $table
                 ->query(function(): Builder {
                     $staff = Auth::user()->staff;
@@ -383,22 +379,13 @@ class ManagePerformances extends ManageRecords
                                 ->send();
                         }),
                     ViewAction::make(),
-                    EditAction::make()
-                        ->visible(fn ($record) => $record->staff_id === Auth::user()->staff_id),
-                    DeleteAction::make()
-                        ->visible(fn ($record) => $record->staff_id === Auth::user()->staff_id),
-                ])
-                ->toolbarActions([
-                    BulkActionGroup::make([
-                        DeleteBulkAction::make(),
-                    ]),
                 ]);
         } else {
             return $table
                 ->query(function(): Builder {
                     $staff = Auth::user()->staff;
                     $query = StaffPerformance::query();
-                    $query->where('staff_id', '=', $staff->id);
+                    $query->where('staff_id', $staff->id);
 
                     return $query->latest();
                 })
@@ -453,10 +440,8 @@ class ManagePerformances extends ManageRecords
                 ])
                 ->recordActions([
                     ViewAction::make(),
-                    EditAction::make()
-                        ->visible(fn ($record) => $record->staff_id === Auth::user()->staff_id),
+                    EditAction::make(),
                     DeleteAction::make()
-                        ->visible(fn ($record) => $record->staff_id === Auth::user()->staff_id),
                 ])
                 ->toolbarActions([
                     BulkActionGroup::make([
