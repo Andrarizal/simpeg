@@ -12,4 +12,8 @@ class PerformancePeriod extends Model
     public function performance(): HasMany {
         return $this->hasMany(StaffPerformance::class, 'period_id');
     }
+
+    protected $casts = [
+        'status' => 'integer'
+    ];
 }

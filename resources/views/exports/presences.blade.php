@@ -53,10 +53,8 @@
                 <th>Masuk</th>
                 <th>Pulang</th>
                 <th>Metode</th>
-                @if ($role == 1)
                 <th>Selisih Masuk</th>
                 <th>Selisih Pulang</th>
-                @endif
             </tr>
         </thead>
 
@@ -97,7 +95,6 @@
                         }
                     }
                 @endphp
-                @if ($role == 1)
                 <td style="text-align: center;">
                     @if ($real_masuk->lessThan($target_masuk))
                     -
@@ -110,11 +107,9 @@
                     @endif
                     {{ $gap_pulang }}
                 </td>
-                @endif
             </tr>
             @endforeach
         </tbody>
-        @if ($role == 1)
         <tfoot>
             <tr style="background-color: #f3f4f6;">
                 <td colspan="5" style="text-align: center; font-weight: bold; padding: 5px;">
@@ -160,7 +155,6 @@
                 </td>
             </tr>
         </tfoot>
-        @endif
     </table>
 
 </body>

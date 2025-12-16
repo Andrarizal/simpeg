@@ -22,6 +22,7 @@
         <iframe 
             src="{{ route('preview.pdf', $token) }}"
             class="w-full h-[80vh]"
+            wire:key="pdf-frame-{{ $token }}-{{ now()->timestamp }}"
         ></iframe>
     </div>
 </div>

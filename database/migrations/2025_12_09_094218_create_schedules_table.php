@@ -22,7 +22,6 @@ return new class extends Migration
                 indexName: 'schedules_shift_id'
             )->cascadeOnDelete();
             $table->date('schedule_date');
-            $table->unsignedTinyInteger('is_locked')->default(0);
             $table->timestamps();
 
             $table->unique(['staff_id', 'schedule_date']);

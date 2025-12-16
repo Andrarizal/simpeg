@@ -28,4 +28,9 @@ class Leave extends Model
     public function verifier(): BelongsTo {
         return $this->belongsTo(Staff::class);
     }
+
+    protected $casts = [
+        'is_replaced' => 'integer',
+        'is_verified' => 'integer'
+    ];
 }

@@ -57,4 +57,8 @@ class Overtime extends Model
         $this->hours = $this->getTotalHours();
     }
 
+    protected $casts = [
+        'is_known' => 'integer',
+        'is_verified' => 'integer'
+    ];
 }

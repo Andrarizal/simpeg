@@ -17,7 +17,8 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Mpdf\Tag\TextArea as TagTextArea;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class ProfileForm
 {
@@ -255,9 +256,55 @@ class ProfileForm
                                     Tab::make('Riwayat Pelatihan')
                                         ->icon('heroicon-o-swatch')
                                         ->schema([
+                                            TextEntry::make('training_alert')
+                                                ->hiddenLabel()
+                                                ->state(function (Get $get) {
+                                                    // Ambil data dari repeater (raw array state)
+                                                    $trainings = $get('training') ?? []; 
+                                                    $totalDuration = 0;
+                                                    $currentYear = now()->year;
+
+                                                    foreach ($trainings as $item) {
+                                                        $date = $item['training_date'] ?? null;
+                                                        $duration = $item['duration'] ?? 0;
+
+                                                        // Hitung hanya jika tanggal valid & tahun ini
+                                                        if ($date && Carbon::parse($date)->year == $currentYear) {
+                                                            $totalDuration += (float) $duration;
+                                                        }
+                                                    }
+
+                                                    if ($totalDuration < 20) {
+                                                        $kurang = 20 - $totalDuration;
+                                                        
+                                                        return new HtmlString("
+                                                            <div class='flex items-center gap-3 p-4 text-xs text-yellow-800 bg-yellow-50 rounded-2xl dark:bg-yellow-900/30 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800'>
+                                                                <svg class='w-5 h-5 shrink-0' fill='currentColor' viewBox='0 0 20 20'>
+                                                                    <path fill-rule='evenodd' d='M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z' clip-rule='evenodd'></path>
+                                                                </svg>
+                                                                <div>
+                                                                    <span class='font-bold'>Target Belum Tercapai!</span> 
+                                                                    Total pelatihan tahun ini baru <strong>{$totalDuration} jam</strong>. 
+                                                                    Anda kurang <strong>{$kurang} jam</strong> lagi untuk mencapai target 20 jam.
+                                                                </div>
+                                                            </div>
+                                                        ");
+                                                    }
+
+                                                    // Jika sudah tercapai, bisa return null (sembunyi) atau pesan sukses
+                                                    return new HtmlString("
+                                                        <div class='flex items-center gap-3 p-4 text-xs text-green-800 bg-green-50 rounded-2xl dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800'>
+                                                            <svg class='w-5 h-5 shrink-0' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd'></path></svg>
+                                                            <div>
+                                                                <span class='font-bold'>Hebat!</span>Target 20 jam per tahun sudah terpenuhi ({$totalDuration} jam).
+                                                            </div>
+                                                        </div>
+                                                    ");
+                                                }),
                                             Repeater::make('training')
                                                 ->hiddenLabel()
-                                                ->relationship()
+                                                ->live()
+                                                ->relationship(modifyQueryUsing: fn (Builder $query) => $query->orderBy('training_date', 'desc'))
                                                 ->schema([
                                                     Grid::make(2)
                                                         ->schema([

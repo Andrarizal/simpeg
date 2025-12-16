@@ -17,4 +17,8 @@ class Shift extends Model
     public function schedule(): HasMany {
         return $this->hasMany(Schedule::class);
     }
+
+    protected $casts = [
+        'is_off' => 'integer'
+    ];
 }

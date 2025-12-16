@@ -28,14 +28,14 @@
                 <p class="text-center md:text-left text-gray-600 dark:text-gray-300 text-sm">Unit Kerja:    {{ $user->staff->unit->name }}</p>
             </div>
             <div class="md:col-span-4 flex justify-around items-center md:gap-4">
-                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm w-32 text-center">
+                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-3xl shadow-xl w-32 text-center">
                     <p class="text-sm text-gray-500 dark:text-gray-400">Masa Kerja</p>
                     <p class="text-3xl font-semibold text-gray-800 dark:text-gray-100">
                         {{ $masaKerja }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">tahun</p>
                 </div>
-                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm w-32 text-center">
+                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-3xl shadow-xl w-32 text-center">
                     <p class="text-sm text-gray-500 dark:text-gray-400">Pensiun</p>
                     <p class="text-3xl font-semibold text-gray-800 dark:text-gray-100">
                         {{ $countdownPensiun }}
