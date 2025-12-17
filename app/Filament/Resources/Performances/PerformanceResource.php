@@ -3,34 +3,14 @@
 namespace App\Filament\Resources\Performances;
 
 use App\Filament\Resources\Performances\Pages\ManagePerformances;
-use App\Models\Chair;
-use App\Models\Performance;
-use App\Models\PerformanceAppraisal;
-use App\Models\PerformancePeriod;
 use App\Models\StaffPerformance;
 use BackedEnum;
 use Carbon\Carbon;
-use Dom\Text;
-use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\TextInputColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class PerformanceResource extends Resource

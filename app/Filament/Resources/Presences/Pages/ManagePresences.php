@@ -35,7 +35,6 @@ class ManagePresences extends ManageRecords implements HasTable
 
     public function mount(): void
     {
-        // 1. Paksa isi variable activeTab dari URL Query String
         if (request()->has('activeTab')) {
             $this->activeTab = request()->query('activeTab');
         }
@@ -219,19 +218,49 @@ class ManagePresences extends ManageRecords implements HasTable
                     ->modalHeading('Preview Cuti')
                     ->modalWidth('5xl')
                     ->modalContent(function ($livewire) {
-                        $month = $livewire->tableFilters['month_year']['value'] ?? now()->format('Y-m');
+                        $monthValue = $livewire->tableFilters['month_year']['value'] ?? now()->format('Y-m');
+                        $year = substr($monthValue, 0, 4);
+                        $month = substr($monthValue, 5, 2);
 
                         $data = Presence::query()
                             ->with(['staff.chair', 'staff.unit'])
                             ->where('staff_id', Auth::user()->staff_id)
-                            ->whereMonth('presence_date', substr($month, 5, 2))
-                            ->whereYear('presence_date', substr($month, 0, 4))
+                            ->whereMonth('presence_date', $month)
+                            ->whereYear('presence_date', $year)
                             ->orderBy('presence_date')
                             ->get();
 
-                            $role = Auth::user()->role_id;
+                        $schedules = Schedule::with('shift')
+                            ->where('staff_id', Auth::user()->staff_id)
+                            ->whereMonth('schedule_date', $month)
+                            ->whereYear('schedule_date', $year)
+                            ->get()
+                            ->keyBy('schedule_date');
 
-                            $html = view('exports.presences', compact('data', 'month', 'role'))->render();
+                        if (!$schedules) {
+                            Notification::make()
+                                ->title('Jadwal Bulan tersebut belum dibuat!')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        if (!$data) {
+                            Notification::make()
+                                ->title('Belum ada presensi bulan tersebut!')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $role = Auth::user()->role_id;
+
+                        $html = view('exports.presences', [
+                            'data' => $data,
+                            'schedules' => $schedules,
+                            'month' => $monthValue,
+                            'role' => $role
+                        ])->render();
 
                         $mpdf = new Mpdf([
                             'mode' => 'utf-8',
@@ -373,19 +402,48 @@ class ManagePresences extends ManageRecords implements HasTable
                         ->modalHeading('Preview Cuti')
                         ->modalWidth('5xl')
                         ->modalContent(function ($record, $livewire) {
-                            $month = $livewire->tableFilters['month_year']['value'] ?? now()->format('Y-m');
+                            $monthValue = $livewire->tableFilters['month_year']['value'] ?? now()->format('Y-m');
+                            $year = substr($monthValue, 0, 4);
+                            $month = substr($monthValue, 5, 2);
 
-                            $data = Presence::query()
+                            $presences = Presence::query()
                                 ->with(['staff.chair', 'staff.unit'])
-                                ->where('staff_id', $record->id)
-                                ->whereMonth('presence_date', substr($month, 5, 2))
-                                ->whereYear('presence_date', substr($month, 0, 4))
+                                ->where('staff_id', $record->id) 
+                                ->whereMonth('presence_date', $month)
+                                ->whereYear('presence_date', $year)
                                 ->orderBy('presence_date')
                                 ->get();
 
-                            $role = Auth::user()->role_id;
+                            $schedules = Schedule::with('shift')
+                                ->where('staff_id', $record->id)
+                                ->whereMonth('schedule_date', $month)
+                                ->whereYear('schedule_date', $year)
+                                ->get()
+                                ->keyBy('schedule_date'); 
 
-                            $html = view('exports.presences', compact('data', 'month', 'role'))->render();
+                            if (!$schedules) {
+                                Notification::make()
+                                    ->title('Jadwal Bulan tersebut belum dibuat!')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            if (!$presences) {
+                                Notification::make()
+                                    ->title('Belum ada presensi bulan tersebut!')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                            
+                            $role = Auth::user()->role_id;
+                            $html = view('exports.presences', [
+                                'data' => $presences,
+                                'schedules' => $schedules, 
+                                'month' => $monthValue,
+                                'role' => $role
+                            ])->render();
 
                             $mpdf = new Mpdf([
                                 'mode' => 'utf-8',
@@ -395,19 +453,14 @@ class ManagePresences extends ManageRecords implements HasTable
                                 'margin_top'    => 25, // 2.5 cm
                                 'margin_bottom' => 20, // 2 cm
                             ]);
-
                             $mpdf->WriteHTML($html);
-
+                            
                             $token = Str::uuid()->toString();
                             $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
-
                             file_put_contents($pdfPath, $mpdf->Output('', 'S'));
-
                             $livewire->pdfToken = $token;
 
-                            return view('filament.components.preview-pdf', [
-                                'token' => $token,
-                            ]);
+                            return view('filament.components.preview-pdf', ['token' => $token]);
                         })
                         ->modalHeading(false)
                         ->modalCancelAction(false)

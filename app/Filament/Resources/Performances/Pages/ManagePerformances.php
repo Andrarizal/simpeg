@@ -42,6 +42,12 @@ class ManagePerformances extends ManageRecords
         parent::mount();
     }
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['staff_id'] = Auth::user()->staff_id;
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -151,7 +157,13 @@ class ManagePerformances extends ManageRecords
                 ->query(function(): Builder {
                     $staff = Auth::user()->staff;
                     $query = StaffPerformance::query();
-                    $query->where('staff_id', '!=', $staff->id);
+                    $query->where('staff_id', '!=', $staff->id)
+                        ->with([
+                            'period', 
+                            'staff.chair', 
+                            'staff.unit', 
+                            'appraisal.appraiser.chair' 
+                        ]);
 
                     if (Auth::user()->role_id == 1){
                         $query->latest();
@@ -347,7 +359,6 @@ class ManagePerformances extends ManageRecords
                                 });
                         })
                         ->default(function () {
-                            // Otomatis pilih periode aktif terakhir saat halaman dibuka
                             return PerformancePeriod::where('status', true)->latest()->first()?->id;
                         })
                         ->searchable()
@@ -385,7 +396,8 @@ class ManagePerformances extends ManageRecords
                 ->query(function(): Builder {
                     $staff = Auth::user()->staff;
                     $query = StaffPerformance::query();
-                    $query->where('staff_id', $staff->id);
+                    $query->where('staff_id', $staff->id)
+                        ->with(['period', 'appraisal.appraiser.chair']);
 
                     return $query->latest();
                 })

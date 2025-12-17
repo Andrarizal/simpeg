@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Leave extends Model
 {
@@ -33,4 +34,13 @@ class Leave extends Model
         'is_replaced' => 'integer',
         'is_verified' => 'integer'
     ];
+
+    protected static function booted(): void
+    {
+        static::deleted(function ($leave) {
+            if ($leave->evidence && Storage::disk('public')->exists($leave->evidence)) {
+                Storage::disk('public')->delete($leave->evidence);
+            }
+        });
+    }
 }

@@ -10,6 +10,7 @@ use App\Models\Overtime;
 use App\Models\Staff;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Table;
@@ -46,8 +47,33 @@ class ListOvertimes extends ListRecords
                         ->orderBy('overtime_date')
                         ->get();
 
+                    if ($data->isEmpty()) {
+                        Notification::make()
+                            ->title('Tidak ada data lembur di bulan ini')
+                            ->warning()
+                            ->send();
+                        return; 
+                    }
+                    
                     $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()->name;
+
+                    if (!$head) {
+                        Notification::make()
+                            ->title('Atasan user belum dipilih!')
+                            ->danger()
+                            ->send();
+                        return; 
+                    }
+                    
                     $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+
+                    if (!$sdm) {
+                        Notification::make()
+                            ->title('Belum ada data untuk posisi SDM!')
+                            ->danger()
+                            ->send();
+                        return; 
+                    }
 
                     foreach ($data as $i => $p) {
                         $this->verified = $p->is_verified ?? false;

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class StaffAdministration extends Model
 {
@@ -16,4 +17,15 @@ class StaffAdministration extends Model
     protected $casts = [
         'is_verified' => 'integer'
     ];
+
+    protected static function booted(): void
+    {
+        static::deleted(function ($model) {
+            foreach (['sip', 'str', 'mcu', 'spk', 'rkk', 'utw'] as $field) {
+                if ($model->$field && Storage::disk('public')->exists($model->$field)) {
+                    Storage::disk('public')->delete($model->$field);
+                }
+            }
+        });
+    }
 }

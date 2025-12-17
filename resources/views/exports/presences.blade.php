@@ -63,6 +63,7 @@
                 $total_gap_detik_masuk = 0; 
                 $total_gap_detik_pulang = 0; 
             @endphp
+
             @foreach ($data as $i => $p)
             <tr>
                 <td style="text-align: center;">{{ $i + 1 }}</td>
@@ -70,42 +71,54 @@
                 <td style="text-align: center;">{{ $p->check_in }}</td>
                 <td style="text-align: center;">{{ $p->check_out ?? '-' }}</td>
                 <td style="text-align: center;">{{ $p->method === 'network' ? 'Jaringan' : 'Lokasi' }}</td>
+                
                 @php
-                    $jadwal = \App\Models\Schedule::where('staff_id', $p->staff_id)
-                        ->where('schedule_date', $p->presence_date)
-                        ->first();
-
                     $gap_masuk = '-';
                     $gap_pulang = '-';
+                    $real_masuk = null;
+                    $real_pulang = null;
+                    $target_masuk = null;
+                    $target_pulang = null;
 
-                    if ($jadwal && $jadwal->shift_id) {
-                        $shift = \App\Models\Shift::find($jadwal->shift_id);
+                    $jadwal = $schedules[$p->presence_date] ?? null;
+
+                    if ($jadwal && $jadwal->shift) {
+                        $shift = $jadwal->shift;
                         
-                        if ($shift) {
+                        if ($shift->start_time && $shift->end_time) {
                             $target_masuk = \Carbon\Carbon::parse($shift->start_time);
                             $target_pulang = \Carbon\Carbon::parse($shift->end_time);
+                            
                             $real_masuk = \Carbon\Carbon::parse($p->check_in);
-                            $real_pulang = \Carbon\Carbon::parse($p->check_out);
                             
                             $gap_masuk = $target_masuk->diff($real_masuk)->format('%H:%I:%S');
-                            $gap_pulang = $target_pulang->diff($real_pulang)->format('%H:%I:%S');
+                            $total_gap_detik_masuk += $target_masuk->diffInSeconds($real_masuk);
 
-                            $total_gap_detik_masuk += $target_masuk->diffInSeconds($real_masuk, false);
-                            $total_gap_detik_pulang += $target_pulang->diffInSeconds($real_pulang, false);
+                            if ($p->check_out) {
+                                $real_pulang = \Carbon\Carbon::parse($p->check_out);
+                                
+                                $gap_pulang = $target_pulang->diff($real_pulang)->format('%H:%I:%S');
+                                $total_gap_detik_pulang += $target_pulang->diffInSeconds($real_pulang); 
+                            }
                         }
                     }
                 @endphp
-                <td style="text-align: center;">
-                    @if ($real_masuk->lessThan($target_masuk))
+
+                <td style="text-align: center; color: {{ $real_masuk > $target_masuk ? 'red' : 'green' }}">
+                    @if ($real_masuk > $target_masuk)
+                    +
+                    @else
                     -
                     @endif
-                    {{ $gap_masuk }}
+                     {{ $gap_masuk }}
                 </td>
-                <td style="text-align: center;">
-                    @if ($real_pulang->lessThan($target_pulang))
+                <td style="text-align: center; color: {{ $real_pulang < $target_pulang ? 'red' : 'green' }}">
+                    @if ($real_pulang < $target_pulang)
                     -
+                    @else
+                    +
                     @endif
-                    {{ $gap_pulang }}
+                     {{ $gap_pulang }}
                 </td>
             </tr>
             @endforeach
@@ -127,8 +140,6 @@
                         $detik_masuk = $sisa_masuk % 60;
                         $tanda_masuk = $negatif_masuk ? '- ' : '';
                         
-                        // Format output: 02:15:00
-                        // %02d artinya: jika angkanya 5, cetak 05.
                         $total_formatted_masuk = sprintf('%s%02d:%02d:%02d', $tanda_masuk, $jam_masuk, $menit_masuk, $detik_masuk);
                     @endphp
                     
@@ -139,15 +150,12 @@
                         $negatif_pulang = $total_gap_detik_pulang < 0;
 
                         $absolute_pulang = abs($total_gap_detik_pulang);
-                        // Konversi Detik ke Jam, Menit, Detik
                         $jam_pulang   = floor($absolute_pulang / 3600);
                         $sisa_pulang  = $absolute_pulang % 3600;
                         $menit_pulang = floor($sisa_pulang / 60);
                         $detik_pulang = $sisa_pulang % 60;
                         $tanda_pulang = $negatif_pulang ? '- ' : '';
                         
-                        // Format output: 02:15:00
-                        // %02d artinya: jika angkanya 5, cetak 05.
                         $total_formatted_pulang = sprintf('%s%02d:%02d:%02d', $tanda_pulang, $jam_pulang, $menit_pulang, $detik_pulang);
                     @endphp
                     

@@ -6,6 +6,10 @@ if (!function_exists('shouldShowApprovalButton')) {
     {
         $user = Auth::user();
 
+        if (!$user->staff || !$user->staff->chair) {
+            return false; 
+        }
+
         if ($record->status == 'Ditolak' || !$record->is_replaced){
             return false;
         }

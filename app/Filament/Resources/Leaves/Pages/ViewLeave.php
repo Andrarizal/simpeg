@@ -4,10 +4,9 @@ namespace App\Filament\Resources\Leaves\Pages;
 
 use App\Filament\Pages\Signature;
 use App\Filament\Resources\Leaves\LeaveResource;
-use App\Models\Leave;
 use App\Models\Staff;
 use Filament\Actions\Action;
-use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -124,6 +123,22 @@ class ViewLeave extends ViewRecord
                 ->modalContent(function ($record) {
                     $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
                     $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+
+                    if (!$head) {
+                        Notification::make()
+                            ->title('Atasan user belum dipilih!')
+                            ->danger()
+                            ->send();
+                        return; 
+                    }
+                    
+                    if (!$sdm) {
+                        Notification::make()
+                            ->title('Belum ada data untuk posisi SDM!')
+                            ->danger()
+                            ->send();
+                        return; 
+                    }
 
                     $approver = '';
                     if ($record->staff->chair->level == 4){

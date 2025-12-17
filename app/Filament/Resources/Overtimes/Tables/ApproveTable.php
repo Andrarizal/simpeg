@@ -24,7 +24,9 @@ class ApproveTable
     public static function configure(Table $table, ?Staff $staff): Table
     {
         return $table
-            ->query(fn() => Overtime::query()->where('staff_id', $staff->id))
+            ->query(function () use ($staff) {
+                return Overtime::query()->where('staff_id', $staff->id)->latest();
+            })
             ->columns([
                 TextColumn::make('overtime_date')->label('Tanggal'),
                 TextColumn::make('command')->label('Perintah'),
@@ -214,8 +216,9 @@ class ApproveTable
                         ->visible(fn () => Auth::user()->staff->chair->level == 3 || (Auth::user()->staff->chair->level == 4 && Auth::user()->staff->unit->leader_id == Auth::user()->staff->chair_id))
                         ->disabled(fn (Collection $records) => !$records->doesntContain('is_known', 1) || !$records->doesntContain('is_known', 2))
                         ->action(function ($records) {
+                            $user = Auth::user();
+        
                             foreach ($records as $record) {
-                                $user = Auth::user();
                                 $user->staff_id = $user->staff_id ?? 1;
 
                                 if ($user->staff->chair->level == 4){
@@ -227,6 +230,11 @@ class ApproveTable
                                         'is_known' => 2,
                                     ]);
                                 }
+
+                                $record->update([
+                                    'known_by' => $user->staff_id,
+                                    'known_at' => Carbon::now()
+                                ]);
                             }
 
                             Notification::make()
@@ -257,6 +265,8 @@ class ApproveTable
                             foreach ($records as $record) {
                                 $record->update([
                                     'is_verified' => 1,
+                                    'verified_by' => Auth::user()->staff_id,
+                                    'verified_at' => Carbon::now()
                                 ]);
                             }
 

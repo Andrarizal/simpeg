@@ -199,7 +199,7 @@ class LeaveForm
                 ->sum(function ($leave) {
                     $start = Carbon::parse($leave->start_date);
                     $end = Carbon::parse($leave->end_date);
-                    return $start->diffInDays($end); // +1 agar termasuk hari pertama
+                    return $start->diffInDays($end) + 1; // +1 agar termasuk hari pertama
                 });
 
             // kurangi jumlah cuti dengan yang cuti sudah diambil

@@ -4,7 +4,9 @@ namespace App\Filament\Resources\StaffAdministrations\Pages;
 
 use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
 use App\Models\Staff;
+use App\Models\StaffAdministration;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,15 +18,18 @@ class ListStaffAdministrations extends ListRecords
     {
         parent::mount();
 
-        // Cek role user (atau kondisi lain)
         if (Auth::user()->role_id == 2) {
-            // Redirect langsung ke edit halaman profil user sendiri
-            $staff = Staff::where('id', Auth::user()->staff_id)->first();
+            $user = Auth::user();
+            
+            $administration = StaffAdministration::where('staff_id', $user->staff_id)->first();
 
-            if ($staff) {
+            if ($administration) {
                 $this->redirect(
-                    route('filament.admin.resources.staff-administrations.view', $staff)
+                    StaffAdministrationResource::getUrl('view', ['record' => $administration])
                 );
+            } else {
+                Notification::make()->title('Data administrasi belum dibuat oleh Admin.')->warning()->send();
+                $this->redirect('/admin'); 
             }
         }
     }
