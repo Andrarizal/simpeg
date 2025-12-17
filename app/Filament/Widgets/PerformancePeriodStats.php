@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Auth;
 
 class PerformancePeriodStats extends StatsOverviewWidget
 {
-    protected static ?int $sort = 6;
+    protected static ?int $sort = 3;
+
+    protected int | string | array $columnSpan = 1;
 
     protected function getStats(): array
     {
@@ -35,10 +37,5 @@ class PerformancePeriodStats extends StatsOverviewWidget
                 ->color($color)
                 ->chart([$avgScore, 100]) // Grafik mini
         ];
-    }
-
-    public static function canView(): bool
-    {
-        return Auth::user()?->role_id == 1;
     }
 }

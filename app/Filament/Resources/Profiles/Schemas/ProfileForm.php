@@ -353,20 +353,24 @@ class ProfileForm
                                                     TextInput::make('contract.contract_number')
                                                         ->label('Nomor Kontrak')
                                                         ->placeholder('ext. 123/12/KK/YMP-U/XI/2025')
-                                                        ->disabled(),
+                                                        ->disabled()
+                                                        ->dehydrated(),
                                                     DatePicker::make('contract.start_date')
                                                         ->label('Tanggal Mulai')
                                                         ->maxDate(now())
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->native(false),
                                                     DatePicker::make('contract.end_date')
                                                         ->label('Tanggal Berakhir')
                                                         ->minDate(now())
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->native(false),
                                                     FileUpload::make('contract.decree')
                                                         ->label('Surat Kontrak')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->disk('public')
                                                         ->visibility('public')
                                                         ->directory('surat-kontrak')
@@ -381,18 +385,22 @@ class ProfileForm
                                                     TextInput::make('appointment.decree_number')
                                                         ->label('Nomor SK')
                                                         ->placeholder('ext. 12/12/SK/YMP/XI/2025')
-                                                        ->disabled(),
+                                                        ->disabled()
+                                                        ->dehydrated(),
                                                     DatePicker::make('appointment.decree_date')
                                                         ->label('Tanggal SK')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->native(false),
                                                     TextInput::make('appointment.class')
                                                         ->label('Golongan')
                                                         ->placeholder('IIIa, IVb, dst.')
-                                                        ->disabled(),
+                                                        ->disabled()
+                                                        ->dehydrated(),
                                                     FileUpload::make('appointment.decree')
                                                         ->label('Surat Pengangkatan Pegawai Tetap')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->disk('public')
                                                         ->visibility('public')
                                                         ->directory('surat-pengangkatan')
@@ -408,18 +416,22 @@ class ProfileForm
                                                     TextInput::make('adjustment.decree_number')
                                                         ->label('Nomor SK Penyesuaian')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->placeholder('ext. 21/02/SK/YMP/I/2016'),
                                                     DatePicker::make('adjustment.decree_date')
                                                         ->label('Tanggal SK Penyesuaian')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->native(false),
                                                     TextInput::make('adjustment.class')
                                                         ->label('Golongan Baru')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->placeholder('IIIa, IVb, dst.'),
                                                     FileUpload::make('adjustment.decree')
                                                         ->label('Surat Penyesuaian')
                                                         ->disabled()
+                                                        ->dehydrated()
                                                         ->disk('public')
                                                         ->visibility('public')
                                                         ->directory('surat-penyesuaian')

@@ -64,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
                     .fi-modal-window,
                     .fi-wi-stats-overview-stat {
                         border-radius: var(--radius-3xl)!important;
+                        overflow: hidden;
                     }
 
                     .fi-btn {
@@ -93,7 +94,15 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     .fi-page-content > *:first-child:not(:last-child) {
-                        display: none;
+                        position: absolute; 
+                        
+                        width: 0;
+                        height: 0;
+                        opacity: 0;
+                        overflow: hidden;
+                        
+                        pointer-events: none; 
+                        z-index: -1;
                     }
 
                     .fi-main {

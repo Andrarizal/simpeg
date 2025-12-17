@@ -17,14 +17,28 @@ class WelcomeMessage extends Widget
     public function getViewData(): array
     {
         $user = Auth::user();
+        $staff = $user->staff; // Eager load di model user lebih baik
 
-        $masaKerja = $user->staff->entry_date
-            ? number_format(Carbon::parse($user->staff->entry_date)->diffInYears(Carbon::now()), 1) : '-';
+        $masaKerja = '-';
+        $countdownPensiun = '-';
+        
+        // Inisial Nama
+        $initials = collect(explode(' ', $user->name))
+            ->map(fn ($word) => mb_substr($word, 0, 1))
+            ->take(2)
+            ->join('');
 
-        $umurPensiun = 58;
-        $countdownPensiun = $user->staff->birth_date
-            ? $umurPensiun - Carbon::parse($user->staff->birth_date)->age : '-';
+        if ($staff) {
+            if ($staff->entry_date) {
+                $masaKerja = number_format(Carbon::parse($staff->entry_date)->diffInYears(Carbon::now()), 1);
+            }
+            if ($staff->birth_date) {
+                $umurPensiun = 58;
+                $age = Carbon::parse($staff->birth_date)->age;
+                $countdownPensiun = max($umurPensiun - $age, 0);
+            }
+        }
 
-        return compact('user', 'masaKerja', 'countdownPensiun');
+        return compact('user', 'staff', 'masaKerja', 'countdownPensiun', 'initials');
     }
 }

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class LeavesTable extends TableWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4;
 
     public function table(Table $table): Table
     {

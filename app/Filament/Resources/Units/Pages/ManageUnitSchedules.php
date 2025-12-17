@@ -115,6 +115,13 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                 ->action(function (array $data) {
                     $shiftsInput = collect($data['shift']);
 
+                    $idsToKeep = $shiftsInput->pluck('id')->filter()->toArray();
+
+                    $this->record->shift()
+                        ->where('is_off', false)
+                        ->whereNotIn('id', $idsToKeep)
+                        ->delete();
+
                     foreach ($shiftsInput as $shiftData) {
                         $this->record->shift()->updateOrCreate(
                             ['id' => $shiftData['id'] ?? null],
@@ -187,27 +194,33 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                     $year  = $data['year'];
                     $totalDays = Carbon::create($year, $month)->daysInMonth;
                     
-                    $count = 0;
+                    $dataToInsert = [];
+                    $now = now();
 
                     foreach ($staffs as $staff) {
                         for ($day = 1; $day <= $totalDays; $day++) {
                             $date = Carbon::create($year, $month, $day);
-                            
                             $shiftToAssign = $date->isSunday() ? ($shiftLibur?->id) : $shiftReguler->id;
 
                             if ($shiftToAssign) {
-                                Schedule::updateOrCreate(
-                                    [
-                                        'staff_id' => $staff->id,
-                                        'schedule_date' => $date->toDateString(),
-                                    ],
-                                    [
-                                        'shift_id' => $shiftToAssign
-                                    ]
-                                );
-                                $count++;
+                                $dataToInsert[] = [
+                                    'staff_id' => $staff->id,
+                                    'schedule_date' => $date->toDateString(),
+                                    'shift_id' => $shiftToAssign,
+                                    'created_at' => $now,
+                                    'updated_at' => $now,
+                                ];
                             }
                         }
+                    }
+
+                    // Lakukan UPSERT (Insert or Update) per chunk 500 data agar memory aman
+                    foreach (array_chunk($dataToInsert, 500) as $chunk) {
+                        Schedule::upsert(
+                            $chunk, 
+                            ['staff_id', 'schedule_date'], 
+                            ['shift_id', 'updated_at']
+                        );
                     }
 
                     Notification::make()
@@ -235,10 +248,21 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $dateObj = Carbon::createFromDate($year, $month, $day);
             $dateString = $dateObj->toDateString();
-            $headerLabel = $day . ' (' . $dateObj->locale('id')->isoFormat('ddd') . ')'; 
+            $dayName = $dateObj->locale('id')->isoFormat('ddd'); 
+
+            $headerHtml = new HtmlString("
+                <div class='flex flex-col items-center justify-center leading-none min-h-[30px]'>
+                    <span class='text-xl font-black text-gray-700 dark:text-gray-200'>
+                        {$day}
+                    </span>
+                    <span class='text-[10px] font-medium text-gray-400 uppercase tracking-wide mt-1'>
+                        {$dayName}
+                    </span>
+                </div>
+            ");
 
             $dateColumns[] = ViewColumn::make("col_{$day}")
-                ->label($headerLabel)
+                ->label($headerHtml)
                 ->alignment('center')
                 ->state(function (Staff $record) use ($dateString) {
                     return $record->schedule->firstWhere('schedule_date', $dateString)?->shift_id;
@@ -368,7 +392,12 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
 
     public function updateShift($staffId, $date, $value)
     {
-        // Jika value kosong, hapus
+        $isStaffInUnit = Staff::where('id', $staffId)
+            ->where('unit_id', $this->record->id)
+            ->exists();
+
+        if (!$isStaffInUnit) return; 
+
         if (empty($value) || $value == '-') {
             Schedule::where('staff_id', $staffId)
                 ->where('schedule_date', $date)

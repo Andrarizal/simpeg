@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class OvertimeTable extends TableWidget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     public function table(Table $table): Table
     {

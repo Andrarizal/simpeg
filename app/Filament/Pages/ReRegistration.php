@@ -22,6 +22,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
@@ -410,7 +411,7 @@ class ReRegistration extends Page implements HasSchemas
             StaffWorkExperience::create([
                 'staff_id' => $staff->id,
                 'institution' => $validated['workExperience']['institution'],
-                'work_length' => $validated['workExperience']['work_lenght'] ?? null,
+                'work_length' => $validated['workExperience']['work_length'] ?? null,
                 'certificate' => collect($validated['workExperience']['certificate'])->first() ?? null,
                 'admission' => $validated['workExperience']['admission'] ?? null,
             ]);
@@ -434,7 +435,7 @@ class ReRegistration extends Page implements HasSchemas
 
     public static function getWithoutRouteMiddleware(Panel $panel): string|array
     {
-        return ['auth'];
+        return [Authenticate::class];
     }
     
     protected function getLayoutData(): array

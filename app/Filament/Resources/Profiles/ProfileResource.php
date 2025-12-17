@@ -3,15 +3,12 @@
 namespace App\Filament\Resources\Profiles;
 
 use App\Filament\Resources\Profiles\Pages\EditProfile;
-use App\Filament\Resources\Profiles\Pages\ListProfiles;
 use App\Filament\Resources\Profiles\Schemas\ProfileForm;
-use App\Filament\Resources\Profiles\Tables\ProfilesTable;
 use App\Models\Staff;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
@@ -32,11 +29,6 @@ class ProfileResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return ProfileForm::configure($schema);
-    }
-
-    public static function table(Table $table): Table
-    {
-        return ProfilesTable::configure($table);
     }
 
     public static function getPages(): array

@@ -140,7 +140,7 @@ class PreStaffResource extends Resource
                     ->action(function (PreStaff $record, array $data) {
                         try {
                             Mail::to($record->email)
-                                ->send(new SendPreStaffVerification($record));
+                                ->queue(new SendPreStaffVerification($record));
 
                             $record->update([
                                 'status' => 'Diverifikasi',

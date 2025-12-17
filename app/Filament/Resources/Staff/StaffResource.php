@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
@@ -62,6 +63,12 @@ class StaffResource extends Resource
             'view' => ViewStaff::route('/{record}'),
             'edit' => EditStaff::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['chair', 'unit', 'group', 'staffStatus']);
     }
 
     public static function canViewAny(): bool

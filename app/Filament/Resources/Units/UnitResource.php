@@ -13,6 +13,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -77,9 +78,6 @@ class UnitResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
             ->recordActions([
                 Action::make('manage_shifts')
                     ->label('Jadwal')
@@ -87,12 +85,18 @@ class UnitResource extends Resource
                     ->color('info')
                     ->url(fn (Unit $record): string => UnitResource::getUrl('shifts', ['record' => $record])),
                 EditAction::make(),
-                DeleteAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                DeleteAction::make()
+                    ->before(function (Unit $record, $action) {
+                        if ($record->staff()->exists()) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Gagal menghapus!')
+                                ->body('Unit ini masih memiliki pegawai. Pindahkan pegawai terlebih dahulu.')
+                                ->send();
+                            
+                            $action->halt();
+                        }
+                    }),
             ]);
     }
 

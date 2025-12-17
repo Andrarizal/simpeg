@@ -11,6 +11,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -52,13 +53,18 @@ class ChairResource extends Resource
                 Select::make('head_id')
                     ->label('Bawahan dari')
                     ->searchable()
-                    ->options(fn (): array => Chair::query()
-                        ->limit(16)
-                        ->pluck('name', 'id')
-                        ->all())
+                    ->options(function (?Chair $record) {
+                        $query = Chair::query();
+
+                        if ($record) {
+                            $query->where('id', '!=', $record->id);
+                        }
+
+                        return $query->pluck('name', 'id')->toArray();
+                    })
                     ->preload()
-                    ->required()
                     ->inlineLabel()
+                    ->nullable()
                     ->columnSpanFull()
                     ->native(false),
             ]);
@@ -81,17 +87,20 @@ class ChairResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                DeleteAction::make()
+                    ->before(function (Chair $record, $action) {
+                        if ($record->staff()->exists()) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Gagal menghapus!')
+                                ->body('Jabatan ini masih diemban beberapa pegawai, ubah jabatan pegawai tersebut terlebih dahulu')
+                                ->send();
+                            
+                            $action->halt();
+                        }
+                    }),
             ]);
     }
 

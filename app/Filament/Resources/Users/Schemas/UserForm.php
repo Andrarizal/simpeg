@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Users\Schemas;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class UserForm
 {
@@ -19,7 +21,8 @@ class UserForm
                     ->label('Alamat Email')
                     ->label('Email address')
                     ->email()
-                    ->required(),
+                    ->required()
+                    ->unique(ignoreRecord: true),
                 TextInput::make('password')
                     ->password()
                     ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
@@ -34,9 +37,22 @@ class UserForm
                     ->native(false),
                 Select::make('staff_id')
                     ->label('Nama Pegawai')
-                    ->relationship('staff', 'name')
+                    ->relationship(
+                        name: 'staff', 
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function (Builder $query, ?Model $record) {
+                            $query->whereDoesntHave('user');
+
+                            if ($record) {
+                                $query->orWhere('id', $record->staff_id);
+                            }
+                            
+                            return $query;
+                        }
+                    )
                     ->searchable()
                     ->preload()
+                    ->unique(ignoreRecord: true)
                     ->native(false),
             ]);
     }

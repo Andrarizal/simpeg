@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Staff extends Model
 {
-
     use HasFactory;
 
     protected $fillable = ['pas', 'nik', 'nip', 'name', 'birth_place', 'birth_date', 'sex', 'marital', 'origin', 'domicile', 'email', 'phone', 'other_phone', 'other_phone_adverb', 'entry_date', 'retirement_date', 'staff_status_id', 'chair_id', 'group_id', 'unit_id'];
@@ -87,7 +86,6 @@ class Staff extends Model
         return $this->hasMany(Schedule::class);
     }
 
-    // Helper untuk menghitung jam tahun ini
     public function getTrainingHoursYearAttribute() {
         return $this->trainings()
             ->whereYear('training_date', now()->year)

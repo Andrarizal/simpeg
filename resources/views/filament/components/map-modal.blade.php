@@ -25,8 +25,8 @@ x-data="{
     checkInterval: null,
     isLocked: false,
 
-    officeLat: {{ $officeLat }},
-    officeLng: {{ $officeLng }},
+    officeLat: {{ json_encode((float) $officeLat) }},
+    officeLng: {{ json_encode((float) $officeLng) }},
     maxRadius: {{ $radius }},
 
     mode: '{{ $presence ? "check-out" : "check-in" }}',

@@ -6,6 +6,7 @@ use App\Models\PreStaff;
 use BackedEnum;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Panel;
@@ -27,10 +28,8 @@ class PreRegistration extends Page implements HasSchemas
     protected static ?string $slug = 'pre-regist';
     protected static ?string $title = 'PreRegistration | SIMANTAP';
 
-    // Method mount wajib ada untuk menginisialisasi form saat halaman dibuka.
     public function mount(): void
     {
-        // Mengisi form dengan data kosong (atau default) ke dalam variabel $data
         $this->form->fill();
     }
 
@@ -43,6 +42,8 @@ class PreRegistration extends Page implements HasSchemas
                     ->placeholder('ex. 3321029920192099')
                     ->maxLength(16)
                     ->numeric()
+                    ->unique('staff', 'nik')
+                    ->unique('pre_staff', 'nik')
                     ->required(),
                 TextInput::make('nip')
                     ->label('NIP')
@@ -62,6 +63,8 @@ class PreRegistration extends Page implements HasSchemas
                 TextInput::make('email')
                     ->label('Email Pribadi')
                     ->email()
+                    ->unique('staff', 'email')
+                    ->unique('pre_staff', 'email')
                     ->placeholder('ex. tamam@gmail.com')
                     ->required(),
                 TextInput::make('phone')
@@ -72,15 +75,10 @@ class PreRegistration extends Page implements HasSchemas
                     ->required(),
             ])
             ->columns(2)
-            // [PERBAIKAN 3]
-            // Ini SANGAT PENTING. Ini memberitahu Schema: 
-            // "Hei, simpan semua ketikan user ke dalam variabel public $data milik class ini"
             ->statePath('data'); 
     }
 
     public function preRegist() {
-        // Validasi & Ambil Data
-        // Karena sudah dibinding ke statePath('data'), validasi akan membaca isi $this->data
         $data = $this->form->validate(); 
         $validated = $data['data'];
 
@@ -100,11 +98,9 @@ class PreRegistration extends Page implements HasSchemas
             ->success()
             ->send();
 
-        // Reset Form
         $this->form->fill();
     }
 
-    // Layout & Middleware methods tetap sama...
     public function getLayout(): string
     {
         return 'filament.pages.layout';
@@ -112,7 +108,7 @@ class PreRegistration extends Page implements HasSchemas
 
     public static function getWithoutRouteMiddleware(Panel $panel): string|array
     {
-        return ['auth'];
+        return [Authenticate::class];
     }
     
     protected function getLayoutData(): array

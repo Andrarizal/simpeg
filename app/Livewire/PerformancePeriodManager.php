@@ -8,10 +8,7 @@ use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -44,45 +41,45 @@ class PerformancePeriodManager extends Component implements HasForms, HasTable, 
     {
         return [
             DatePicker::make('start_date')
-                    ->label('Tanggal Mulai')
-                    ->required()
-                    ->native(false)
-                    ->displayFormat('d F Y')
-                    ->live()
-                    ->disabledDates(fn () => $this->getOccupiedDates($this->editingId))
-                    // Minimal tanggal 1 bulan saat ini
-                    ->minDate(now()->startOfMonth()) 
-                    // Auto-koreksi ke Tanggal 1
-                    ->afterStateUpdated(function ($state, Set $set) {
-                        if ($state) {
-                            // Apapun tanggal yang dipilih user, paksa jadi tanggal 1
-                            $set('start_date', Carbon::parse($state)->startOfMonth()->toDateString());
-                        }
-                    }),
+                ->label('Tanggal Mulai')
+                ->required()
+                ->native(false)
+                ->displayFormat('d F Y')
+                ->live()
+                ->disabledDates(fn () => $this->getOccupiedDates($this->editingId))
+                // Minimal tanggal 1 bulan saat ini
+                ->minDate(now()->startOfMonth()) 
+                // Auto-koreksi ke Tanggal 1
+                ->afterStateUpdated(function ($state, Set $set) {
+                    if ($state) {
+                        // Apapun tanggal yang dipilih user, paksa jadi tanggal 1
+                        $set('start_date', Carbon::parse($state)->startOfMonth()->toDateString());
+                    }
+                }),
 
-                DatePicker::make('end_date')
-                    ->label('Tanggal Selesai')
-                    ->required()
-                    ->native(false)
-                    ->live()
-                    ->disabledDates(fn () => $this->getOccupiedDates($this->editingId))
-                    ->displayFormat('d F Y')
-                    // Baru aktif setelah start_date diisi
-                    ->disabled(fn (Get $get) => blank($get('start_date')))
-                    // Minimal harus setelah start_date
-                    ->minDate(fn (Get $get) => $get('start_date') ? Carbon::parse($get('start_date')) : null)
-                    // Maksimal akhir tahun dari start_date (Tahun yang sama)
-                    ->maxDate(fn (Get $get) => $get('start_date') ? Carbon::parse($get('start_date'))->endOfYear() : null)
-                    // Auto-koreksi ke Tanggal Terakhir Bulan Tersebut
-                    ->afterStateUpdated(function ($state, Set $set) {
-                        if ($state) {
-                            // Apapun tanggal yang dipilih, paksa jadi End of Month
-                            $set('end_date', Carbon::parse($state)->endOfMonth()->toDateString());
-                        }
-                    }),
-                Toggle::make('status')
-                    ->label('Aktif')
-                    ->default(1),
+            DatePicker::make('end_date')
+                ->label('Tanggal Selesai')
+                ->required()
+                ->native(false)
+                ->live()
+                ->disabledDates(fn () => $this->getOccupiedDates($this->editingId))
+                ->displayFormat('d F Y')
+                // Baru aktif setelah start_date diisi
+                ->disabled(fn (Get $get) => blank($get('start_date')))
+                // Minimal harus setelah start_date
+                ->minDate(fn (Get $get) => $get('start_date') ? Carbon::parse($get('start_date')) : null)
+                // Maksimal akhir tahun dari start_date (Tahun yang sama)
+                ->maxDate(fn (Get $get) => $get('start_date') ? Carbon::parse($get('start_date'))->endOfYear() : null)
+                // Auto-koreksi ke Tanggal Terakhir Bulan Tersebut
+                ->afterStateUpdated(function ($state, Set $set) {
+                    if ($state) {
+                        // Apapun tanggal yang dipilih, paksa jadi End of Month
+                        $set('end_date', Carbon::parse($state)->endOfMonth()->toDateString());
+                    }
+                }),
+            Toggle::make('status')
+                ->label('Aktif')
+                ->default(1),
         ];
     }
 
