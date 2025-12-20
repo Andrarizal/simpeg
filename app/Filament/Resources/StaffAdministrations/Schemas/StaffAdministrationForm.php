@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\StaffAdministrations\Schemas;
 
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
@@ -29,6 +30,12 @@ class StaffAdministrationForm
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->helperText('Unggah SIP dalam format PDF'),
+                DatePicker::make('sip_expiry')
+                    ->label('Masa Berlaku SIP')
+                    ->native(false)
+                    ->displayFormat('d F Y')
+                    ->inlineLabel()
+                    ->columnSpanFull(),
                 FileUpload::make('str')
                     ->label('Surat Tanda Registrasi')
                     ->disk('public')
@@ -39,6 +46,12 @@ class StaffAdministrationForm
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->helperText('Unggah STR dalam format PDF'),
+                DatePicker::make('str_expiry')
+                    ->label('Masa Berlaku STR')
+                    ->native(false)
+                    ->displayFormat('d F Y')
+                    ->inlineLabel()
+                    ->columnSpanFull(),
                 FileUpload::make('mcu')
                     ->label('Medical Check Up')
                     ->disk('public')
@@ -49,6 +62,12 @@ class StaffAdministrationForm
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->helperText('Unggah MCU dalam format PDF'),
+                DatePicker::make('mcu_expiry')
+                    ->label('Masa Berlaku MCU')
+                    ->native(false)
+                    ->displayFormat('d F Y')
+                    ->inlineLabel()
+                    ->columnSpanFull(),
                 FileUpload::make('spk')
                     ->label('Surat Penugasan Klinis')
                     ->disk('public')
@@ -59,6 +78,12 @@ class StaffAdministrationForm
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->helperText('Unggah SPK dalam format PDF'),
+                DatePicker::make('spk_expiry')
+                    ->label('Masa Berlaku SPK')
+                    ->native(false)
+                    ->displayFormat('d F Y')
+                    ->inlineLabel()
+                    ->columnSpanFull(),
                 FileUpload::make('rkk')
                     ->label('Rincian Kewenangan Klinis')
                     ->disk('public')
@@ -69,6 +94,12 @@ class StaffAdministrationForm
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->helperText('Unggah RKK dalam format PDF'),
+                DatePicker::make('rkk_expiry')
+                    ->label('Masa Berlaku RKK')
+                    ->native(false)
+                    ->displayFormat('d F Y')
+                    ->inlineLabel()
+                    ->columnSpanFull(),
                 FileUpload::make('utw')
                     ->label('Uraian Tugas dan Wewenang')
                     ->disk('public')
@@ -79,6 +110,12 @@ class StaffAdministrationForm
                     ->inlineLabel()
                     ->columnSpanFull()
                     ->helperText('Unggah UTW dalam format PDF'),
+                DatePicker::make('utw_expiry')
+                    ->label('Masa Berlaku UTW')
+                    ->native(false)
+                    ->displayFormat('d F Y')
+                    ->inlineLabel()
+                    ->columnSpanFull(),
             ]);
     }
 }

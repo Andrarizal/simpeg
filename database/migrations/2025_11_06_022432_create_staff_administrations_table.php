@@ -18,13 +18,18 @@ return new class extends Migration
                 indexName: 'staff_administration_staff_id'
             )->cascadeOnDelete();
             $table->string('sip')->nullable();
+            $table->date('sip_expiry')->nullable();
             $table->string('str')->nullable();
+            $table->date('str_expiry')->nullable();
             $table->string('mcu')->nullable();
+            $table->date('mcu_expiry')->nullable();
             $table->string('spk')->nullable();
+            $table->date('spk_expiry')->nullable();
             $table->string('rkk')->nullable();
+            $table->date('rkk_expiry')->nullable();
             $table->string('utw')->nullable();
+            $table->date('utw_expiry')->nullable();
             $table->unsignedTinyInteger('is_verified')->default(0);
-            $table->string('adverb')->nullable();
             $table->timestamps();
         });
     }

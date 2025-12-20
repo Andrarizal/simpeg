@@ -3,15 +3,21 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
+use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\FontProviders\GoogleFontProvider;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Notifications\Livewire\Notifications;
+use Filament\Notifications\Notification;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\VerticalAlignment;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -20,7 +26,9 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Livewire\Livewire;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -244,7 +252,7 @@ class AdminPanelProvider extends PanelProvider
                             const checkNotifications = () => {
                                 // Selector spesifik sesuai HTML yang Anda kirim
                                 // Kita cari span di dalam div class 'fi-icon-btn-badge-ctn'
-                                const badgeSpan = document.querySelector('.fi-icon-btn-badge-ctn span.fi-badge');
+                                const badgeSpan = document.querySelector('.total-notifications');
 
                                 if (badgeSpan) {
                                     // Ambil angka dari teks (misal "1", "5", "99+")
@@ -294,5 +302,80 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn () => view('filament.schemas.components.brand-logo'))
             ->databaseNotifications()
             ->databaseNotificationsPolling('5s');
+    }
+
+    public function boot(): void
+    {
+        Filament::serving(function () {
+            if (!Auth::check()) return;
+
+            if (Livewire::isLivewireRequest()) return;
+            if (session()->has('doc_expiry_notified')) return;
+
+            $user = Auth::user();
+
+            if ($user->staff && $user->staff->administration) {
+                
+                $adminRecord = $user->staff->administration;
+                
+                $documentsToCheck = [
+                    'sip_expiry' => 'Surat Izin Praktek (SIP)',
+                    'str_expiry' => 'Surat Tanda Registrasi (STR)',
+                    'mcu_expiry' => 'Medical Check Up (MCU)',
+                    'spk_expiry' => 'Surat Penugasan Klinis (SPK)',
+                    'rkk_expiry' => 'Rincian Kewenangan Klinis (RKK)',
+                    'utw_expiry' => 'Uraian Tugas Wewenang (UTW)',
+                ];
+
+                foreach ($documentsToCheck as $field => $label) {
+                    $expiryValue = $adminRecord->$field;
+
+                    if ($expiryValue) {
+                        $expiryDate = Carbon::parse($expiryValue);
+                        $today = Carbon::now()->startOfDay();
+                        $warningDate = Carbon::now()->addDays(7)->endOfDay(); 
+
+                        // Logika: H-7 atau Sudah Lewat
+                        if ($expiryDate->lessThanOrEqualTo($warningDate)) {
+                            $daysLeft = $today->diffInDays($expiryDate, false);
+                            
+                            if ($daysLeft < 0) {
+                                $title = '⛔ Dokumen Kadaluarsa';
+                                $body = "Dokumen {$label} telah beberapa hari kadaluarsa.";
+                                $color = 'danger';
+                            } elseif ($daysLeft == 0) {
+                                $title = '⚠️ Dokumen Kadaluarsa Hari Ini';
+                                $body = "Dokumen {$label} Anda kadaluarsa HARI INI!";
+                                $color = 'warning';
+                            } else {
+                                $title = '⚠️ Peringatan Dokumen';
+                                $body = "Dokumen {$label} Anda akan kadaluarsa dalam {$daysLeft} hari lagi (" . $expiryDate->format('d M Y') . ")";
+                                $color = 'warning';
+                            }
+                            
+                            $secretMarker = '<span class="lock-notif hidden"></span>';
+
+                            Notification::make()
+                                ->title(new HtmlString($secretMarker . $title))
+                                ->body($body)
+                                ->status($color)
+                                ->persistent()
+                                ->actions([
+                                    Action::make('perbarui')
+                                        ->button()
+                                        ->label('Perbarui')
+                                        ->url(StaffAdministrationResource::getUrl('edit', ['record' => $adminRecord->id])),
+                                    Action::make('dismiss')
+                                        ->label('Perbarui Nanti')
+                                        ->color('gray')
+                                        ->dispatch('mark-expiry-read')
+                                        ->close()
+                                ])
+                                ->send();
+                        }
+                    }
+                }
+            }
+        });
     }
 }

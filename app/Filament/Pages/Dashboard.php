@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
 use App\Livewire\DeviceCaptureWidget;
 use App\Models\Presence;
 use App\Models\Schedule;

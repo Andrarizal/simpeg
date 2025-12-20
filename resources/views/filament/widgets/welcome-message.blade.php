@@ -18,8 +18,8 @@
                 <div class="inline-block px-2 py-0.5 rounded bg-white/20 text-white text-xs font-mono mb-1">
                     {{ $staff->nip ?? 'No NIP' }}
                 </div>
-                <h2 class="text-2xl font-bold text-white tracking-tight">
-                    Selamat Datang, {{ $user->name }}
+                <h2 class="text-3xl font-bold text-white tracking-tight">
+                    {{ $user->name }}
                 </h2>
                 <div class="text-emerald-100 text-sm space-y-0.5">
                     <p>{{ $staff->chair->name ?? '-' }} &bull; {{ $staff->unit->name ?? '-' }}</p>

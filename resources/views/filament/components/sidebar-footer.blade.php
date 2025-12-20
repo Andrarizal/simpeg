@@ -63,7 +63,6 @@
               },
 
               cycleTheme() {
-                  // Logic untuk tombol tunggal saat collapse: Light -> Dark -> System -> Light
                   if (this.theme === 'light') this.setTheme('dark');
                   else if (this.theme === 'dark') this.setTheme('system');
                   else this.setTheme('light');
@@ -74,7 +73,7 @@
                   document.documentElement.classList.toggle('dark', isDark);
               }
           }"
-          class="px-2 transition-all duration-300"
+          class="flex justify-center px-2 transition-all duration-300"
       >
           <div x-show="$store.sidebar.isOpen" x-transition class="flex justify-self-center gap-1 px-2 py-1.5 w-fit bg-gray-100 rounded-xl dark:bg-white/5">
               <button @click="setTheme('light')" :class="theme === 'light' ? 'bg-white text-primary-600 shadow-sm dark:bg-gray-800 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'" class="flex items-center justify-center px-2 py-1.5 rounded-lg transition-all gap-1">

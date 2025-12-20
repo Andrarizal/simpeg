@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Livewire\FloatingNotification;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +65,9 @@ class AppServiceProvider extends ServiceProvider
                     .fi-modal-window,
                     .fi-wi-stats-overview-stat {
                         border-radius: var(--radius-3xl)!important;
+                    }
+
+                    .fi-wi-stats-overview-stat {
                         overflow: hidden;
                     }
 
@@ -143,6 +147,22 @@ class AppServiceProvider extends ServiceProvider
 
                     .fi-sidebar-nav .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover {
                         filter: brightness(90%); 
+                    }
+
+                    .fi-in-entry-content-col {
+                        row-gap: 0
+                    }
+
+                    .fi-in-text-affixed {
+                        align-items: center;
+                    }
+
+                    .fi-topbar-database-notifications-btn .fi-icon-btn-badge-ctn {
+                        display: none !important;
+                    }
+
+                    .fi-no-notification:has(.lock-notif) button[x-on\:click="close"] {
+                        display: none !important;
                     }
 
                     @media (min-width: 1024px) {
@@ -285,7 +305,7 @@ class AppServiceProvider extends ServiceProvider
 
         FilamentView::registerRenderHook(
             'panels::body.end',
-            fn () => view('filament.components.floating-notification')
+            fn () => \Livewire\Livewire::mount(FloatingNotification::class)
         );
     }
 }

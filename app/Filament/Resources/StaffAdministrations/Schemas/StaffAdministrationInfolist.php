@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\StaffAdministrations\Schemas;
 
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -19,6 +20,10 @@ class StaffAdministrationInfolist
                 TextEntry::make('sip')
                     ->label('Surat Izin Praktek')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->helperText(fn ($record) => $record->sip_expiry 
+                        ? 'Berlaku sampai: ' . Carbon::parse($record->sip_expiry)->format('d-m-Y') 
+                        : null
+                    )
                     ->suffixAction(
                         Action::make('show')
                             ->icon('heroicon-o-eye')
@@ -46,6 +51,10 @@ class StaffAdministrationInfolist
                 TextEntry::make('Surat Tanda Registrasi')
                     ->label('Surat Tanda Registrasi')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->helperText(fn ($record) => $record->str_expiry 
+                        ? 'Berlaku sampai: ' . Carbon::parse($record->str_expiry)->format('d-m-Y') 
+                        : null
+                    )
                     ->suffixAction(
                         Action::make('show')
                             ->icon('heroicon-o-eye')
@@ -73,6 +82,10 @@ class StaffAdministrationInfolist
                 TextEntry::make('mcu')
                     ->label('Medical Check Up')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->helperText(fn ($record) => $record->mcu_expiry 
+                        ? 'Berlaku sampai: ' . Carbon::parse($record->mcu_expiry)->format('d-m-Y') 
+                        : null
+                    )
                     ->suffixAction(
                         Action::make('show')
                             ->icon('heroicon-o-eye')
@@ -100,6 +113,10 @@ class StaffAdministrationInfolist
                 TextEntry::make('spk')
                     ->label('Surat Penugasan Klinis')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->helperText(fn ($record) => $record->spk_expiry 
+                        ? 'Berlaku sampai: ' . Carbon::parse($record->spk_expiry)->format('d-m-Y') 
+                        : null
+                    )
                     ->suffixAction(
                         Action::make('show')
                             ->icon('heroicon-o-eye')
@@ -127,6 +144,10 @@ class StaffAdministrationInfolist
                 TextEntry::make('rkk')
                     ->label('Rencana Kewenangan Klinis')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->helperText(fn ($record) => $record->rkk_expiry 
+                        ? 'Berlaku sampai: ' . Carbon::parse($record->rkk_expiry)->format('d-m-Y') 
+                        : null
+                    )
                     ->suffixAction(
                         Action::make('show')
                             ->icon('heroicon-o-eye')
@@ -154,6 +175,10 @@ class StaffAdministrationInfolist
                 TextEntry::make('utw')
                     ->label('Uraian Tugas dan Wewenang')
                     ->formatStateUsing(fn ($state) => $state ? '📄 ' . basename($state) : '-')
+                    ->helperText(fn ($record) => $record->utw_expiry 
+                        ? 'Berlaku sampai: ' . Carbon::parse($record->utw_expiry)->format('d-m-Y') 
+                        : null
+                    )
                     ->suffixAction(
                         Action::make('show')
                             ->icon('heroicon-o-eye')
