@@ -13,6 +13,8 @@ class StaffContract extends Model
     
     protected $fillable = ['staff_id', 'contract_number', 'start_date', 'end_date', 'decree'];
 
+    protected $touches = ['staff'];
+
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);
     }

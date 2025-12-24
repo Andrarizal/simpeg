@@ -1,4 +1,4 @@
-<div class="fixed right-8 top-4 z-10" wire:poll.5s>
+<div class="floating-notif fixed right-8 top-4 z-10" wire:poll.5s>
     {{-- Container Utama --}}
     <div class="relative flex items-center justify-center bg-white border border-gray-200 shadow-xl rounded-full dark:bg-gray-900 dark:border-white/10" 
          style="width: 40px; height: 40px;">

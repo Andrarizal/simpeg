@@ -16,6 +16,10 @@ return new class extends Migration
             $table->string('name');
             $table->unsignedTinyInteger('level');
             $table->unsignedTinyInteger('head_id')->nullable();
+            $table->foreignId('unit_id')->nullable()->constrained(
+                table: 'units',
+                indexName: 'chairs_unit_id',
+            )->nullOnDelete();
             $table->timestamps();
         });
     }

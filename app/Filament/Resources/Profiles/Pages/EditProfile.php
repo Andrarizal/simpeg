@@ -23,6 +23,9 @@ class EditProfile extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('my_history')
+                ->label('Riwayat Jabatan Saya')
+                ->url(route('filament.admin.resources.staff.history', ['record' => Auth::user()->staff_id])),
             Action::make('save')
                 ->label('Simpan')
                 ->action(fn () => $this->save())

@@ -201,7 +201,6 @@ class StaffForm
                             ->disk('public')
                             ->visibility('public')
                             ->directory('surat-penyesuaian')
-                            ->required()
                             ->acceptedFileTypes(['application/pdf'])
                             ->maxSize(2048) // maksimal 2MB
                             ->helperText('Unggah surat penyesuaian golongan dalam format PDF'),

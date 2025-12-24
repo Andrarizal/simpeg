@@ -9,6 +9,7 @@ use App\Filament\Resources\Staff\Pages\ViewStaff;
 use App\Filament\Resources\Staff\Schemas\StaffForm;
 use App\Filament\Resources\Staff\Schemas\StaffInfolist;
 use App\Filament\Resources\Staff\Tables\StaffTable;
+use App\Filament\Resources\StaffResource\Pages\ManageWorkHistories;
 use App\Models\Staff;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -62,6 +63,7 @@ class StaffResource extends Resource
             'create' => CreateStaff::route('/create'),
             'view' => ViewStaff::route('/{record}'),
             'edit' => EditStaff::route('/{record}/edit'),
+            'history' => ManageWorkHistories::route('/{record}/history'),
         ];
     }
 

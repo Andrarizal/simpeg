@@ -30,11 +30,12 @@ class AppServiceProvider extends ServiceProvider
                 <style>
                     @font-face {
                         font-family: 'SF-Pro';
-                        src: url('/fonts/SF-Pro.otf');
+                        src: url('/fonts/SF-Pro.ttf');
                     }
 
                     :root {
                         --font-family: 'SF-Pro', sans-serif !important;
+                        --sidebar-width: 18rem!important;
                     }
 
                     .fi-card,
@@ -110,6 +111,8 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     .fi-main {
+                        margin-inline: 0 !important;
+                        max-width: 100% !important;
                         min-height: 100vh;
                         background-color: #f8fafc; 
 
@@ -163,6 +166,10 @@ class AppServiceProvider extends ServiceProvider
 
                     .fi-no-notification:has(.lock-notif) button[x-on\:click="close"] {
                         display: none !important;
+                    }
+
+                    .fi-section-content:has(div[wire\:poll\.5s="updateChartData"]) canvas {
+                        width: 100% !important;
                     }
 
                     @media (min-width: 1024px) {

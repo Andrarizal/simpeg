@@ -13,6 +13,8 @@ class StaffAppointment extends Model
     
     protected $fillable = ['staff_id', 'decree_number', 'decree_date', 'class', 'decree'];
 
+    protected $touches = ['staff'];
+
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);
     }
