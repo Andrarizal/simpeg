@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class SystemRuleResource extends Resource
 {
@@ -26,6 +27,8 @@ class SystemRuleResource extends Resource
     protected static ?string $modelLabel = 'Aturan Sistem';        // singular
     protected static ?string $pluralModelLabel = 'Aturan Sistem'; // plural/menu
     protected static ?string $navigationLabel = 'Aturan Sistem';
+    protected static ?int $navigationSort = 1;
+    protected static UnitEnum|string|null $navigationGroup = 'Sistem';
 
     public static function form(Schema $schema): Schema
     {

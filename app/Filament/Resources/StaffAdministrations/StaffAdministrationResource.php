@@ -23,7 +23,7 @@ class StaffAdministrationResource extends Resource
     protected static ?string $modelLabel = 'Administrasi';       
     protected static ?string $pluralModelLabel = 'Administrasi Pegawai'; 
     protected static ?string $navigationLabel = 'Administrasi';
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 3;
     protected static UnitEnum|string|null $navigationGroup = 'Kepegawaian';
     
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Wallet;

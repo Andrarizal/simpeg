@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Auth;
 
 class TrainingProgressWidget extends Widget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4;
+
+    protected int | string | array $columnSpan = 2;
 
     protected string $view = 'filament.widgets.training-progress-widget';
 

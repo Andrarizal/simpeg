@@ -7,6 +7,7 @@ use App\Models\Presence;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class PresenceResource extends Resource
 {
@@ -15,6 +16,8 @@ class PresenceResource extends Resource
     protected static ?string $modelLabel = 'Presensi';       
     protected static ?string $pluralModelLabel = 'Presensi'; 
     protected static ?string $navigationLabel = 'Presensi';
+    protected static ?int $navigationSort = 1;
+    protected static UnitEnum|string|null $navigationGroup = 'Keperluan';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::FingerPrint;
 
     protected static ?string $recordTitleAttribute = 'Presence';

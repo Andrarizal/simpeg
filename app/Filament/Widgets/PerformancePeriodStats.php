@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Auth;
 
 class PerformancePeriodStats extends StatsOverviewWidget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
-    protected int | string | array $columnSpan = 1;
+    protected int | string | array $columnSpan = 2;
 
     protected function getStats(): array
     {

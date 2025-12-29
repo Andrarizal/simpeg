@@ -24,6 +24,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use UnitEnum;
 
 class PreStaffResource extends Resource
 {
@@ -36,6 +37,8 @@ class PreStaffResource extends Resource
     protected static ?string $modelLabel = 'Pegawai Baru';       
     protected static ?string $pluralModelLabel = 'Pegawai Baru'; 
     protected static ?string $navigationLabel = 'Pegawai Baru';
+    protected static ?int $navigationSort = 4;
+    protected static UnitEnum|string|null $navigationGroup = 'Kepegawaian';
 
     public static function table(Table $table): Table
     {

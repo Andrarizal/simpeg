@@ -6,10 +6,13 @@ use App\Models\Presence;
 use Filament\Widgets\ChartWidget;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
+use Illuminate\Support\Facades\Auth;
 
 class LateAttendanceChart extends ChartWidget
 {
-    protected static ?int $sort = 7;
+    protected static ?int $sort = 8;
+
+    protected int | string | array $columnSpan = 2;
 
     protected ?string $heading = 'Tren Keterlambatan (7 Hari Terakhir)';
     
@@ -49,5 +52,10 @@ class LateAttendanceChart extends ChartWidget
     protected function getType(): string
     {
         return 'line';
+    }
+
+    public static function canView(): bool
+    {
+        return Auth::user()?->role_id == 1;
     }
 }

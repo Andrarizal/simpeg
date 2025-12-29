@@ -25,8 +25,8 @@ class OvertimeResource extends Resource
     protected static ?string $modelLabel = 'Lembur';       
     protected static ?string $pluralModelLabel = 'Daftar Lembur'; 
     protected static ?string $navigationLabel = 'Lembur';
-    protected static ?int $navigationSort = 7;
-    protected static UnitEnum|string|null $navigationGroup = 'Kepegawaian';
+    protected static ?int $navigationSort = 2;
+    protected static UnitEnum|string|null $navigationGroup = 'Keperluan';
     
     protected static string|BackedEnum|null $navigationIcon = Heroicon::SquaresPlus;
 

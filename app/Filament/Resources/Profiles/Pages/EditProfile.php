@@ -25,6 +25,7 @@ class EditProfile extends EditRecord
         return [
             Action::make('my_history')
                 ->label('Riwayat Jabatan Saya')
+                ->color('info')
                 ->url(route('filament.admin.resources.staff.history', ['record' => Auth::user()->staff_id])),
             Action::make('save')
                 ->label('Simpan')

@@ -7,9 +7,12 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class OrganizationStructure extends Page
 {
+    protected static ?int $navigationSort = 1;
+    protected static UnitEnum|string|null $navigationGroup = 'Master';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::RectangleGroup;
     
     protected static ?string $navigationLabel = 'Struktur Organisasi';

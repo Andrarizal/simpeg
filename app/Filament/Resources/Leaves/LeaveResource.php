@@ -28,8 +28,8 @@ class LeaveResource extends Resource
     protected static ?string $modelLabel = 'Cuti & Izin'; 
     protected static ?string $pluralModelLabel = 'Cuti & Izin'; 
     protected static ?string $navigationLabel = 'Cuti & Izin';
-    protected static ?int $navigationSort = 4;
-    protected static string|UnitEnum|null $navigationGroup = 'Kepegawaian';
+    protected static ?int $navigationSort = 3;
+    protected static string|UnitEnum|null $navigationGroup = 'Keperluan';
 
     public static function form(Schema $schema): Schema
     {

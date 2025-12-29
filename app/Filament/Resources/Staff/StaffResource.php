@@ -27,7 +27,7 @@ class StaffResource extends Resource
     protected static ?string $modelLabel = 'Pegawai';       
     protected static ?string $pluralModelLabel = 'List Pegawai'; 
     protected static ?string $navigationLabel = 'List Pegawai';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
     protected static UnitEnum|string|null $navigationGroup = 'Kepegawaian';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
@@ -75,6 +75,17 @@ class StaffResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->role_id == 1;
+        $user = Auth::user();
+
+        if ($user?->role_id == 1) {
+            return true;
+        }
+
+        if (request()->routeIs('filament.admin.resources.staff.history')) {
+            return true;
+        }
+
+        // Default: Blokir
+        return false;
     }
 }

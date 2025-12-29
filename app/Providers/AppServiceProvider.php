@@ -293,6 +293,12 @@ class AppServiceProvider extends ServiceProvider
                                 margin-bottom: 0 !important;
                             }
                         }
+
+                        @media (max-width: 768px) {
+                            .fi-sc-has-gap {
+                                column-gap: 0!important;
+                            }
+                        }
                     CSS;
                 }
 

@@ -38,8 +38,14 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
-            // ->font('SF Pro', provider: GoogleFontProvider::class)
             ->sidebarCollapsibleOnDesktop()
+            ->navigationGroups([
+                'Kepegawaian',
+                'Keperluan',
+                'Pengembangan',
+                'Master',
+                'Sistem',
+            ])
             ->login(Login::class)
             ->userMenuItems([
                 Action::make('profile')

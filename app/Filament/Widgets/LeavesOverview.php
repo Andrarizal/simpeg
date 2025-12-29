@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Auth;
 
 class LeavesOverview extends StatsOverviewWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
-    protected int | string | array $columnSpan = 1;
+    protected int | string | array $columnSpan = 2;
 
-    protected function getColumns(): int 
+    protected function getColumns(): int | array
     {
         return 2;
     }

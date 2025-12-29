@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class DailyAttendanceStats extends StatsOverviewWidget
 {
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 6;
 
     protected ?string $pollingInterval = '10s';
 
-    protected int | string | array $columnSpan = 1;
+    protected int | string | array $columnSpan = 2;
 
     protected function getColumns(): int 
     {

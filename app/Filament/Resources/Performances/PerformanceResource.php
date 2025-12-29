@@ -20,8 +20,8 @@ class PerformanceResource extends Resource
     protected static ?string $modelLabel = 'Penilaian Kinerja';       
     protected static ?string $pluralModelLabel = 'Penilaian Kinerja'; 
     protected static ?string $navigationLabel = 'Penilaian Kinerja';
-    protected static ?int $navigationSort = 8;
-    protected static UnitEnum|string|null $navigationGroup = 'Kepegawaian';
+    protected static ?int $navigationSort = 1;
+    protected static UnitEnum|string|null $navigationGroup = 'Pengembangan';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::PresentationChartLine;
 
