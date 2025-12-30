@@ -28,7 +28,7 @@ class ChairResource extends Resource
     protected static ?string $pluralModelLabel = 'Jabatan';
     protected static ?string $navigationLabel = 'Jabatan';
     protected static ?int $navigationSort = 2;
-    protected static UnitEnum|string|null $navigationGroup = 'Master';
+    protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Briefcase;
 

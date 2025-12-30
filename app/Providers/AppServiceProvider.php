@@ -172,6 +172,47 @@ class AppServiceProvider extends ServiceProvider
                         width: 100% !important;
                     }
 
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) .fi-section-content-ctn {
+                        border-top-width: 0 !important;
+                    }
+
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) header,
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) footer {
+                        display: none !important;
+                    }
+
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-button {
+                        border-radius: var(--radius-2xl) !important;
+                    }
+
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-today:hover {
+                        border-radius: var(--radius-2xl) !important;
+                        cursor: pointer;
+                        background-color: rgba(0,0,0,0.1) !important;
+                    }
+
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-prev {
+                        border-top-right-radius: 0!important;
+                        border-bottom-right-radius: 0!important;
+                    }
+
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-next {
+                        border-top-left-radius: 0!important;
+                        border-bottom-left-radius: 0!important;
+                    }
+
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-header {
+                        border-radius: var(--radius-2xl) !important;
+                        border-bottom-right-radius: 0 !important;
+                        border-bottom-left-radius: 0 !important;
+                    }
+
+                    .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-body {
+                        border-radius: var(--radius-2xl) !important;
+                        border-top-right-radius: 0 !important;
+                        border-top-left-radius: 0 !important;
+                    }
+
                     @media (min-width: 1024px) {
                         aside.fi-sidebar,
                         main.fi-main,

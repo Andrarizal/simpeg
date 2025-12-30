@@ -3,7 +3,7 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'bfd2191b6a0f6689891c14683603c421cac209d0',
+        'reference' => '971c25a1a3c525226922cf8040328d2820878baa',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -27,6 +27,15 @@
             'install_path' => __DIR__ . '/../bacon/bacon-qr-code',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'barryvdh/laravel-debugbar' => array(
+            'pretty_version' => 'v3.16.3',
+            'version' => '3.16.3.0',
+            'reference' => 'c91e57ea113edd6526f5b8cd6b1c6ee02c67b28e',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../barryvdh/laravel-debugbar',
+            'aliases' => array(),
+            'dev_requirement' => true,
         ),
         'blade-ui-kit/blade-heroicons' => array(
             'pretty_version' => '2.6.0',
@@ -346,6 +355,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'guava/calendar' => array(
+            'pretty_version' => '2.1.1',
+            'version' => '2.1.1.0',
+            'reference' => '9d010d2c31646b40198c4fe181ce830cb052ab82',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../guava/calendar',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'guzzlehttp/guzzle' => array(
             'pretty_version' => '7.10.0',
             'version' => '7.10.0.0',
@@ -637,7 +655,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'bfd2191b6a0f6689891c14683603c421cac209d0',
+            'reference' => '971c25a1a3c525226922cf8040328d2820878baa',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -831,6 +849,12 @@
             'install_path' => __DIR__ . '/../masterminds/html5',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'maximebf/debugbar' => array(
+            'dev_requirement' => true,
+            'replaced' => array(
+                0 => 'v2.2.6',
+            ),
         ),
         'mockery/mockery' => array(
             'pretty_version' => '1.6.12',
@@ -1042,6 +1066,15 @@
             'reference' => '4f7fd7836c6f332bb2933569e566a0d6c4cbed74',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phar-io/version',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'php-debugbar/php-debugbar' => array(
+            'pretty_version' => 'v2.2.6',
+            'version' => '2.2.6.0',
+            'reference' => 'abb9fa3c5c8dbe7efe03ddba56782917481de3e8',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../php-debugbar/php-debugbar',
             'aliases' => array(),
             'dev_requirement' => true,
         ),

@@ -13,6 +13,11 @@ class PerformancePeriodStats extends StatsOverviewWidget
 
     protected int | string | array $columnSpan = 2;
 
+    public function getColumns(): int | array
+    {
+        return 1;
+    }
+
     protected function getStats(): array
     {
         $period = PerformancePeriod::where('status', true)->latest()->first();

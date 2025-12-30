@@ -42,8 +42,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Kepegawaian',
                 'Keperluan',
-                'Pengembangan',
-                'Master',
+                'Perusahaan',
                 'Sistem',
             ])
             ->login(Login::class)
