@@ -207,6 +207,10 @@ class AppServiceProvider extends ServiceProvider
                         border-bottom-left-radius: 0 !important;
                     }
 
+                    .dark .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-header, .dark .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-body, .dark .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-day, .dark .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-days {
+                        border-color: rgb(48, 48, 48) !important; 
+                    }
+
                     .fi-section.fi-section-has-header:has(div[data-calendar]) .ec-body {
                         border-radius: var(--radius-2xl) !important;
                         border-top-right-radius: 0 !important;
