@@ -358,7 +358,7 @@ class ApproveTable
                     ->color('info')
                     ->visible(function ($record) {
                         if (Auth::user()->role_id == 1) {
-                            return $record->is_verified == 0 || $record->is_verified == 1 || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
+                            return $record->is_verified === 0 || $record->is_verified === 1 || $record->is_replaced == 0 || $record->status === 'Ditolak' ? false : true;
                         }
                         return false;
                     })

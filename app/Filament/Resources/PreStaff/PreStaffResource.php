@@ -14,7 +14,9 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -44,13 +46,11 @@ class PreStaffResource extends Resource
     {
         return $table
             ->recordTitleAttribute('PreStaff')
+            ->query(fn ($query) => $query->latest())
             ->columns([
                 TextColumn::make('nik')
                     ->label('NIK')
                     ->sortable(),
-                TextColumn::make('nip')
-                    ->label('NIP')
-                    ->searchable(),
                 TextColumn::make('name')
                     ->label('Nama Lengkap')
                     ->searchable(),
@@ -94,13 +94,10 @@ class PreStaffResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
             ->recordActions([
                 Action::make('verifikasi')
                     ->label('Verifikasi')
-                    ->icon('heroicon-m-paper-airplane') // Icon pesawat kertas
+                    ->icon('heroicon-m-paper-airplane')
                     ->color('info') 
                     ->requiresConfirmation()
                     ->modalHeading('Kirim Email Verifikasi?')
@@ -110,6 +107,16 @@ class PreStaffResource extends Resource
                     ->schema([
                         Grid::make()
                             ->schema([
+                                TextInput::make('nip')
+                                    ->label('NIP')
+                                    ->mask('9999.9999.999.9')
+                                    ->disabled()
+                                    ->dehydrated(),
+                                DatePicker::make('entry_date')
+                                    ->label('Terhitung Mulai Tanggal')
+                                    ->maxDate(now())
+                                    ->required()
+                                    ->native(false),
                                 Select::make('staff_status_id')
                                     ->label('Status Kepegawaian')
                                     ->options(StaffStatus::pluck('name', 'id'))
@@ -147,6 +154,8 @@ class PreStaffResource extends Resource
 
                             $record->update([
                                 'status' => 'Diverifikasi',
+                                'nip' => $data['nip'],
+                                'entry_date' => $data['entry_date'],
                                 'staff_status_id' => $data['staff_status_id'],
                                 'chair_id' => $data['chair_id'],
                                 'group_id' => $data['group_id'],

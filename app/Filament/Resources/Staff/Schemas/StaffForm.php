@@ -24,12 +24,12 @@ class StaffForm
         return $schema
             ->components([
                 TextInput::make('nik')
-                    ->label('NIK')
+                    ->label('Nomor Induk Kependudukan')
                     ->placeholder('ex. 3321029920192099')
                     ->maxLength(16)
                     ->required(),
                 TextInput::make('nip')
-                    ->label('NIP')
+                    ->label('Nomor Induk Kepegawaian')
                     ->mask('9999.9999.999.9')
                     ->maxLength(15)
                     ->placeholder('ex. 3321.0299.201.9')
@@ -47,7 +47,6 @@ class StaffForm
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(function (callable $set, $state) {
-                        // reset end_date ketika start_date berubah
                         $set('retirement_date', Carbon::parse($state)->addYear(56)->format('Y-m-d'));
                     })
                     ->native(false),
@@ -57,7 +56,7 @@ class StaffForm
                     ->inline()
                     ->required(),
                 Textarea::make('origin')
-                    ->label('Alamat Asli')
+                    ->label('Alamat KTP')
                     ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
                     ->required(),
                 Textarea::make('domicile')

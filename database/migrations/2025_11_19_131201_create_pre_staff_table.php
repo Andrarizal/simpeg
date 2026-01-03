@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pre_staff', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('nik')->unique();
-            $table->string('nip')->unique();
+            $table->string('nip')->nullable()->unique();
             $table->string('name');
             $table->date('birth_date');
             $table->string('email')->unique();
@@ -35,6 +35,7 @@ return new class extends Migration
                 table: 'units',
                 indexName: 'pre_staff_unit_id'
             )->nullOnDelete();
+            $table->date('entry_date')->nullable();
             $table->string('token');
             $table->enum('status', ['Menunggu', 'Diverifikasi', 'Ditolak']);
             $table->timestamps();

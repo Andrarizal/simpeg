@@ -44,6 +44,34 @@ class SumStaffByUnit extends ChartWidget
         return 'bar';
     }
 
+    protected function getOptions(): array
+    {
+        return [
+            'maintainAspectRatio' => false, // Penting: Biarkan chart mengisi container tanpa terkunci rasio lama
+            'responsive' => true,
+            'plugins' => [
+                'legend' => [
+                    'display' => false, // Opsional: sembunyikan legend jika tidak perlu
+                ],
+            ],
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => [
+                        'stepSize' => 1,
+                    ],
+                ],
+                'x' => [
+                    'ticks' => [
+                        // Opsional: Miringkan text agar tidak tumpang tindih saat lebar berubah
+                        'maxRotation' => 45,
+                        'minRotation' => 45, 
+                    ],
+                ],
+            ],
+        ];
+    }
+
     public static function canView(): bool
     {
         return Auth::user()?->role_id == 1;

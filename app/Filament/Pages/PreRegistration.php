@@ -37,24 +37,18 @@ class PreRegistration extends Page implements HasSchemas
     {
         return $schema
             ->components([
+                TextInput::make('name')
+                    ->label('Nama')
+                    ->columnSpanFull()
+                    ->placeholder('ex. Tamam Muhammad')
+                    ->required(),
                 TextInput::make('nik')
-                    ->label('NIK')
+                    ->label('Nomor Induk Kependudukan')
                     ->placeholder('ex. 3321029920192099')
                     ->maxLength(16)
                     ->numeric()
                     ->unique('staff', 'nik')
                     ->unique('pre_staff', 'nik')
-                    ->required(),
-                TextInput::make('nip')
-                    ->label('NIP')
-                    ->mask('9999.9999.999.9')
-                    ->maxLength(16)
-                    ->inputMode('numeric')
-                    ->placeholder('ex. 3321.0299.201.9')
-                    ->required(),
-                TextInput::make('name')
-                    ->label('Nama')
-                    ->placeholder('ex. Tamam Muhammad')
                     ->required(),
                 DatePicker::make('birth_date')
                     ->label('Tanggal Lahir')
@@ -84,7 +78,6 @@ class PreRegistration extends Page implements HasSchemas
 
         PreStaff::create([
             'nik' => $validated['nik'],
-            'nip' => $validated['nip'],
             'name' => $validated['name'],
             'birth_date' => $validated['birth_date'],
             'email' => $validated['email'],

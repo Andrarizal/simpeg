@@ -91,7 +91,7 @@ class ProfileForm
                                                 ->columns(2)
                                                 ->schema([
                                                     TextInput::make('nik')
-                                                        ->label('NIK')
+                                                        ->label('Nomor Induk Kependudukan')
                                                         ->placeholder('ex. 3321029920192099')
                                                         ->maxLength(16)
                                                         ->required(),
@@ -128,6 +128,8 @@ class ProfileForm
                                                         ->label('Terhitung Mulai Tanggal')
                                                         ->maxDate(now())
                                                         ->required()
+                                                        ->disabled()
+                                                        ->dehydrated()
                                                         ->native(false),
                                                     TextInput::make('email')
                                                         ->label('Email Pribadi')

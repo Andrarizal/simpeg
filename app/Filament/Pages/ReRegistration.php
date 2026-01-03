@@ -79,6 +79,7 @@ class ReRegistration extends Page implements HasSchemas
             'chair_id' => $preStaff->chair_id,
             'group_id' => $preStaff->group_id,
             'unit_id' => $preStaff->unit_id,
+            'entry_date' => $preStaff->entry_date,
         ]);
     }
 
@@ -110,7 +111,7 @@ class ReRegistration extends Page implements HasSchemas
                                             'class' => 'mx-auto mb-2',
                                         ]),
                                     TextInput::make('nik')
-                                        ->label('NIK')
+                                        ->label('Nomor Induk Kependudukan')
                                         ->disabled()
                                         ->dehydrated(),
                                     TextInput::make('name')
@@ -166,7 +167,7 @@ class ReRegistration extends Page implements HasSchemas
                                                 ->reactive()
                                                 ->native(false),
                                             Textarea::make('origin')
-                                                ->label('Alamat Asli')
+                                                ->label('Alamat KTP')
                                                 ->rows(3)
                                                 ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
                                                 ->required(),
@@ -192,7 +193,7 @@ class ReRegistration extends Page implements HasSchemas
                                         ->icon('heroicon-o-puzzle-piece')
                                         ->schema([
                                             TextInput::make('nip')
-                                                ->label('NIP')
+                                                ->label('Nomor Induk Kepegawaian')
                                                 ->mask('9999.9999.999.9')
                                                 ->disabled()
                                                 ->dehydrated(),
@@ -200,6 +201,8 @@ class ReRegistration extends Page implements HasSchemas
                                                 ->label('Terhitung Mulai Tanggal')
                                                 ->maxDate(now())
                                                 ->required()
+                                                ->disabled()
+                                                ->dehydrated()
                                                 ->native(false),
                                             DatePicker::make('retirement_date')
                                                 ->label('Tanggal Pensiun')
