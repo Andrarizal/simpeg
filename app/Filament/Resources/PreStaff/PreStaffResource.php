@@ -46,7 +46,6 @@ class PreStaffResource extends Resource
     {
         return $table
             ->recordTitleAttribute('PreStaff')
-            ->query(fn ($query) => $query->latest())
             ->columns([
                 TextColumn::make('nik')
                     ->label('NIK')

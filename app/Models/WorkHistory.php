@@ -28,4 +28,10 @@ class WorkHistory extends Model
     {
         return $this->belongsTo(StaffStatus::class);
     }
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'decree_date' => 'date',
+    ];
 }

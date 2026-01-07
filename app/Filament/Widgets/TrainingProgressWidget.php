@@ -20,6 +20,7 @@ class TrainingProgressWidget extends Widget
 
         $total_hours = $user->staff->training()
             ->whereYear('training_date', now()->year)
+            ->where('is_verified', 1)
             ->sum('duration');
 
         $target = 20;

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Profiles\Schemas;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -261,7 +262,6 @@ class ProfileForm
                                             TextEntry::make('training_alert')
                                                 ->hiddenLabel()
                                                 ->state(function (Get $get) {
-                                                    // Ambil data dari repeater (raw array state)
                                                     $trainings = $get('training') ?? []; 
                                                     $totalDuration = 0;
                                                     $currentYear = now()->year;
@@ -270,8 +270,7 @@ class ProfileForm
                                                         $date = $item['training_date'] ?? null;
                                                         $duration = $item['duration'] ?? 0;
 
-                                                        // Hitung hanya jika tanggal valid & tahun ini
-                                                        if ($date && Carbon::parse($date)->year == $currentYear) {
+                                                        if ($date && Carbon::parse($date)->year == $currentYear && $item['is_verified'] == 1) {
                                                             $totalDuration += (float) $duration;
                                                         }
                                                     }
@@ -293,12 +292,11 @@ class ProfileForm
                                                         ");
                                                     }
 
-                                                    // Jika sudah tercapai, bisa return null (sembunyi) atau pesan sukses
                                                     return new HtmlString("
                                                         <div class='flex items-center gap-3 p-4 text-xs text-green-800 bg-green-50 rounded-2xl dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800'>
                                                             <svg class='w-5 h-5 shrink-0' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd'></path></svg>
                                                             <div>
-                                                                <span class='font-bold'>Hebat!</span>Target 20 jam per tahun sudah terpenuhi ({$totalDuration} jam).
+                                                                <span class='font-bold'>Hebat! </span>Target 20 jam per tahun sudah terpenuhi ({$totalDuration} jam).
                                                             </div>
                                                         </div>
                                                     ");
@@ -308,7 +306,19 @@ class ProfileForm
                                                 ->live()
                                                 ->relationship(modifyQueryUsing: fn (Builder $query) => $query->orderBy('training_date', 'desc'))
                                                 ->schema([
+                                                    Hidden::make('is_verified'),
                                                     Grid::make(2)
+                                                        ->extraAttributes(function (Get $get) {
+                                                            $status = $get('is_verified');
+
+                                                            $flag = match ($status) {
+                                                                1, '1', true => 'status-flag-verified',
+                                                                0, '0', false => 'status-flag-rejected',
+                                                                default => 'status-flag-pending',
+                                                            };
+                                                            
+                                                            return ['class' => $flag];
+                                                        })
                                                         ->schema([
                                                             TextInput::make('name')
                                                                 ->label('Nama Pelatihan')
@@ -318,12 +328,6 @@ class ProfileForm
                                                                 ->maxDate(now())
                                                                 ->required()
                                                                 ->native(false),
-                                                            TextInput::make('duration')
-                                                                ->label('Durasi')
-                                                                ->required()
-                                                                ->numeric(),
-                                                            TextInput::make('notes')
-                                                                ->label('Keterangan'),
                                                             TextArea::make('description')
                                                                 ->label('Deskripsi')
                                                                 ->rows(3),
@@ -333,13 +337,43 @@ class ProfileForm
                                                                 ->visibility('public')
                                                                 ->directory('pelatihan')
                                                                 ->acceptedFileTypes(['application/pdf'])
-                                                                ->maxSize(2048) // maksimal 2MB
+                                                                ->maxSize(2048)
                                                                 ->helperText('Unggah sertifikat dalam format PDF'),
+                                                            TextInput::make('duration')
+                                                                ->label('Durasi (jam)')
+                                                                ->required()
+                                                                ->numeric()
+                                                                ->helperText('Gunakan titik (.) untuk menuliskan koma.'),
+                                                            TextInput::make('notes')
+                                                                ->label('Catatan Penolakan')
+                                                                ->formatStateUsing(fn (Get $get) => $get('notes'))
+                                                                ->disabled()
+                                                                ->dehydrated(false)
+                                                                ->visible(fn (Get $get) => ($get('is_verified') === 0 || $get('is_verified') === '0') && !empty($get('notes')))
+                                                                ->extraInputAttributes(['class' => '
+                                                                    !bg-danger-50 !text-danger-600 !border-danger-200 
+                                                                    dark:!bg-danger-900/20 dark:!text-danger-400 dark:!border-danger-800
+                                                                    !opacity-100 !font-medium !rounded-lg
+                                                                ']),
                                                         ]),
                                                 ])
                                                 ->addActionLabel('Tambah Pelatihan Baru')
-                                                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                                                ->collapsed(false)
+                                                ->itemLabel(fn (array $state): ?string => $state['name'] . ' (' . Carbon::parse($state['training_date'])->format('d-m-Y') . ')' ?? null)
+                                                ->collapsed()
+                                                ->extraAttributes([
+                                                    'class' => '
+                                                    [&_.fi-fo-repeater-item:has(.status-flag-verified)]:ring 
+                                                    [&_.fi-fo-repeater-item:has(.status-flag-verified)]:ring-success-500 
+                                                    dark[&_.fi-fo-repeater-item:has(.status-flag-verified)]:ring-success-500 
+
+                                                    [&_.fi-fo-repeater-item:has(.status-flag-rejected)]:ring 
+                                                    [&_.fi-fo-repeater-item:has(.status-flag-rejected)]:ring-danger-500 
+                                                    dark[&_.fi-fo-repeater-item:has(.status-flag-rejected)]:ring-danger-500 
+
+                                                    [&_.fi-fo-repeater-item:has(.status-flag-pending)]:ring 
+                                                    [&_.fi-fo-repeater-item:has(.status-flag-pending)]:ring-warning-500 
+                                                    dark[&_.fi-fo-repeater-item:has(.status-flag-pending)]:ring-warning-500',
+                                                ])
                                                 ->deleteAction(
                                                     fn ($action) => $action->requiresConfirmation(),
                                                 ),

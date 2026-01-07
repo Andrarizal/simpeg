@@ -22,6 +22,12 @@ return new class extends Migration
             $table->date('training_date');
             $table->integer('duration');
             $table->string('certificate')->nullable();
+            $table->unsignedTinyInteger('is_verified')->nullable();
+            $table->timestamp('verified_at')->nullable();
+            $table->foreignId('verified_by')->nullable()->constrained(
+                table: 'staff',
+                indexName: 'staff_trainings_verified_by'
+            )->nullOnDelete();
             $table->text('notes')->nullable();
             $table->timestamps();
         });

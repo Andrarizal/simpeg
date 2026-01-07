@@ -17,69 +17,30 @@ class Staff extends Model
 
     protected static function booted()
     {
-        // EVENT: SAAT DIBUAT (CREATED)
         static::created(function ($staff) {
             StaffAdministration::create([
                 'staff_id' => $staff->id,
             ]);
+            $staff->createHistoryAuto();
         });
 
         static::saved(function ($staff) {
-            if ($staff->is_processing_history) return; 
+            if ($staff->is_processing_history) return;
 
-            DB::transaction(function () use ($staff) {
-                $staff->is_processing_history = true; 
+            $statusChanged = $staff->wasChanged(['staff_status_id', 'unit_id', 'chair_id']);
 
-                // SKENARIO 1: PEGAWAI BARU
-                if ($staff->wasRecentlyCreated) {
-                    $staff->createHistoryBasedOnStatus();
-                }
+            DB::transaction(function () use ($staff, $statusChanged) {
+                $staff->is_processing_history = true;
 
-                // SKENARIO 2: STATUS BERUBAH (Misal: Kontrak -> Tetap)
-                elseif ($staff->wasChanged('staff_status_id')) {
-                    // Paksa tutup yang lama
-                    $staff->closePreviousHistories(); 
-                    $staff->createHistoryBasedOnStatus();
-                }
-
-                // SKENARIO 3: STATUS TETAP, DATA RELASI BERUBAH
+                if ($statusChanged) {
+                    $staff->closePreviousHistories();
+                    $staff->createHistoryAuto();
+                } 
                 else {
-                    $created = false; // Flag penanda
+                    $historyCreated = $staff->createHistoryIfNewDocumentFound();
 
-                    if ($staff->staff_status_id == 1) { // Tetap
-                        $adjustment = $staff->adjustment()->latest()->first();
-                        $appointment = $staff->appointment()->latest()->first();
-
-                        // Cek Adjustment
-                        if ($adjustment && $adjustment->updated_at->diffInSeconds(now()) < 5) {
-                            // Coba buat history adjustment
-                            $created = $staff->createWorkHistoryFromModel($adjustment, 'adjustment');
-                        
-                            if ($created) {
-                                $staff->closePreviousHistories(); 
-                            }
-                        }
-                        
-                        // Cek Appointment (Hanya jika adjustment tidak tereksekusi/gagal)
-                        if (!$created && $appointment && $appointment->updated_at->diffInSeconds(now()) < 5) {
-                            $created = $staff->createWorkHistoryFromModel($appointment, 'appointment');
-                        
-                            if ($created) {
-                                $staff->closePreviousHistories();
-                            }
-                        }
-                    }
-                    
-                    elseif ($staff->staff_status_id == 2) { // Kontrak
-                        $contract = $staff->contract()->latest()->first();
-                        
-                        if ($contract && $contract->updated_at->diffInSeconds(now()) < 5) {
-                            $created = $staff->createWorkHistoryFromModel($contract, 'contract');
-                        
-                            if ($created) {
-                                $staff->closePreviousHistories();
-                            }
-                        }
+                    if ($historyCreated) {
+                        $staff->closePreviousHistories();
                     }
                 }
 
@@ -88,35 +49,82 @@ class Staff extends Model
         });
     }
 
-    public function closePreviousHistories()
+    public function createHistoryAuto()
     {
-        $latest = $this->workHistories()->latest('id')->first();
-        
-        if (!$latest) return;
+        if ($this->staff_status_id == 1) {
+            $adj = $this->adjustment()->latest()->first();
+            if ($adj && $this->isNewDocument($adj, 'adjustment')) {
+                return $this->createWorkHistoryFromModel($adj, 'adjustment');
+            }
 
-        $this->workHistories()
-            ->whereNull('end_date')
-            ->where('id', '!=', $latest->id) // Jangan tutup diri sendiri
-            ->update([
-                'end_date' => $latest->start_date->subDay()
+            $app = $this->appointment()->latest()->first();
+            if ($app) {
+                return $this->createWorkHistoryFromModel($app, 'appointment');
+            }
+        }
+        
+        elseif ($this->staff_status_id == 2) {
+            $con = $this->contract()->latest()->first();
+            if ($con) {
+                return $this->createWorkHistoryFromModel($con, 'contract');
+            }
+        }
+
+        else {
+            return WorkHistory::create([
+                'staff_id' => $this->id,
+                'unit_id' => $this->unit_id,
+                'chair_id' => $this->chair_id,
+                'staff_status_id' => $this->staff_status_id,
+                'start_date' => now(),
             ]);
+        }
+
+        return null;
     }
 
-    public function createHistoryBasedOnStatus()
+    public function createHistoryIfNewDocumentFound()
     {
+        if ($this->staff_status_id == 1) {
+            $adj = $this->adjustment()->latest()->first();
+            
+            if ($adj && $this->isNewDocument($adj, 'adjustment')) {
+                return $this->createWorkHistoryFromModel($adj, 'adjustment');
+            }
+        }
+        
         if ($this->staff_status_id == 2) {
-            $data = $this->contract()->latest()->first();
-            if ($data) $this->createWorkHistoryFromModel($data, 'contract');
+            $con = $this->contract()->latest()->first();
+            if ($con && $this->isNewDocument($con, 'contract')) {
+                return $this->createWorkHistoryFromModel($con, 'contract');
+            }
         }
-        elseif ($this->staff_status_id == 1) {
-            $data = $this->appointment()->latest()->first();
-            if ($data) $this->createWorkHistoryFromModel($data, 'appointment');
+
+        return false;
+    }
+
+    public function isNewDocument($sourceModel, $type)
+    {
+        $newDecreeNumber = match($type) {
+            'contract' => $sourceModel->contract_number,
+            'appointment' => $sourceModel->decree_number,
+            'adjustment' => $sourceModel->decree_number,
+            default => null
+        };
+
+        $lastHistory = $this->workHistories()->latest('id')->first();
+
+        if (!$lastHistory) return true;
+
+        if ($lastHistory->decree_number === $newDecreeNumber) {
+            return false; 
         }
+
+        return true;
     }
 
     public function createWorkHistoryFromModel($sourceModel, $type)
     {
-        // 1. Ekstrak Data Calon History Baru
         $decreeNumber = match($type) {
             'contract' => $sourceModel->contract_number,
             'appointment' => $sourceModel->decree_number,
@@ -132,25 +140,8 @@ class Staff extends Model
         };
 
         $decreeFile = $sourceModel->decree ?? null; 
-        $class = $sourceModel->class ?? null; 
+        $class = $sourceModel->class ?? null;
 
-        // 2. CEK HISTORY TERAKHIR (ANTI DUPLIKAT)
-        // Ambil history paling terakhir yang dibuat
-        $lastHistory = $this->workHistories()->latest('id')->first();
-
-        // Logika Pengecekan:
-        // Jika history terakhir punya Nomor SK, Status, dan Golongan yang SAMA
-        // Maka anggap ini duplikat trigger event, JANGAN BUAT LAGI.
-        if ($lastHistory && 
-            $lastHistory->staff_status_id == $this->staff_status_id &&
-            $lastHistory->decree_number == $decreeNumber &&
-            $lastHistory->class == $class
-        ) {
-            // Abaikan, karena data tidak berubah
-            return false; 
-        }
-
-        // 3. JIKA BEDA, BARU BUAT
         WorkHistory::create([
             'staff_id' => $this->id,
             'unit_id' => $this->unit_id,
@@ -163,7 +154,21 @@ class Staff extends Model
             'class' => $class,
         ]);
 
-        return true; // Berhasil buat baru
+        return true;
+    }
+
+    public function closePreviousHistories()
+    {
+        $latest = $this->workHistories()->latest('id')->first();
+        
+        if (!$latest) return;
+
+        $this->workHistories()
+            ->whereNull('end_date')
+            ->where('id', '!=', $latest->id)
+            ->update([
+                'end_date' => $latest->start_date->subDay()
+            ]);
     }
 
     public function user(): HasOne
@@ -243,5 +248,20 @@ class Staff extends Model
     public function currentWork(): HasOne
     {
         return $this->hasOne(WorkHistory::class)->whereNull('end_date')->latestOfMany();
+    }
+
+    public function leave(): HasMany
+    {
+        return $this->hasMany(Leave::class);
+    }
+
+    public function performance(): HasMany
+    {
+        return $this->hasMany(StaffPerformance::class);
+    }
+
+    public function overtime(): HasMany
+    {
+        return $this->hasMany(Overtime::class);
     }
 }

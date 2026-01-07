@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Staff\Schemas;
 
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
@@ -13,9 +12,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
-use Filament\Support\Enums\TextSize;
-use Filament\Tables\Columns\Layout\Split;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class StaffInfolist
 {
@@ -127,6 +124,7 @@ class StaffInfolist
                             ->tabs([
                                 Tab::make('Kontrak & SK')
                                     ->icon('heroicon-m-document-text')
+                                    ->visible(fn ($record) => $record->contract || $record->appointment || $record->adjustment)
                                     ->schema([
                                         Section::make('Kontrak Terakhir')
                                             ->visible(fn ($record) => $record->contract)
@@ -188,7 +186,7 @@ class StaffInfolist
                                     ->schema([
                                         TextEntry::make('workExperience.institution')->label('Institusi'),
                                         TextEntry::make('workExperience.work_length')->label('Lama Bekerja'),
-                                        TextEntry::make('workExperience.admission')->label('Pengakuan')->date(),
+                                        TextEntry::make('workExperience.admission')->label('Pengakuan'),
                                         self::getPdfEntry('workExperience.certificate', 'Sertifikat', 'work_experiences')->columnSpanFull(),
                                     ]),
                             ]),
@@ -207,17 +205,223 @@ class StaffInfolist
                         Section::make('Masa Pengabdian')
                             ->icon('heroicon-m-clock')
                             ->schema([
-                                TextEntry::make('entry_date')->label('TMT Masuk')->date(),
+                                TextEntry::make('entry_date')
+                                    ->label('TMT')
+                                    ->inlineLabel()
+                                    ->alignEnd()
+                                    ->date(),
                                 TextEntry::make('work_period')
-                                    ->label('Lama Bekerja')
+                                    ->label('Masa Kerja')
+                                    ->inlineLabel()
+                                    ->alignEnd()
                                     ->state(fn ($record) => $record->entry_date 
                                         ? number_format(Carbon::parse($record->entry_date)->diffInYears(Carbon::now()), 1) . ' Tahun' 
                                         : '-')
                                     ->badge()
                                     ->color('success'),
-                                TextEntry::make('retirement_date')->label('Pensiun')->date()->color('danger'),
+                                TextEntry::make('retirement_date')
+                                    ->label('Pensiun')
+                                    ->inlineLabel()
+                                    ->alignEnd()
+                                    ->date()
+                                    ->color('danger'),
                             ]),
-                    ])->columnSpan(['md' => 1]), // Span 1
+
+                        Section::make('Data Kepegawaian')
+                            ->icon('heroicon-m-briefcase')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    TextEntry::make('leaves_taken')
+                                        ->label('Cuti Terpakai')
+                                        ->state(function ($record) {
+                                            return $record->leave()
+                                                ->where('type', 'Cuti')
+                                                ->where('subtype', 'Tahunan')
+                                                ->where('status', '!=', 'Ditolak')
+                                                ->whereYear('start_date', now()->year)
+                                                ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
+                                        })
+                                        ->color('danger'),
+
+                                    TextEntry::make('leaves_remaining')
+                                        ->label('Sisa Cuti')
+                                        ->state(function ($record) {
+                                            $quota = setting('max_leave_days'); 
+                                            
+                                            $taken = $record->leave()
+                                                ->where('type', 'Cuti')
+                                                ->where('subtype', 'Tahunan')
+                                                ->where('status', '!=', 'Ditolak')
+                                                ->whereYear('start_date', now()->year)
+                                                ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1'));
+                                                
+                                            return ($quota - $taken) . ' Hari';
+                                        })
+                                        ->weight(FontWeight::Bold)
+                                        ->color('success'),
+                                    TextEntry::make('permission_taken')
+                                        ->label('Izin Terpakai')
+                                        ->state(function ($record) {
+                                            return $record->leave()
+                                                ->where('type', 'Izin')
+                                                ->where('subtype', 'Non-Sakit')
+                                                ->where('status', '!=', 'Ditolak')
+                                                ->whereYear('start_date', now()->year)
+                                                ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
+                                        })
+                                        ->color('danger'),
+
+                                    TextEntry::make('permission_remaining')
+                                        ->label('Sisa Izin')
+                                        ->state(function ($record) {
+                                            $quota = setting('max_permission_days'); 
+                                            
+                                            $taken = $record->leave()
+                                                ->where('type', 'Izin')
+                                                ->where('subtype', 'Non-Sakit')
+                                                ->where('status', '!=', 'Ditolak')
+                                                ->whereYear('start_date', now()->year)
+                                                ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1'));
+                                                
+                                            return ($quota - $taken) . ' Hari';
+                                        })
+                                        ->weight(FontWeight::Bold)
+                                        ->color('success'),
+                                ]),
+
+                                TextEntry::make('completeness')
+                                    ->label('Administrasi')
+                                    ->inlineLabel()
+                                    ->alignEnd()
+                                    ->state(function ($record) {
+                                        $admin = $record->administration;
+
+                                        if (! $admin) {
+                                            return '0%';
+                                        }
+
+                                        $fields = [
+                                            'sip', 
+                                            'str', 
+                                            'mcu', 
+                                            'spk', 
+                                            'rkk', 
+                                            'utw',
+                                        ];
+                                        
+                                        $totalFields = count($fields);
+                                        $filledFields = 0;
+
+                                        foreach ($fields as $field) {
+                                            if (!empty($admin->$field)) {
+                                                $filledFields++;
+                                            }
+                                        }
+
+                                        $percentage = ($filledFields / $totalFields) * 100;
+                                        
+                                        return number_format($percentage, 0) . '%';
+                                    })
+                                    ->badge()
+                                    ->icon(function ($record) {
+                                        if ($record->administration?->is_verified) {
+                                            return 'heroicon-m-check-badge';
+                                        }
+                                        return 'heroicon-m-clipboard-document-list';
+                                    })
+                                    ->color(function ($record) {
+                                        $admin = $record->administration;
+
+                                        if (! $admin) return 'danger';
+
+                                        if ($admin->is_verified) {
+                                            return 'success';
+                                        }
+
+                                        return 'warning'; 
+                                    })
+                                    ->tooltip(function ($record) {
+                                        $admin = $record->administration;
+                                        if ($admin?->is_verified) return 'Data Terverifikasi Valid';
+                                        return 'Menunggu Verifikasi / Data Belum Lengkap';
+                                    }),
+
+                                TextEntry::make('performance')
+                                    ->label('Kinerja')
+                                    ->inlineLabel()
+                                    ->alignEnd()
+                                    ->state(function ($record) {
+                                        $lastScore = $record->performance()
+                                            ->latest('period_id')
+                                            ->first();
+                                            
+                                        return $lastScore ? $lastScore->appraisal?->score : '-';
+                                    })
+                                    ->badge()
+                                    ->color(function ($record) {
+                                        $lastScore = $record->performance()
+                                            ->latest('period_id')
+                                            ->first();
+
+                                        if (!$lastScore) {
+                                            return 'gray';
+                                        }
+
+                                        if ($lastScore->appraisal === null) {
+                                            return 'gray';
+                                        }
+                                            
+                                        return match (true) {
+                                            $lastScore->appraisal?->score >= 85 => 'info', 
+                                            $lastScore->appraisal?->score >= 70 => 'success', 
+                                            $lastScore->appraisal?->score >= 50 => 'warning', 
+                                            $lastScore->appraisal?->score > 0   => 'danger',  
+                                            default      => 'gray'
+                                        };
+                                    }),
+
+                                TextEntry::make('overtime')
+                                    ->label('Lembur')
+                                    ->inlineLabel()
+                                    ->alignEnd()
+                                    ->state(function ($record) {
+                                        $hours = $record->overtime()
+                                            ->whereMonth('overtime_date', now()->month)
+                                            ->whereYear('overtime_date', now()->year)
+                                            ->sum('hours');
+                                            
+                                        return $hours ? $hours . ' Jam' : '0 Jam';
+                                    })
+                                    ->icon('heroicon-m-clock'),
+                                TextEntry::make('trainings')
+                                    ->label('Pelatihan')
+                                    ->inlineLabel()
+                                    ->alignEnd()
+                                    ->state(function ($record) {
+                                        $hours = $record->training()
+                                            ->whereYear('training_date', now()->year)
+                                            ->sum('duration');
+
+                                        return $hours ? $hours . '/20 Jam' : '0 Jam';
+                                    })
+                                    ->badge()
+                                    ->color(function ($record) {
+                                        $hours = $record->training()
+                                            ->whereYear('training_date', now()->year)
+                                            ->sum('duration');
+
+                                        if (!$hours) {
+                                            return 'gray';
+                                        }
+
+                                        return match (true) {
+                                            $hours >= 20 => 'success', 
+                                            $hours < 20 => 'warning', 
+                                            default => 'gray'
+                                        };
+                                    }),
+                            ]),
+                    ])->columnSpan(['md' => 1]),
                 ]),
 
         ])
