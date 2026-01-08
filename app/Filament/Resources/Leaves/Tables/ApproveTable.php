@@ -176,17 +176,19 @@ class ApproveTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('type')->options([
-                    'Cuti' => 'Cuti',
-                    'Izin' => 'Izin',
-                ]),
+                SelectFilter::make('type')
+                    ->label('Jenis Pengajuan')
+                    ->options([
+                        'Cuti' => 'Cuti',
+                        'Izin' => 'Izin',
+                    ]),
             ])
             ->recordActions([
                 Action::make('approve')
                     ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Ketahui' : 'Setujui')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
+                    ->visible(fn ($record) => shouldShowApprovalButton($record))
                     ->requiresConfirmation()
                     ->schema([
                         Textarea::make('adverb')
@@ -197,7 +199,6 @@ class ApproveTable
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
-                        // Cek level jabatan dari user login
                         switch ($user->staff->chair->level) {
                             case 4:
                                 $record->update([
@@ -310,13 +311,12 @@ class ApproveTable
                                 break;
                         }
 
-                        
                     }),
                 Action::make('reject')
                     ->label('Tolak')
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
-                    ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
+                    ->visible(fn ($record) => shouldShowApprovalButton($record))
                     ->requiresConfirmation()
                     ->schema([
                         Textarea::make('adverb')
@@ -357,10 +357,10 @@ class ApproveTable
                     ->icon('heroicon-o-check')
                     ->color('info')
                     ->visible(function ($record) {
-                        if (Auth::user()->role_id == 1) {
-                            return $record->is_verified === 0 || $record->is_verified === 1 || $record->is_replaced == 0 || $record->status === 'Ditolak' ? false : true;
-                        }
-                        return false;
+                        return Auth::user()->role_id == 1 
+                            && is_null($record->is_verified)
+                            && $record->status != 'Ditolak'
+                            && $record->is_replaced != 0;
                     })
                     ->requiresConfirmation()
                     ->action(function ($record) {
@@ -392,10 +392,10 @@ class ApproveTable
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->visible(function ($record) {
-                        if (Auth::user()->role_id == 1) {
-                            return $record->is_verified == 0 || $record->is_verified == 1 || $record->is_replaced == 0 || $record->status == 'Ditolak' ? false : true;
-                        }
-                        return false;
+                        return Auth::user()->role_id == 1 
+                            && is_null($record->is_verified)
+                            && $record->status != 'Ditolak'
+                            && $record->is_replaced != 0;
                     })
                     ->requiresConfirmation()
                     ->schema([

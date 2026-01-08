@@ -21,6 +21,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -229,11 +230,16 @@ class TrainingResource extends Resource
                         2025 => '2025',
                         2026 => '2026',
                     ])
+                    ->indicateUsing(function (array $data) {
+                        return [
+                            Indicator::make('Tahun: ' . $data['value'])
+                                ->removable(false),
+                        ];
+                    })
                     ->default(now()->year)
                     ->selectablePlaceholder(false)
                     ->query(fn ($query) => $query),
             ])
-            ->hiddenFilterIndicators()
             ->modifyQueryUsing(function (Builder $query, Component $livewire) {
                 $filterState = $livewire->tableFilters['filter_year']['value'] ?? null;
                 $selectedYear = $filterState ?? now()->year;
@@ -273,7 +279,7 @@ class TrainingResource extends Resource
                     ->badge()
                     ->default(0)
                     ->formatStateUsing(fn ($state) => ($state ?? 0) . ' jam')
-                    ->color(fn ($state) => $state < 20 ? 'warning' : 'success')
+                    ->color(fn ($state) => $state < setting('training_hours_per_year') ? 'warning' : 'success')
                     ->alignCenter()
                     ->sortable(),
             ])

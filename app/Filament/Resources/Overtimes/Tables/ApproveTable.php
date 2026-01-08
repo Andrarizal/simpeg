@@ -13,6 +13,7 @@ use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,23 +29,26 @@ class ApproveTable
                 return Overtime::query()->where('staff_id', $staff->id)->latest();
             })
             ->columns([
-                TextColumn::make('overtime_date')->label('Tanggal'),
-                TextColumn::make('command')->label('Perintah'),
+                TextColumn::make('overtime_date')
+                    ->label('Tanggal')
+                    ->date(),
+                TextColumn::make('command')
+                    ->label('Perintah'),
                 TextColumn::make('start_time')
-                    ->label('Mulai'),
+                    ->label('Mulai')
+                    ->time('H:i'),
                 TextColumn::make('end_time')
                     ->label('Selesai')
+                    ->time('H:i')
                     ->getStateUsing(function ($record) {
                         return $record->end_time ?: '---';
                     }),
-
                 TextColumn::make('hours')
                     ->label('Total Jam')
                     ->state(function ($record) {
                         if (! $record || ! $record->end_time) {
                             return '---';
                         }
-
                         $total = $record->getTotalHours();
                         return $total ? "{$total} jam" : '-';
                     }),
@@ -114,27 +118,37 @@ class ApproveTable
                     })
                     ->indicateUsing(function ($data) {
                         return [
-                            'Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'),
+                            Indicator::make('Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'))
+                                ->removable(false),
                         ];
                     })
                     ->selectablePlaceholder(false)
                     ->native(false),
             ])
-            ->hiddenFilterIndicators()
             ->recordActions([
                 Action::make('approve')
                     ->label('Ketahui')
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(function ($record) {
-                        if (Auth::user()->role_id == 1) return false;
-
-                        if (Auth::user()->staff->chair->level == 4){
-                            return $record->is_known > 0 ? false : true;
-                        } else if (Auth::user()->staff->chair->level == 3){
-                            return $record->is_known == 1 || (!$record->is_known && !$record->staff->unit->leader_id)  ? true : false;
+                        $user = Auth::user();
+                        if ($user->role_id == 1) {
+                            return false;
                         }
-                        return false;
+                        if (!$user->staff || !$user->staff->chair) {
+                            return false;
+                        }
+                        $userLevel = $user->staff->chair->level;
+                        switch ($userLevel) {
+                            case 4:
+                                return is_null($record->is_known);
+                            case 3:
+                                $passedLevel4 = $record->is_known == 1;
+                                $directApproval = is_null($record->is_known) && !$record->staff->unit->leader_id;
+                                return $passedLevel4 || $directApproval;
+                            default:
+                                return false;
+                        }
                     })
                     ->requiresConfirmation()
                     ->action(function ($record) {
@@ -173,11 +187,69 @@ class ApproveTable
                             ->success()
                             ->send();
                     }),
+                Action::make('reject')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(function ($record) {
+                        $user = Auth::user();
+                        if ($user->role_id == 1) {
+                            return false;
+                        }
+                        if (!$user->staff || !$user->staff->chair) {
+                            return false;
+                        }
+                        $userLevel = $user->staff->chair->level;
+                        switch ($userLevel) {
+                            case 4:
+                                return is_null($record->is_known);
+                            case 3:
+                                $passedLevel4 = $record->is_known == 1;
+                                $directApproval = is_null($record->is_known) && !$record->staff->unit->leader_id;
+                                return $passedLevel4 || $directApproval;
+                            default:
+                                return false;
+                        }
+                    })
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $user = Auth::user();
+                        $user->staff_id = $user->staff_id ?? 1;
+
+                        $record->update([
+                            'is_known' => 0,
+                        ]);
+
+                        $record->update([
+                            'known_by' => $user->staff_id,
+                            'known_at' => Carbon::now()
+                        ]);
+
+                        Notification::make()
+                            ->title('Pengajuan Lembur Ditolak')
+                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah ditolak oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
+                            ->success()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(OvertimeResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->staff->user);
+
+                        Notification::make()
+                            ->title('Lembur ditolak')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('verification')
                     ->label('Verifikasi')
                     ->icon('heroicon-o-check')
                     ->color('info')
-                    ->visible(fn ($record) => ($record->is_verified || Auth::user()->staff->chair->level < 4 || Auth::user()->role_id > 1) ? false : true)
+                    ->visible(fn ($record) => 
+                        is_null($record->is_verified) && 
+                        Auth::user()->staff->chair->level == 4 &&
+                        Auth::user()->role_id == 1)
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $recipient = $record->staff->user;
@@ -202,6 +274,41 @@ class ApproveTable
 
                         Notification::make()
                             ->title('Lembur diverifikasi')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('cancel')
+                    ->label('Batalkan')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(fn ($record) => 
+                        is_null($record->is_verified) && 
+                        Auth::user()->staff->chair->level == 4 &&
+                        Auth::user()->role_id == 1)
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $recipient = $record->staff->user;
+
+                        $record->update([
+                            'is_verified' => 0,
+                            'verified_by' => Auth::user()->staff_id,
+                            'verified_at' => Carbon::now()
+                        ]);
+
+                        Notification::make()
+                            ->title('Pengajuan Lembur Dibatalkan')
+                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah dibatalkan SDM')
+                            ->success()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(OvertimeResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($recipient);
+
+                        Notification::make()
+                            ->title('Lembur dibatalkan')
                             ->success()
                             ->send();
                     }),

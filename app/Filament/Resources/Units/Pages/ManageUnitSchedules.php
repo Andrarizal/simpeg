@@ -22,6 +22,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
@@ -239,10 +240,20 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
         $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
         $unitId = $this->record->id;
 
-        $shiftOptions = Shift::where('unit_id', $unitId)
-            ->pluck('code', 'id')
-            ->mapWithKeys(fn ($code, $id) => [$id => $code])
-            ->toArray();
+        $shifts = Shift::where('unit_id', $unitId)->get();
+
+        $shiftOptions = $shifts->pluck('code', 'id')->toArray();
+
+        $shiftDurations = $shifts->mapWithKeys(function ($shift) {
+            $start = Carbon::parse($shift->start_time);
+            $end = Carbon::parse($shift->end_time);
+            
+            if ($end->lessThan($start)) {
+                $end->addDay();
+            }
+            
+            return [$shift->id => $start->floatDiffInHours($end)];
+        })->toArray();
         
         $dateColumns = [];
         for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -296,12 +307,32 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                         ->extraHeaderAttributes([
                             'class' => 'sticky left-0 z-20 bg-gray-50 bg-gray-100 dark:bg-gray-800',
                         ])
-                        
                         ->extraAttributes([
                             'class' => 'sticky-col-name', 
                         ]),
                 ],
-                $dateColumns
+                $dateColumns,
+                [
+                    TextColumn::make('total_hours')
+                        ->label('Total Jam')
+                        ->alignCenter()
+                        ->state(function (Staff $record) use ($shiftDurations) {
+                            $total = $record->schedule->sum(function ($schedule) use ($shiftDurations) {
+                                return $shiftDurations[$schedule->shift_id] ?? 0;
+                            });
+
+                            return $total;
+                        })
+                        ->formatStateUsing(fn ($state) => number_format((float)$state, 1, '.', '') . ' Jam')
+                        ->color('primary')
+                        ->weight('bold')
+                        ->extraHeaderAttributes([
+                            'class' => 'sticky right-0 z-20 bg-gray-50 bg-gray-100 dark:bg-gray-800', 
+                        ])
+                        ->extraAttributes([
+                            'class' => 'sticky-col-total',
+                        ])
+                ]
             ))
             ->paginated(false)
             ->filters([
@@ -310,6 +341,12 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                     ->options(collect(range(1, 12))->mapWithKeys(fn($m) => 
                         [$m => Carbon::create(2024, $m, 1)->locale('id')->monthName]
                     ))
+                    ->indicateUsing(function (array $data) {
+                        return [
+                            Indicator::make('Bulan: ' . Carbon::create(0, $data['value'])->locale('id')->monthName)
+                                ->removable(false),
+                        ];
+                    })
                     ->default(now()->month)
                     ->selectablePlaceholder(false)
                     ->query(fn($query) => $query),
@@ -318,6 +355,12 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                     ->options(collect(range(now()->year - 1, now()->year + 5))->mapWithKeys(fn($y) => 
                         [$y => $y]
                     ))
+                    ->indicateUsing(function (array $data) {
+                        return [
+                            Indicator::make('Tahun: ' . $data['value'])
+                                ->removable(false),
+                        ];
+                    })
                     ->default(now()->year)
                     ->selectablePlaceholder(false)
                     ->query(fn($query) => $query),
@@ -350,8 +393,7 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                             }
                         ',
                     ])
-            )
-            ->hiddenFilterIndicators();
+            );
     }
 
     public function getSubheading(): string|Htmlable|null

@@ -275,8 +275,8 @@ class ProfileForm
                                                         }
                                                     }
 
-                                                    if ($totalDuration < 20) {
-                                                        $kurang = 20 - $totalDuration;
+                                                    if ($totalDuration < setting('training_hours_per_year')) {
+                                                        $kurang = setting('training_hours_per_year') - $totalDuration;
                                                         
                                                         return new HtmlString("
                                                             <div class='flex items-center gap-3 p-4 text-xs text-yellow-800 bg-yellow-50 rounded-2xl dark:bg-yellow-900/30 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800'>

@@ -114,12 +114,18 @@ class AdminPanelProvider extends PanelProvider
                         .fi-ta-cell:has(.sticky-col-name) {
                             position: sticky !important;
                             left: 0 !important;
-                            /* Z-index rendah agar tidak menutupi header/dropdown */
                             z-index: 10 !important; 
-                            
                             background-color: white; 
                         }
-                        .dark .fi-ta-cell:has(.sticky-col-name) {
+
+                        .fi-ta-cell:has(.sticky-col-total) {
+                            position: sticky !important;
+                            right: 0 !important;
+                            z-index: 10 !important; 
+                            background-color: white;
+                        }
+
+                        .dark .fi-ta-cell:has(.sticky-col-name), .dark .fi-ta-cell:has(.sticky-col-total) {
                             background-color: rgb(24 24 27);
                         }
 
@@ -127,7 +133,13 @@ class AdminPanelProvider extends PanelProvider
                         .fi-ta-header-cell:has(.sticky-col-name) {
                             position: sticky !important;
                             left: 0 !important;
-                            /* Z-index sedang, di atas data tapi di bawah dropdown */
+                            z-index: 20 !important; 
+                            background-color: inherit;
+                        }
+
+                        .fi-ta-header-cell:has(.sticky-col-total) {
+                            position: sticky !important;
+                            right: 0 !important;
                             z-index: 20 !important; 
                             background-color: inherit;
                         }

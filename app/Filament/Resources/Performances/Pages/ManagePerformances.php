@@ -24,6 +24,7 @@ use Filament\Resources\Pages\ManageRecords;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -358,6 +359,15 @@ class ManagePerformances extends ManageRecords
                                     return [$period->id => "$start - $end"];
                                 });
                         })
+                        ->indicateUsing(function (array $data) {
+                            $period = PerformancePeriod::find($data['value']);
+                            $start = Carbon::parse($period->start_date)->translatedFormat('F');
+                            $end = Carbon::parse($period->end_date)->translatedFormat('F Y');
+                            return [
+                                Indicator::make("Periode: $start - $end")
+                                    ->removable(false),
+                            ];
+                        })
                         ->default(function () {
                             return PerformancePeriod::where('status', true)->latest()->first()?->id;
                         })
@@ -365,7 +375,6 @@ class ManagePerformances extends ManageRecords
                         ->selectablePlaceholder(false)
                         ->native(false),
                 ])
-                ->hiddenFilterIndicators()
                 ->contentFooter(view('filament.tables.avgscore-pagination', [
                     'score' => $this->averageScore, // <--- Ini otomatis dinamis
                 ]))

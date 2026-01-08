@@ -11,6 +11,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,7 +110,8 @@ class OvertimesTable
                     })
                     ->indicateUsing(function ($data) {
                         return [
-                            'Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'),
+                            Indicator::make('Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'))
+                                ->removable(false),
                         ];
                     })
                     ->selectablePlaceholder(false)

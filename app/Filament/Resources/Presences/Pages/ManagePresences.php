@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
@@ -340,13 +341,13 @@ class ManagePresences extends ManageRecords implements HasTable
                             if (empty($data['value'])) return [];
 
                             return [
-                                'Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'),
+                                Indicator::make('Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'))
+                                    ->removable(false),
                             ];
                         })
                         ->selectablePlaceholder(false)
                         ->native(false)
-                ])
-                ->hiddenFilterIndicators();
+                ]);
         } else {
             $unit = $this->tableFilters['unit']['value'] ?? 0;
             $unit = $unit == 0 ? 1 : $unit;
@@ -388,7 +389,10 @@ class ManagePresences extends ManageRecords implements HasTable
                         })
                         ->indicateUsing(function (array $data) {
                             if (empty($data['value'])) return [];
-                            return ['Periode: ' . Carbon::createFromFormat('Y-m', $data['value'])->translatedFormat('F Y')];
+                            return [
+                                Indicator::make('Periode: ' . Carbon::createFromFormat('Y-m', $data['value'])->translatedFormat('F Y'))
+                                    ->removable(false),
+                            ];
                         })
                         ->selectablePlaceholder(false)
                         ->native(false)

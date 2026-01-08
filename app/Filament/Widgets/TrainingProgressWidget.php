@@ -23,7 +23,7 @@ class TrainingProgressWidget extends Widget
             ->where('is_verified', 1)
             ->sum('duration');
 
-        $target = 20;
+        $target = setting('training_hours_per_year');
         $percentage = min(100, ($total_hours / $target) * 100);
 
         return [

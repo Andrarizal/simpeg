@@ -138,11 +138,14 @@ class ReplacerTable
                     ->label('Bersedia')
                     ->icon('heroicon-o-check')
                     ->color('success')
-                    ->visible(fn ($record) => $record->is_replaced || $record->status == 'Ditolak' || $record->is_verified == 0 ? false : true)
+                    ->visible(fn ($record) => 
+                        !$record->is_replaced &&
+                        $record->status !== 'Ditolak' &&
+                        is_null($record->is_verified))
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update([
-                            'is_replaced' => true,
+                            'is_replaced' => 1,
                             'replacement_at' => Carbon::now()
                         ]);
 
@@ -159,7 +162,39 @@ class ReplacerTable
                             ->sendToDatabase($record->staff->user);
 
                         Notification::make()
-                            ->title('Ketersediaan berhasil ditambahkan')
+                            ->title('Berhasil menyetujui ketersediaan')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('reject')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(fn ($record) => 
+                        !$record->is_replaced &&
+                        $record->status !== 'Ditolak' &&
+                        is_null($record->is_verified))
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update([
+                            'is_replaced' => 0,
+                            'replacement_at' => Carbon::now()
+                        ]);
+
+                        Notification::make()
+                            ->title('Pengganti ' . $record->type . ' Anda tidak bersedia')
+                            ->body('Pengganti Anda telah menyatakan ketidaksediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                            ->warning()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(LeaveResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->staff->user);
+
+                        Notification::make()
+                            ->title('Berhasil menolak ketersediaan')
                             ->success()
                             ->send();
                     }),
