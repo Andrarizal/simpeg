@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
+use App\Models\Staff;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -22,6 +23,7 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
@@ -330,11 +332,102 @@ class AdminPanelProvider extends PanelProvider
             if (session()->has('doc_expiry_notified')) return;
 
             $user = Auth::user();
+            $today = Carbon::now()->startOfDay();
+            $warningDate = Carbon::now()->addMonths(6)->endOfDay();
+
+            if ($user->role_id == 1) { 
+                $today = now();
+
+                $expiringStaffs = Staff::query()
+                    ->where('staff_status_id', 2) 
+                    ->whereHas('contract', function ($query) use ($warningDate) {
+                        $query->where('end_date', '<=', $warningDate);
+                    })
+                    ->with('contract')
+                    ->get();
+
+                foreach ($expiringStaffs as $staff) {
+                    $contract = $staff->contract; 
+
+                    if (!$contract || !$contract->end_date) continue;
+
+                    $contractEndDate = Carbon::parse($contract->end_date);
+                    $daysLeft = $today->diffInDays($contractEndDate, false); 
+
+                    $title = '';
+                    $body = '';
+                    $color = '';
+
+                    $secretMarker = '<span class="lock-notif hidden"></span>';
+                    
+                    if ($daysLeft < 0) {
+                        $title = 'Kontrak Kerja Kadaluarsa';
+                        $body = "Kontrak dari {$staff->name} telah kadaluarsa sejak " . $contractEndDate->format('d M Y');
+                        $color = 'danger';
+                    } elseif ($daysLeft == 0) {
+                        $title = 'Kontrak Kerja Kadaluarsa Hari Ini';
+                        $body = "Kontrak dari {$staff->name} berakhir HARI INI!";
+                        $color = 'danger';
+                    } else {
+                        $title = 'Peringatan Kontrak Kerja';
+                        
+                        $monthsLeft = round($today->diffInMonths($contractEndDate));
+                        $timeString = '';
+
+                        if ($monthsLeft == 0) {
+                            $daysOnly = (int) $today->diffInDays($contractEndDate);
+                            $timeString = "{$daysOnly} hari";
+                        } else {
+                            $dateAfterMonths = $today->copy()->addMonths($monthsLeft);
+                            $extraDays = (int) $dateAfterMonths->diffInDays($contractEndDate) + 1;
+
+                            $timeString = "{$monthsLeft} bulan";
+                            
+                            if ($extraDays > 0) {
+                                $timeString .= " {$extraDays} hari";
+                            }
+                        }
+
+                        $body = "Kontrak dari {$staff->name} akan berakhir dalam {$timeString} lagi (" . $contractEndDate->format('d M Y') . ")";
+                        $color = $monthsLeft < 1 ? 'danger' : 'warning';
+                    }
+
+                    $hasNotifiedToday = DatabaseNotification::query()
+                        ->where('notifiable_id', $user->id)
+                        ->where('notifiable_type', get_class($user))
+                        ->where('data->title', new HtmlString($secretMarker . $title)) 
+                        ->where('data->body', $body)
+                        ->whereDate('created_at', Carbon::today()) 
+                        ->exists();
+
+                    if ($hasNotifiedToday) {
+                        continue;
+                    }
+
+                    Notification::make()
+                        ->title(new HtmlString($secretMarker . $title))
+                        ->body($body)
+                        ->status($color)
+                        ->persistent()
+                        ->actions([
+                            Action::make('perbarui')
+                                ->button()
+                                ->label('Perbarui')
+                                ->url(StaffAdministrationResource::getUrl('edit', ['record' => $staff->id])),
+                            
+                            Action::make('dismiss')
+                                ->label('Tutup')
+                                ->color('gray')
+                                ->close(),
+                        ])
+                        ->sendToDatabase($user);
+                }
+            }
 
             if ($user->staff && $user->staff->administration) {
                 
                 $adminRecord = $user->staff->administration;
-                
+
                 $documentsToCheck = [
                     'sip_expiry' => 'Surat Izin Praktek (SIP)',
                     'str_expiry' => 'Surat Tanda Registrasi (STR)',
@@ -349,10 +442,7 @@ class AdminPanelProvider extends PanelProvider
 
                     if ($expiryValue) {
                         $expiryDate = Carbon::parse($expiryValue);
-                        $today = Carbon::now()->startOfDay();
-                        $warningDate = Carbon::now()->addDays(7)->endOfDay(); 
 
-                        // Logika: H-7 atau Sudah Lewat
                         if ($expiryDate->lessThanOrEqualTo($warningDate)) {
                             $daysLeft = $today->diffInDays($expiryDate, false);
                             

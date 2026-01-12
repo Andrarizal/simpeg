@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('command');
             $table->decimal('hours', 8, 1)->nullable();
             $table->string('month_year');
+            $table->text('note')->nullable();
             $table->unsignedTinyInteger('is_known')->nullable();
             $table->unsignedTinyInteger('known_by')->nullable();
             $table->foreignId('known_by')->nullable()->constrained(

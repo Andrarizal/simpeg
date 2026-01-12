@@ -359,6 +359,7 @@ class ApproveTable
                     ->visible(function ($record) {
                         return Auth::user()->role_id == 1 
                             && is_null($record->is_verified)
+                            && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
                             && $record->status != 'Ditolak'
                             && $record->is_replaced != 0;
                     })
@@ -394,6 +395,7 @@ class ApproveTable
                     ->visible(function ($record) {
                         return Auth::user()->role_id == 1 
                             && is_null($record->is_verified)
+                            && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
                             && $record->status != 'Ditolak'
                             && $record->is_replaced != 0;
                     })

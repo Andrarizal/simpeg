@@ -10,6 +10,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -211,18 +212,22 @@ class ApproveTable
                                 return false;
                         }
                     })
+                    ->schema([
+                        Textarea::make('note')
+                            ->label('Alasan')
+                            ->required()
+                            ->rows(3),
+                    ])
                     ->requiresConfirmation()
-                    ->action(function ($record) {
+                    ->action(function ($data, $record) {
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
                         $record->update([
                             'is_known' => 0,
-                        ]);
-
-                        $record->update([
                             'known_by' => $user->staff_id,
-                            'known_at' => Carbon::now()
+                            'known_at' => Carbon::now(),
+                            'note' => $data['note'],
                         ]);
 
                         Notification::make()
@@ -285,14 +290,21 @@ class ApproveTable
                         is_null($record->is_verified) && 
                         Auth::user()->staff->chair->level == 4 &&
                         Auth::user()->role_id == 1)
+                    ->schema([
+                        Textarea::make('note')
+                            ->label('Alasan')
+                            ->required()
+                            ->rows(3),
+                    ])
                     ->requiresConfirmation()
-                    ->action(function ($record) {
+                    ->action(function ($data, $record) {
                         $recipient = $record->staff->user;
 
                         $record->update([
                             'is_verified' => 0,
                             'verified_by' => Auth::user()->staff_id,
-                            'verified_at' => Carbon::now()
+                            'verified_at' => Carbon::now(),
+                            'note' => $data['note'],
                         ]);
 
                         Notification::make()
