@@ -37,6 +37,19 @@ class ProfileForm
                         ->columnSpan(1)
                         ->schema([
                             Section::make('Profil Pegawai')
+                                ->extraAttributes([
+                                    'class' => implode(' ', [
+                                        '[&_.fi-section-header]:bg-gradient-to-br',
+                                        '[&_.fi-section-header]:from-emerald-500',
+                                        '[&_.fi-section-header]:to-teal-600',
+                                        '[&_.fi-section-header]:dark:from-emerald-900',
+                                        '[&_.fi-section-header]:dark:to-teal-950',
+                                        '[&_.fi-section-header]:rounded-t-2xl',
+                                        '[&_.fi-section-header-heading]:!text-white',
+                                        '[&_.fi-section-header-description]:!text-white/80',
+                                        '[&_.fi-section-header_.fi-icon-btn]:!text-white',
+                                    ])
+                                ])
                                 ->schema([
                                     FileUpload::make('pas')
                                         ->label('Foto Profil')

@@ -199,118 +199,71 @@ class ApproveTable
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
 
-                        switch ($user->staff->chair->level) {
+                        $level = $user->staff->chair->level;
+
+                        $role = '';
+                        $verb = '';
+                        $notifColor = 'success';
+
+                        switch ($level) {
                             case 4:
-                                $record->update([
-                                    'status' => 'Diketahui Kepala Unit',
-                                    'approver_id' => $user->staff_id,
-                                    'approve_at' => Carbon::now(),
-                                    'adverb' => $data['adverb']
-                                ]);
-
-                                Notification::make()
-                                    ->title($record->type . ' Anda telah diketahui Kepala Unit')
-                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah diketahui Kepala Unit')
-                                    ->info()
-                                    ->actions([
-                                        Action::make('read')
-                                            ->button()
-                                            ->url(LeaveResource::getUrl('index'))
-                                            ->markAsRead()
-                                    ])
-                                    ->sendToDatabase($record->staff->user);
-
-                                Notification::make()
-                                    ->title($record->type . ' Diketahui')
-                                    ->success()
-                                    ->send();
+                                $role = 'Kepala Unit';
+                                $verb = 'diketahui';
+                                $notifColor = 'info';
                                 break;
                             case 3:
-                                $record->update([
-                                    'status' => 'Diketahui Koordinator',
-                                    'approver_id' => $user->staff_id,
-                                    'approve_at' => Carbon::now(),
-                                    'known_by' => $user->staff_id,
-                                    'known_at' => Carbon::now(),
-                                    'adverb' => $data['adverb']
-                                ]);
-
-                                Notification::make()
-                                    ->title($record->type . ' Anda telah diketahui Koordinator')
-                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah diketahui Koordinator')
-                                    ->info()
-                                    ->actions([
-                                        Action::make('read')
-                                            ->button()
-                                            ->url(LeaveResource::getUrl('index'))
-                                            ->markAsRead()
-                                    ])
-                                    ->sendToDatabase($record->staff->user);
-
-                                Notification::make()
-                                    ->title($record->type . ' Diketahui')
-                                    ->success()
-                                    ->send();
+                                $role = 'Koordinator';
+                                $verb = 'diketahui';
+                                $notifColor = 'info';
                                 break;
                             case 2:
-                                $record->update([
-                                    'status' => 'Disetujui Kepala Seksi',
-                                    'approver_id' => $user->staff_id,
-                                    'approve_at' => Carbon::now(),
-                                    'adverb' => $data['adverb']
-                                ]);
-
-                                if ($record->staff->chair->level == 3){
-                                    $record->update([
-                                        'known_by' => $user->staff_id,
-                                        'known_at' => Carbon::now()
-                                    ]);
-                                }
-
-                                Notification::make()
-                                    ->title($record->type . ' Anda telah disetujui Kepala Seksi')
-                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah disetujui Kepala Seksi')
-                                    ->success()
-                                    ->actions([
-                                        Action::make('read')
-                                            ->button()
-                                            ->url(LeaveResource::getUrl('index'))
-                                            ->markAsRead()
-                                    ])
-                                    ->sendToDatabase($record->staff->user);
-
-                                Notification::make()
-                                    ->title($record->type . ' Disetujui')
-                                    ->success()
-                                    ->send();
+                                $role = 'Kepala Seksi';
+                                $verb = 'disetujui';
+                                $notifColor = 'success';
                                 break;
                             case 1:
-                                $record->update([
-                                    'status' => 'Disetujui Direktur',
-                                    'approver_id' => $user->staff_id,
-                                    'approve_at' => Carbon::now(),
-                                    'adverb' => $data['adverb']
-                                ]);
-
-                                Notification::make()
-                                    ->title($record->type . ' Anda telah disetujui Direktur')
-                                    ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah disetujui Direktur')
-                                    ->success()
-                                    ->actions([
-                                        Action::make('read')
-                                            ->button()
-                                            ->url(LeaveResource::getUrl('index'))
-                                            ->markAsRead()
-                                    ])
-                                    ->sendToDatabase($record->staff->user);
-
-                                Notification::make()
-                                    ->title($record->type . ' Disetujui')
-                                    ->success()
-                                    ->send();
+                                $role = 'Direktur';
+                                $verb = 'disetujui';
+                                $notifColor = 'success';
                                 break;
                         }
 
+                        if (!empty($role)) {
+                            $updateData = [
+                                'status'      => ucfirst($verb) . ' ' . $role,
+                                'approver_id' => $user->staff_id,
+                                'approve_at'  => Carbon::now(),
+                                'adverb'      => $data['adverb']
+                            ];
+
+                            if ($level == 3 || $level == 4) {
+                                $updateData['known_by'] = $user->staff_id;
+                                $updateData['known_at'] = Carbon::now();
+                            } 
+                            elseif ($level == 2 && $record->staff->chair->level == 3) {
+                                $updateData['known_by'] = $user->staff_id;
+                                $updateData['known_at'] = Carbon::now();
+                            }
+
+                            $record->update($updateData);
+
+                            Notification::make()
+                                ->title($record->type . ' Anda telah ' . $verb . ' ' . $role)
+                                ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah ' . $verb . ' ' . $role)
+                                ->status($notifColor)
+                                ->actions([
+                                    Action::make('read')
+                                        ->button()
+                                        ->url(LeaveResource::getUrl('index'))
+                                        ->markAsRead(),
+                                ])
+                                ->sendToDatabase($record->staff->user);
+
+                            Notification::make()
+                                ->title($record->type . ' ' . ucfirst($verb))
+                                ->success()
+                                ->send();
+                        }
                     }),
                 Action::make('reject')
                     ->label('Tolak')
@@ -335,9 +288,28 @@ class ApproveTable
                             'adverb' => $data['adverb']
                         ]);
 
+                        $level = $user->staff->chair->level;
+
+                        $role = '';
+
+                        switch ($level) {
+                            case 4:
+                                $role = 'Kepala Unit';
+                                break;
+                            case 3:
+                                $role = 'Koordinator';
+                                break;
+                            case 2:
+                                $role = 'Kepala Seksi';
+                                break;
+                            case 1:
+                                $role = 'Direktur';
+                                break;
+                        }
+
                         Notification::make()
-                            ->title($record->type . ' Anda telah ditolak')
-                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah ditolak')
+                            ->title($record->type . ' Anda telah ditolak oleh ' . $role)
+                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah ditolak dengan alasan: ' . $data['adverb'])
                             ->danger()
                             ->actions([
                                 Action::make('read')
@@ -414,7 +386,7 @@ class ApproveTable
 
                         Notification::make()
                             ->title($record->type . ' Anda telah dibatalkan SDM')
-                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah dibatalkan SDM')
+                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah dibatalkan SDM dengan alasan: ' . $data['adverb'])
                             ->danger()
                             ->actions([
                                 Action::make('read')

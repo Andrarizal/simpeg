@@ -29,7 +29,8 @@ return new class extends Migration
             $table->date('rkk_expiry')->nullable();
             $table->string('utw')->nullable();
             $table->date('utw_expiry')->nullable();
-            $table->unsignedTinyInteger('is_verified')->default(0);
+            $table->unsignedTinyInteger('is_verified')->nullable();
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }

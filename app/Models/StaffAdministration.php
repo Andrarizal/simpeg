@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class StaffAdministration extends Model
 {
-    protected $fillable = ['staff_id', 'sip', 'sip_expiry', 'str', 'str_expiry', 'mcu', 'mcu_expiry', 'spk', 'spk_expiry', 'rkk', 'rkk_expiry', 'utw', 'utw_expiry', 'is_verified'];
+    protected $fillable = ['staff_id', 'sip', 'sip_expiry', 'str', 'str_expiry', 'mcu', 'mcu_expiry', 'spk', 'spk_expiry', 'rkk', 'rkk_expiry', 'utw', 'utw_expiry', 'is_verified', 'note'];
 
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);

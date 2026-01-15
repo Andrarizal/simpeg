@@ -60,15 +60,22 @@ class AppServiceProvider extends ServiceProvider
                         border-radius: var(--radius-xl) !important;
                     }
 
-                    .fi-section,
-                    .fi-sc-tabs,
-                    .fi-ta-ctn,
-                    .fi-modal-window,
-                    .fi-wi-stats-overview-stat {
+                    .fi-sc-tabs, 
+                    .fi-ta-ctn, 
+                    .fi-modal-window
+                    {
                         border-radius: var(--radius-3xl)!important;
                     }
 
-                    .fi-wi-stats-overview-stat {
+                    .fi-tabs {
+                        border-radius: var(--radius-2xl)
+                    }
+                    
+                    .fi-section, .fi-sc-tabs.fi-contained, .fi-sc-tabs.fi-contained .fi-tabs, .fi-wi-stats-overview-stat {
+                        border-radius: var(--radius-3xl)!important;
+                    }
+
+                    .fi-wi-stats-overview-stat, {
                         overflow: hidden;
                     }
 
@@ -82,6 +89,15 @@ class AppServiceProvider extends ServiceProvider
 
                     .fi-section-not-contained, .fi-tabs.fi-contained {
                         box-shadow: none
+                    }
+
+                    .fi-tabs-item.fi-active {
+                        background-image: linear-gradient(to bottom right, oklch(69.6% 0.17 162.48), oklch(60% 0.118 184.704));
+                        color: white;
+                    }
+
+                    .fi-tabs-item.fi-active .fi-icon, .fi-tabs-item.fi-active .fi-tabs-item-label {
+                        color:white!important;
                     }
                 </style>
             HTML)
@@ -138,8 +154,7 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     .fi-sidebar-nav .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
-                        background-image: none !important;
-                        background-color: var(--primary-600) !important;
+                        background-image: linear-gradient(to bottom right, oklch(69.6% 0.17 162.48), oklch(60% 0.118 184.704));
                     }
 
                     .fi-sidebar-nav .fi-sidebar-item.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon, 

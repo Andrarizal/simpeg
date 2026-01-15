@@ -231,8 +231,8 @@ class ApproveTable
                         ]);
 
                         Notification::make()
-                            ->title('Pengajuan Lembur Ditolak')
-                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah ditolak oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
+                            ->title('Pengajuan Lembur Ditolak oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
+                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah ditolak dengan alasan: ' . $data['note'])
                             ->success()
                             ->actions([
                                 Action::make('read')
@@ -308,8 +308,8 @@ class ApproveTable
                         ]);
 
                         Notification::make()
-                            ->title('Pengajuan Lembur Dibatalkan')
-                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah dibatalkan SDM')
+                            ->title('Pengajuan Lembur Ditolak SDM')
+                            ->body('Lembur Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah ditolak SDM dengan alasan: ' . $data['note'])
                             ->success()
                             ->actions([
                                 Action::make('read')
@@ -354,22 +354,22 @@ class ApproveTable
                                     'known_by' => $user->staff_id,
                                     'known_at' => Carbon::now()
                                 ]);
+
+                                Notification::make()
+                                    ->title('Pengajuan Lembur Diketahui')
+                                    ->body('Lembur Anda untuk tanggal ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diketahui oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
+                                    ->success()
+                                    ->actions([
+                                        Action::make('read')
+                                            ->button()
+                                            ->url(OvertimeResource::getUrl('index'))
+                                            ->markAsRead()
+                                    ])
+                                    ->sendToDatabase($record->staff->user);
                             }
 
                             Notification::make()
-                                ->title('Pengajuan Lembur Diketahui')
-                                ->body('Lembur Anda untuk bulan ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('F Y') . ' telah diketahui oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
-                                ->success()
-                                ->actions([
-                                    Action::make('read')
-                                        ->button()
-                                        ->url(OvertimeResource::getUrl('index'))
-                                        ->markAsRead()
-                                ])
-                                ->sendToDatabase($record->staff->user);
-
-                            Notification::make()
-                                ->title('Data lembur ditandai diketahui.')
+                                ->title('Data lembur diketahui.')
                                 ->success()
                                 ->send();
                         }),
@@ -387,22 +387,22 @@ class ApproveTable
                                     'verified_by' => Auth::user()->staff_id,
                                     'verified_at' => Carbon::now()
                                 ]);
+
+                                Notification::make()
+                                    ->title('Pengajuan Lembur Diverifikasi')
+                                    ->body('Lembur Anda untuk tanggal ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
+                                    ->success()
+                                    ->actions([
+                                        Action::make('read')
+                                            ->button()
+                                            ->url(OvertimeResource::getUrl('index'))
+                                            ->markAsRead()
+                                    ])
+                                    ->sendToDatabase($record->staff->user);
                             }
 
-                        Notification::make()
-                            ->title('Pengajuan Lembur Diverifikasi')
-                            ->body('Lembur Anda untuk bulan ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('F Y') . ' telah diverifikasi SDM')
-                            ->success()
-                            ->actions([
-                                Action::make('read')
-                                    ->button()
-                                    ->url(OvertimeResource::getUrl('index'))
-                                    ->markAsRead()
-                            ])
-                            ->sendToDatabase($record->staff->user);
-
                             Notification::make()
-                                ->title('Data lembur diverifikasi.')
+                                ->title(count($records) . ' Data lembur diverifikasi.')
                                 ->success()
                                 ->send();
                         }),

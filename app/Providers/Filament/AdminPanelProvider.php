@@ -56,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->colors([
                 'primary' => Color::Emerald,
+                'gray' => Color::Stone
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -101,13 +102,12 @@ class AdminPanelProvider extends PanelProvider
                             padding-right: 0 !important;
                             
                             text-align: center !important;
-                            text-align-last: center !important; /* Khusus Chrome */
+                            text-align-last: center !important;
                             
                             min-width: 40px !important;
                             width: 100% !important;
                         }
                         
-                        /* Hilangkan border focus ring jika ingin terlihat bersih total */
                         .no-arrow select:focus {
                             ring: 0 !important;
                             border-color: transparent !important;
@@ -131,7 +131,6 @@ class AdminPanelProvider extends PanelProvider
                             background-color: rgb(24 24 27);
                         }
 
-                        /* --- 2. CONFIG STICKY HEADER (Judul) --- */
                         .fi-ta-header-cell:has(.sticky-col-name) {
                             position: sticky !important;
                             left: 0 !important;
@@ -146,13 +145,10 @@ class AdminPanelProvider extends PanelProvider
                             background-color: inherit;
                         }
 
-                        /* --- 3. SOLUSI ANDA: BOOST FILTER Z-INDEX --- */
-                        /* Kita paksa Panel Dropdown (Filter/Action) punya level tertinggi */
                         .fi-dropdown-panel {
-                            z-index: 100 !important; /* Angka ini harus > 20 */
+                            z-index: 100 !important; 
                         }
                         
-                        /* Opsional: Jika Header tabel sticky juga menutupi, naikkan header tabel container */
                         .fi-ta-header-ctn {
                             z-index: 30 !important;
                         }
@@ -180,7 +176,6 @@ class AdminPanelProvider extends PanelProvider
                                         this.timestamp = Date.now();
                                         this.isReady = true;
 
-                                        // Broadcast Event ke AlpineJS (agar halaman presensi bisa dengar)
                                         window.dispatchEvent(new CustomEvent('gps-update', { 
                                             detail: { 
                                                 lat: this.lat, 
@@ -207,8 +202,6 @@ class AdminPanelProvider extends PanelProvider
                         });
 
                         document.addEventListener('DOMContentLoaded', async () => {
-                            // --- 1. VARIABEL GLOBAL UNTUK MENYIMPAN STATE ---
-                            // Kita simpan jumlah notifikasi terakhir di sini agar tidak hilang saat HTML di-refresh Livewire
                             let previousNotificationCount = 0; 
                             let isFirstLoad = true;
 
@@ -221,7 +214,6 @@ class AdminPanelProvider extends PanelProvider
                                 }
                             }
                             
-                            // --- 2. REQUEST PERMISSION ---
                             if (Notification.permission !== "granted" && Notification.permission !== "denied") {
                                 Notification.requestPermission();
                             }
@@ -237,26 +229,24 @@ class AdminPanelProvider extends PanelProvider
                                         if ('serviceWorker' in navigator) {
                                             const registration = await navigator.serviceWorker.ready;
                                             
-                                            // Tampilkan via Service Worker
                                             await registration.showNotification(data.title, {
                                                 body: data.body,
-                                                icon: "/img/rsumpyk.png", // Ganti path logo
+                                                icon: "/img/rsumpyk.png",
                                                 vibrate: [200, 100, 200, 100, 200],
                                                 tag: "simantap-" + Date.now(),
-                                                // Renotify: Jika tag kebetulan sama, paksa bunyi lagi
                                                 renotify: true,
-                                                data: { url: data.url ?? window.location.href } // Simpan URL untuk di-klik
+                                                data: { url: data.url ?? window.location.href }
                                             });
                                         } else {
                                             const notif = new Notification(data.title, {
                                                 body: data.body,
-                                                icon: "/img/rsumpyk.png", // Pastikan path ini benar
+                                                icon: "/img/rsumpyk.png",
                                                 tag: "simantap-" + Date.now() 
                                             });
 
                                             notif.onclick = () => { 
                                                 window.focus(); 
-                                                if(data.url) window.location.href = data.url; // Redirect jika ada link
+                                                if(data.url) window.location.href = data.url;
                                                 notif.close(); 
                                             };
                                         }
@@ -269,36 +259,25 @@ class AdminPanelProvider extends PanelProvider
                             };
 
                             const checkNotifications = () => {
-                                // Selector spesifik sesuai HTML yang Anda kirim
-                                // Kita cari span di dalam div class 'fi-icon-btn-badge-ctn'
                                 const badgeSpan = document.querySelector('.total-notifications');
 
                                 if (badgeSpan) {
-                                    // Ambil angka dari teks (misal "1", "5", "99+")
-                                    // Gunakan regex untuk mengambil hanya angka (jika ada karakter lain)
                                     const text = badgeSpan.innerText.trim();
                                     const currentCount = parseInt(text.replace(/[^0-9]/g, '')) || 0;
 
-                                    // LOGIKA DETEKSI KENAIKAN
-                                    // Jika ini bukan load pertama DAN angka sekarang LEBIH BESAR dari sebelumnya
                                     if (!isFirstLoad && currentCount > previousNotificationCount) {
                                         console.log('Notifikasi baru! Mengambil detail...');
                                         showSystemNotification();
                                     }
 
-                                    // Update state global
                                     previousNotificationCount = currentCount;
                                     isFirstLoad = false;
                                 } else {
-                                    // Jika badge hilang (berarti 0 notifikasi)
                                     previousNotificationCount = 0;
                                 }
                             };
 
-                            // --- 3. JALANKAN MUTATION OBSERVER ---
-                            // Karena Livewire mengubah DOM, kita pantau terus menerus
                             const observer = new MutationObserver((mutations) => {
-                                // Setiap ada perubahan di DOM, kita cek ulang angkanya
                                 checkNotifications();
                             });
 
@@ -311,7 +290,6 @@ class AdminPanelProvider extends PanelProvider
                                 });
                             }
                             
-                            // Cek sekali di awal (jika sudah ada notif saat login)
                             checkNotifications();
                         });
                     </script>
@@ -403,6 +381,13 @@ class AdminPanelProvider extends PanelProvider
                     if ($hasNotifiedToday) {
                         continue;
                     }
+
+                    DatabaseNotification::query()
+                        ->where('notifiable_id', $user->id)
+                        ->where('notifiable_type', get_class($user))
+                        ->where('data->title', 'LIKE', '%lock-notif hidden%') 
+                        ->where('data->body', 'LIKE', "%Kontrak dari {$staff->name}%")
+                        ->delete();
 
                     Notification::make()
                         ->title(new HtmlString($secretMarker . $title))

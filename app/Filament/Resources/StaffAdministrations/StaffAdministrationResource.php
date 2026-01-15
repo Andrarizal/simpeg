@@ -45,13 +45,6 @@ class StaffAdministrationResource extends Resource
         return StaffAdministrationsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [

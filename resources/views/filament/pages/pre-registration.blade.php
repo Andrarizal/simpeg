@@ -2,8 +2,8 @@
     <form wire:submit="preRegist" class="space-y-4 w-full self-center">
         <div class="flex justify-center lg:justify-start items-center gap-4 pb-4">
             <img src="{{ asset('img/rsumpyk.png') }}" class="w-14 h-14">
-            <h1 class="font-semibold leading-tight lg:text-xl hidden lg:block">Sistem Informasi Manajemen dan <br>Tenaga Pegawai</h1>
-            <h1 class="font-semibold leading-tight text-2xl lg:hidden">SIMANTAP</h1>
+            <h1 class="font-bold leading-tight lg:text-xl hidden lg:block">Sistem Informasi Manajemen dan <br>Tenaga Pegawai</h1>
+            <h1 class="font-bold leading-tight text-2xl lg:hidden">SIMANTAP</h1>
             </div>
             {{ $this->form }}
 

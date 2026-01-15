@@ -11,7 +11,7 @@
     <style>
       @font-face {
           font-family: 'SF-Pro';
-          src: url('/fonts/SF-Pro.otf');
+          src: url('/fonts/SF-Pro.ttf');
       }
 
       :root {

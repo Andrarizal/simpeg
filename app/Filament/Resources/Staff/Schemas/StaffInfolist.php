@@ -65,7 +65,8 @@ class StaffInfolist
                                         ->hiddenLabel()
                                         ->alignCenter()
                                         ->extraAttributes([
-                                            'class' => 'text-center font-bold text-2xl -mt-4',
+                                            'class' => 'text-center font-bold text-xl -mt-3',
+                                            'style' => 'line-height: 1em'
                                         ]),
                                     TextEntry::make('nip')
                                         ->hiddenLabel()
@@ -81,15 +82,40 @@ class StaffInfolist
                         ->columnSpan(2)
                         ->schema([
                             Section::make('Profil Pegawai')
+                                ->extraAttributes([
+                                    'class' => implode(' ', [
+                                        '[&_.fi-section-header]:bg-gradient-to-br',
+                                        '[&_.fi-section-header]:from-emerald-500',
+                                        '[&_.fi-section-header]:to-teal-600',
+                                        '[&_.fi-section-header]:dark:from-emerald-900',
+                                        '[&_.fi-section-header]:dark:to-teal-950',
+                                        '[&_.fi-section-header]:rounded-t-2xl',
+                                        '[&_.fi-section-header-heading]:!text-white',
+                                        '[&_.fi-section-header-description]:!text-white/80',
+                                        '[&_.fi-section-header_.fi-icon-btn]:!text-white',
+                                    ])
+                                ])
                                 ->schema([
                                     TextEntry::make('chair.name')
-                                        ->label('Jabatan'),
+                                        ->label('Jabatan')
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ]),
                                     TextEntry::make('unit.name')
-                                        ->label('Unit Kerja'),
+                                        ->label('Unit Kerja')
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ]),
                                     TextEntry::make('staffStatus.name')
-                                        ->label('Status Kepegawaian'),
+                                        ->label('Status Kepegawaian')
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ]),
                                     TextEntry::make('group.name')
-                                        ->label('Kelompok Tenaga Kerja'),
+                                        ->label('Kelompok Tenaga Kerja')
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ]),
                                 ])
                                 ->columns(2),
                         ]),
@@ -100,23 +126,59 @@ class StaffInfolist
                 ->schema([
                     Group::make([
                         Section::make('Informasi Pribadi')
-                            ->icon('heroicon-m-user')
-                            ->columnSpan(['md' => 2]) // Span 2
+                            ->columnSpan(['md' => 2])
+                            ->extraAttributes([
+                                'class' => implode(' ', [
+                                    '[&_.fi-section-header]:bg-gradient-to-br',
+                                    '[&_.fi-section-header]:from-emerald-500',
+                                    '[&_.fi-section-header]:to-teal-600',
+                                    '[&_.fi-section-header]:dark:from-emerald-900',
+                                    '[&_.fi-section-header]:dark:to-teal-950',
+                                    '[&_.fi-section-header]:rounded-t-2xl',
+                                    '[&_.fi-section-header-heading]:!text-white',
+                                    '[&_.fi-section-header-description]:!text-white/80',
+                                    '[&_.fi-section-header_.fi-icon-btn]:!text-white',
+                                ])
+                            ])
                             ->columns(2)
                             ->schema([
                                 TextEntry::make('nik')
-                                    ->hiddenLabel()
+                                    ->label('Nomor Induk Kepegawaian')
                                     ->columnSpanFull()
                                     ->extraAttributes([
-                                        'class' => 'font-bold text-4xl',
+                                        'class' => 'font-bold text-4xl -mt-2',
                                         'style' => 'font-family: monospace;',
                                     ]),
-                                TextEntry::make('birth_place')->label('Tempat Lahir'),
-                                TextEntry::make('birth_date')->label('Tanggal Lahir')->date(),
-                                TextEntry::make('sex')->label('Jenis Kelamin'),
-                                TextEntry::make('marital')->label('Status Perkawinan'),
-                                TextEntry::make('origin')->label('Alamat KTP')->columnSpanFull(),
-                                TextEntry::make('domicile')->label('Alamat Domisili')->columnSpanFull(),
+                                TextEntry::make('birth_place')
+                                    ->label('Tempat Lahir')
+                                    ->extraAttributes([
+                                            'class' => '-mt-2'
+                                    ]                                    ),
+                                TextEntry::make('birth_date')
+                                    ->label('Tanggal Lahir')
+                                    ->extraAttributes([
+                                            'class' => '-mt-2'
+                                    ]                                    )->date(),
+                                TextEntry::make('sex')
+                                    ->label('Jenis Kelamin')
+                                    ->extraAttributes([
+                                            'class' => '-mt-2'
+                                    ]),
+                                TextEntry::make('marital')
+                                    ->label('Status Perkawinan')
+                                    ->extraAttributes([
+                                            'class' => '-mt-2'
+                                    ]),
+                                TextEntry::make('origin')
+                                    ->label('Alamat KTP')
+                                    ->extraAttributes([
+                                            'class' => '-mt-2'
+                                    ])->columnSpanFull(),
+                                TextEntry::make('domicile')
+                                    ->label('Alamat Domisili')
+                                    ->extraAttributes([
+                                            'class' => '-mt-2'
+                                    ])->columnSpanFull(),
                             ]),
 
                         Tabs::make('Data Kepegawaian')
@@ -130,10 +192,16 @@ class StaffInfolist
                                             ->visible(fn ($record) => $record->contract)
                                             ->columns(3)
                                             ->schema([
-                                                TextEntry::make('contract.contract_number')->label('No. Kontrak'),
-                                                TextEntry::make('contract.start_date')->label('Mulai')->date(),
-                                                TextEntry::make('contract.end_date')->label('Selesai')->date(),
-                                                self::getPdfEntry('contract.decree', 'File Kontrak', 'contract')->columnSpanFull(),
+                                                TextEntry::make('contract.contract_number')
+                                                    ->label('No. Kontrak'),
+                                                TextEntry::make('contract.start_date')
+                                                    ->label('Mulai')
+                                                    ->date(),
+                                                TextEntry::make('contract.end_date')
+                                                    ->label('Selesai')
+                                                    ->date(),
+                                                self::getPdfEntry('contract.decree', 'File Kontrak', 'contract')
+                                                    ->columnSpanFull(),
                                             ]),
                                         Section::make('SK Pengangkatan')
                                             ->visible(fn ($record) => $record->appointment)
@@ -183,11 +251,12 @@ class StaffInfolist
                                 Tab::make('Pengalaman Kerja')
                                     ->icon('heroicon-o-briefcase')
                                     ->visible(fn ($record) => $record->workExperience)
+                                    ->columns(2)
                                     ->schema([
                                         TextEntry::make('workExperience.institution')->label('Institusi'),
                                         TextEntry::make('workExperience.work_length')->label('Lama Bekerja'),
                                         TextEntry::make('workExperience.admission')->label('Pengakuan'),
-                                        self::getPdfEntry('workExperience.certificate', 'Sertifikat', 'work_experiences')->columnSpanFull(),
+                                        self::getPdfEntry('workExperience.certificate', 'Sertifikat', 'work_experiences')->visible(fn($state) => $state ? true : false),
                                     ]),
                             ]),
                     ])->columnSpan(['md' => 2]),
@@ -196,10 +265,25 @@ class StaffInfolist
                         Section::make('Kontak')
                             ->icon('heroicon-m-phone')
                             ->schema([
-                                TextEntry::make('email')->icon('heroicon-m-envelope')->label('Email'),
-                                TextEntry::make('phone')->icon('heroicon-m-device-phone-mobile')->label('No. HP'),
-                                TextEntry::make('other_phone')->icon('heroicon-m-device-phone-mobile')->label('No. HP Kerabat')
-                                    ->helperText(fn($record) => $record->other_phone_adverb),
+                                TextEntry::make('email')
+                                    ->icon('heroicon-m-envelope')
+                                    ->extraAttributes([
+                                        'class' => '-mt-2'
+                                    ])
+                                    ->label('Email'),
+                                TextEntry::make('phone')
+                                    ->icon('heroicon-m-device-phone-mobile')
+                                    ->extraAttributes([
+                                        'class' => '-mt-2'
+                                    ])
+                                    ->label('No. HP'),
+                                TextEntry::make('other_phone')
+                                    ->icon('heroicon-m-device-phone-mobile')
+                                    ->extraAttributes([
+                                        'class' => '-mt-2'
+                                    ])
+                                    ->label('No. HP Kerabat')
+                                    ->formatStateUsing(fn($record) => $record->other_phone . ' (' . $record->other_phone_adverb . ')'),
                             ]),
                         
                         Section::make('Masa Pengabdian')
@@ -241,6 +325,9 @@ class StaffInfolist
                                                 ->whereYear('start_date', now()->year)
                                                 ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
                                         })
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ])
                                         ->color('danger'),
 
                                     TextEntry::make('leaves_remaining')
@@ -257,6 +344,9 @@ class StaffInfolist
                                                 
                                             return ($quota - $taken) . ' Hari';
                                         })
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ])
                                         ->weight(FontWeight::Bold)
                                         ->color('success'),
                                     TextEntry::make('permission_taken')
@@ -269,6 +359,9 @@ class StaffInfolist
                                                 ->whereYear('start_date', now()->year)
                                                 ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
                                         })
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ])
                                         ->color('danger'),
 
                                     TextEntry::make('permission_remaining')
@@ -285,6 +378,9 @@ class StaffInfolist
                                                 
                                             return ($quota - $taken) . ' Hari';
                                         })
+                                        ->extraAttributes([
+                                            'class' => '-mt-2'
+                                        ])
                                         ->weight(FontWeight::Bold)
                                         ->color('success'),
                                 ]),
@@ -300,15 +396,11 @@ class StaffInfolist
                                             return '0%';
                                         }
 
-                                        $fields = [
-                                            'sip', 
-                                            'str', 
-                                            'mcu', 
-                                            'spk', 
-                                            'rkk', 
-                                            'utw',
-                                        ];
-                                        
+                                        $fields = ['mcu', 'utw'];
+                                        if ($record->group_id < 9 && $record->group_id != 1){
+                                            array_push($fields, 'sip', 'str', 'spk', 'rkk');
+                                        }
+
                                         $totalFields = count($fields);
                                         $filledFields = 0;
 
