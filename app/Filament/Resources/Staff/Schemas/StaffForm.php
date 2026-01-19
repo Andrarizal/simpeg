@@ -99,12 +99,14 @@ class StaffForm
                     ->label('Tanggal Pensiun')
                     ->minDate(now())
                     ->required()
-                    ->disabled(),
+                    ->disabled()
+                    ->dehydrated(),
                 Select::make('staff_status_id')
                     ->label('Status Kepegawaian')
                     ->relationship('staffStatus', 'name')
                     ->reactive()
                     ->required()
+                    ->live()
                     ->native(false),
                 Select::make('chair_id')
                     ->label('Jabatan')
@@ -112,6 +114,7 @@ class StaffForm
                     ->required()
                     ->searchable()
                     ->preload()
+                    ->live()
                     ->native(false),
                 Select::make('group_id')
                     ->label('Kelompok Tenaga Kerja')
@@ -119,6 +122,7 @@ class StaffForm
                     ->required()
                     ->searchable()
                     ->preload()
+                    ->live()
                     ->native(false),
                 Select::make('unit_id')
                     ->label('Unit Kerja')
@@ -126,13 +130,15 @@ class StaffForm
                     ->required()
                     ->searchable()
                     ->preload()
+                    ->live()
                     ->native(false),
                 Fieldset::make('Data Kontrak')
                     ->visible(fn (Get $get) => ($get('staff_status_id') ?? null) == 2)
                     ->schema([
                         TextInput::make('contract.contract_number')
                             ->label('Nomor Kontrak')
-                            ->placeholder('ext. 123/12/KK/YMP-U/XI/2025')
+                            ->placeholder('cth. 123/12/KK/YMP-U/XI/2025')
+                            ->live(onBlur: true)
                             ->required(),
                         DatePicker::make('contract.start_date')
                             ->label('Tanggal Mulai')
@@ -151,7 +157,7 @@ class StaffForm
                             ->directory('surat-kontrak')
                             ->required()
                             ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(2048) // maksimal 2MB
+                            ->maxSize(2048)
                             ->helperText('Unggah surat kontrak dalam format PDF'),
                     ])
                     ->columnSpanFull(),
@@ -161,7 +167,8 @@ class StaffForm
                     ->schema([
                         TextInput::make('appointment.decree_number')
                             ->label('Nomor SK')
-                            ->placeholder('ext. 12/12/SK/YMP/XI/2025')
+                            ->placeholder('cth. 12/12/SK/YMP/XI/2025')
+                            ->live(onBlur: true)
                             ->required(),
                         DatePicker::make('appointment.decree_date')
                             ->label('Tanggal SK')
@@ -178,7 +185,7 @@ class StaffForm
                             ->directory('surat-pengangkatan')
                             ->required()
                             ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(2048) // maksimal 2MB
+                            ->maxSize(2048)
                             ->helperText('Unggah surat pengangkatan pegawai tetap dalam format PDF'),
                     ])
                     ->columnSpanFull(),
@@ -188,7 +195,8 @@ class StaffForm
                     ->schema([
                         TextInput::make('adjustment.decree_number')
                             ->label('Nomor SK Penyesuaian')
-                            ->placeholder('ext. 21/02/SK/YMP/I/2016'),
+                            ->live(onBlur: true)
+                            ->placeholder('cth. 21/02/SK/YMP/I/2016'),
                         DatePicker::make('adjustment.decree_date')
                             ->label('Tanggal SK Penyesuaian')
                             ->native(false),
@@ -201,11 +209,10 @@ class StaffForm
                             ->visibility('public')
                             ->directory('surat-penyesuaian')
                             ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(2048) // maksimal 2MB
+                            ->maxSize(2048)
                             ->helperText('Unggah surat penyesuaian golongan dalam format PDF'),
                     ])
                     ->columnSpanFull(),
-                // === FORM TAMBAHAN DEPENDENSI ===
                 Section::make('Data Tambahan Kepegawaian')
                     ->schema([
                         Fieldset::make('Pendidikan Awal')
@@ -218,11 +225,11 @@ class StaffForm
                                     ->native(false),
                                 TextInput::make('entryEducation.institution')
                                     ->label('Institusi')
-                                    ->placeholder('ext. Universitas Mitra Paramedika')
+                                    ->placeholder('cth. Universitas Mitra Paramedika')
                                     ->required(),
                                 TextInput::make('entryEducation.certificate_number')
                                     ->label('Nomor Ijazah')
-                                    ->placeholder('ext. 1234/ABC/ABCDE/KM/S-1/XI/25')
+                                    ->placeholder('cth. 1234/ABC/ABCDE/KM/S-1/XI/25')
                                     ->required(),
                                 DatePicker::make('entryEducation.certificate_date')
                                     ->label('Tanggal Ijazah')
@@ -235,18 +242,17 @@ class StaffForm
                                     ->directory('ijazah-awal')
                                     ->required()
                                     ->acceptedFileTypes(['application/pdf'])
-                                    ->maxSize(2048) // maksimal 2MB
+                                    ->maxSize(2048)
                                     ->helperText('Unggah ijazah dalam format PDF')
                                     ->columnSpanFull(),
                                 TextInput::make('entryEducation.nonformal_education')
                                     ->label('Pendidikan Nonformal')
-                                    ->placeholder('ext. Kursus Mitra Paramedika'),
+                                    ->placeholder('cth. Kursus Mitra Paramedika'),
                                 TextInput::make('entryEducation.adverb')
                                     ->label('Keterangan'),
                             ])
                             ->visible(),
 
-                        // --- 5. WORK EDUCATION ---
                         Checkbox::make('has_work_education')
                             ->label('Memiliki Riwayat Pendidikan saat Bekerja?')
                             ->reactive(),
@@ -259,10 +265,10 @@ class StaffForm
                                     ->native(false),
                                 TextInput::make('workEducation.major')
                                     ->label('Jurusan')
-                                    ->placeholder('ext. Keperawatan'),
+                                    ->placeholder('cth. Keperawatan'),
                                 TextInput::make('workEducation.institution')
                                     ->label('Institusi')
-                                    ->placeholder('ext. Universitas Mitra Paramedika'),
+                                    ->placeholder('cth. Universitas Mitra Paramedika'),
                                 TextInput::make('workEducation.certificate_number')
                                     ->label('Nomor Ijazah')
                                     ->placeholder('1234/ABC/ABCDE/KM/S-1/IV/25'),
@@ -275,12 +281,11 @@ class StaffForm
                                     ->visibility('public')
                                     ->directory('ijazah-bekerja')
                                     ->acceptedFileTypes(['application/pdf'])
-                                    ->maxSize(2048) // maksimal 2MB
+                                    ->maxSize(2048)
                                     ->helperText('Unggah ijazah dalam format PDF'),
                             ])
                             ->visible(fn (Get $get) => $get('has_work_education')),
 
-                        // --- 6. WORK EXPERIENCE ---
                         Checkbox::make('has_work_experience')
                             ->label('Memiliki Pengalaman Kerja Sebelumnya?')
                             ->reactive(),
@@ -288,10 +293,10 @@ class StaffForm
                             ->schema([
                                 TextInput::make('workExperience.institution')
                                     ->label('Instansi')
-                                    ->placeholder('ext. RSU Mitra Paramedika'),
+                                    ->placeholder('cth. RSU Mitra Paramedika'),
                                 TextInput::make('workExperience.work_length')
                                     ->label('Lama Kerja')
-                                    ->placeholder('ext. 2 Tahun'),
+                                    ->placeholder('cth. 2 Tahun'),
                                 TextInput::make('workExperience.admission')
                                     ->label('Pengakuan'),
                                 FileUpload::make('workExperience.certificate')
@@ -300,7 +305,7 @@ class StaffForm
                                     ->visibility('public')
                                     ->directory('ijazah')
                                     ->acceptedFileTypes(['application/pdf'])
-                                    ->maxSize(2048) // maksimal 2MB
+                                    ->maxSize(2048)
                                     ->helperText('Unggah sertifikat dalam format PDF'),
                             ])
                             ->visible(fn (Get $get) => $get('has_work_experience')),

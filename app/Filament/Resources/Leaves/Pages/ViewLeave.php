@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Leaves\Pages;
 use App\Filament\Pages\Signature;
 use App\Filament\Resources\Leaves\LeaveResource;
 use App\Models\Staff;
+use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
@@ -27,36 +29,74 @@ class ViewLeave extends ViewRecord
                 ->icon('heroicon-o-check')
                 ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
                 ->requiresConfirmation()
-                ->action(function ($record) {
+                ->action(function (array $data, $record) {
                     $user = Auth::user();
                     $user->staff_id = $user->staff_id ?? 1;
 
-                    // Cek level jabatan dari user login
-                    switch ($user->staff->chair->level) {
+                    $level = $user->staff->chair->level;
+
+                    $role = '';
+                    $verb = '';
+                    $notifColor = 'success';
+
+                    switch ($level) {
                         case 4:
-                            $record->update([
-                                'status' => 'Diketahui Kepala Unit',
-                                'approver_id' => $user->staff_id
-                            ]);
+                            $role = 'Kepala Unit';
+                            $verb = 'diketahui';
+                            $notifColor = 'info';
                             break;
                         case 3:
-                            $record->update([
-                                'status' => 'Diketahui Koordinator',
-                                'approver_id' => $user->staff_id
-                            ]);
+                            $role = 'Koordinator';
+                            $verb = 'diketahui';
+                            $notifColor = 'info';
                             break;
                         case 2:
-                            $record->update([
-                                'status' => 'Disetujui Kepala Seksi',
-                                'approver_id' => $user->staff_id
-                            ]);
+                            $role = 'Kepala Seksi';
+                            $verb = 'disetujui';
+                            $notifColor = 'success';
                             break;
                         case 1:
-                            $record->update([
-                                'status' => 'Disetujui Direktur',
-                                'approver_id' => $user->staff_id
-                            ]);
+                            $role = 'Direktur';
+                            $verb = 'disetujui';
+                            $notifColor = 'success';
                             break;
+                    }
+
+                    if (!empty($role)) {
+                        $updateData = [
+                            'status'      => ucfirst($verb) . ' ' . $role,
+                            'approver_id' => $user->staff_id,
+                            'approve_at'  => Carbon::now(),
+                            'adverb'      => $data['adverb']
+                        ];
+
+                        if ($level == 3 || $level == 4) {
+                            $updateData['known_by'] = $user->staff_id;
+                            $updateData['known_at'] = Carbon::now();
+                        } 
+                        elseif ($level == 2 && $record->staff->chair->level == 3) {
+                            $updateData['known_by'] = $user->staff_id;
+                            $updateData['known_at'] = Carbon::now();
+                        }
+
+                        $record->update($updateData);
+
+                        Notification::make()
+                            ->title($record->type . ' Anda telah ' . $verb . ' ' . $role)
+                            ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah ' . $verb . ' ' . $role)
+                            ->status($notifColor)
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(LeaveResource::getUrl('index'))
+                                    ->markAsRead(),
+                            ])
+                            ->sendToDatabase($record->staff->user);
+
+                        Notification::make()
+                            ->title($record->type . ' ' . ucfirst($verb))
+                            ->success()
+                            ->send();
                     }
                 }),
             Action::make('reject')
@@ -65,48 +105,135 @@ class ViewLeave extends ViewRecord
                 ->color('danger')
                 ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
                 ->requiresConfirmation()
-                ->action(function ($record) {
+                ->schema([
+                    Textarea::make('adverb')
+                        ->label('Alasan')
+                        ->required()
+                        ->rows(3),
+                ])
+                ->action(function (array $data, $record) {
                     $user = Auth::user();
                     $user->staff_id = $user->staff_id ?? 1;
 
                     $record->update([
                         'status' => 'Ditolak',
-                        'approver_id' => $user->staff_id
+                        'approver_id' => $user->staff_id,
+                        'approve_at' => Carbon::now(),
+                        'adverb' => $data['adverb']
                     ]);
+
+                    $level = $user->staff->chair->level;
+
+                    $role = '';
+
+                    switch ($level) {
+                        case 4:
+                            $role = 'Kepala Unit';
+                            break;
+                        case 3:
+                            $role = 'Koordinator';
+                            break;
+                        case 2:
+                            $role = 'Kepala Seksi';
+                            break;
+                        case 1:
+                            $role = 'Direktur';
+                            break;
+                    }
+
+                    Notification::make()
+                        ->title($record->type . ' Anda telah ditolak oleh ' . $role)
+                        ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah ditolak dengan alasan: ' . $data['adverb'])
+                        ->danger()
+                        ->actions([
+                            Action::make('read')
+                                ->button()
+                                ->url(LeaveResource::getUrl('index'))
+                                ->markAsRead()
+                        ])
+                        ->sendToDatabase($record->staff->user);
+
+                    Notification::make()
+                        ->title($record->type . ' ditolak')
+                        ->success()
+                        ->send();
                 }),
             Action::make('verified')
                 ->label('Verifikasi')
                 ->icon('heroicon-o-check')
                 ->color('info')
                 ->visible(function ($record) {
-                    if (Auth::user()->role_id == 1) {
-                        return $record->is_verified ? false : true;
-                    }
-                    return false;
-                })
-                // ->visible(true)
+                        return Auth::user()->role_id == 1 
+                            && is_null($record->is_verified)
+                            && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
+                            && $record->status != 'Ditolak'
+                            && $record->is_replaced != 0;
+                    })
                 ->requiresConfirmation()
                 ->action(function ($record) {
                     $record->update([
                         'is_verified' => 1,
+                        'verified_by' => Auth::user()->staff_id,
+                        'verified_at' => Carbon::now()
                     ]);
+
+                    Notification::make()
+                        ->title($record->type . ' Anda telah diverifikasi SDM')
+                        ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
+                        ->success()
+                        ->actions([
+                            Action::make('read')
+                                ->button()
+                                ->url(LeaveResource::getUrl('index'))
+                                ->markAsRead()
+                        ])
+                        ->sendToDatabase($record->staff->user);
+
+                    Notification::make()
+                        ->title($record->type . ' diverifikasi')
+                        ->success()
+                        ->send();
                 }),
             Action::make('cancel')
                 ->label('Batalkan')
                 ->icon('heroicon-o-no-symbol')
                 ->color('danger')
                 ->visible(function ($record) {
-                    if (Auth::user()->role_id == 1) {
-                        return $record->is_verified ? false : true;
-                    }
-                    return false;
+                    return Auth::user()->role_id == 1 
+                        && is_null($record->is_verified)
+                        && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
+                        && $record->status != 'Ditolak'
+                        && $record->is_replaced != 0;
                 })
-                // ->visible(true)
                 ->requiresConfirmation()
-                ->action(function ($record) {
+                ->schema([
+                    Textarea::make('adverb')
+                        ->label('Alasan')
+                        ->required()
+                        ->rows(3),
+                ])
+                ->action(function (array $data, $record) {
                     $record->update([
                         'is_verified' => 0,
+                        'adverb' => $data['adverb']
                     ]);
+
+                    Notification::make()
+                        ->title($record->type . ' Anda telah dibatalkan SDM')
+                        ->body($record->type . ' Anda untuk tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ' telah dibatalkan SDM dengan alasan: ' . $data['adverb'])
+                        ->danger()
+                        ->actions([
+                            Action::make('read')
+                                ->button()
+                                ->url(LeaveResource::getUrl('index'))
+                                ->markAsRead()
+                        ])
+                        ->sendToDatabase($record->staff->user);
+
+                    Notification::make()
+                        ->title($record->type . ' dibatalkan')
+                        ->success()
+                        ->send();
                 }),
             Action::make('exportPdf')
                 ->label('Export PDF')

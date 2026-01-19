@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Leave;
 use App\Models\Presence;
 use App\Models\StaffAdjustment;
 use App\Models\StaffAdministration;
@@ -13,6 +14,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/storage/profile/{filename}', function ($filename) {
     $path = storage_path('app/private/profile/' . $filename);
@@ -123,7 +125,7 @@ Route::get('/preview-administration/{model}/{id}/{field}', function ($model, $id
         'experience' => StaffWorkExperience::class,
         'contract' => StaffContract::class,
         'appointment' => StaffAppointment::class,
-        'adjustment' => StaffAdjustment::class,
+        'adjustment' => StaffAdjustment::class
     ];
 
     if (!array_key_exists($model, $allowedModels)) {
@@ -150,6 +152,18 @@ Route::get('/preview-administration/{model}/{id}/{field}', function ($model, $id
 
     return response()->file($path);
 })->name('preview.administration')->middleware('auth');
+
+Route::get('/evidence-preview/{record}', function ($record) {
+    $leave = Leave::findOrFail($record);
+
+    if (!Storage::disk('public')->exists($leave->evidence)) {
+        abort(404);
+    }
+
+    $path = Storage::disk('public')->path($leave->evidence);
+
+    return response()->file($path);
+})->name('evidence.preview');
 
 Route::middleware('auth')->get('/latest-notification', function (Request $request) {
     // Ambil 1 notifikasi terakhir yang belum dibaca milik user yang login

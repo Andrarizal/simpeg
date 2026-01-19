@@ -25,10 +25,10 @@ return new class extends Migration
             $table->unsignedTinyInteger('remaining')->nullable();
             $table->string('evidence')->nullable();
             $table->unsignedTinyInteger('is_replaced')->nullable()->default(null);
-            $table->foreignId('replacement_id')->constrained(
+            $table->foreignId('replacement_id')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'leaves_replacement_id'
-            )->cascadeOnDelete();
+            )->nullOnDelete();
             $table->date('replacement_at')->nullable();
             $table->enum('status', ['Menunggu', 'Diketahui Kepala Unit', 'Diketahui Koordinator', 'Disetujui Kepala Seksi', 'Disetujui Direktur', 'Ditolak']);
             $table->foreignId('known_by')->nullable()->constrained(

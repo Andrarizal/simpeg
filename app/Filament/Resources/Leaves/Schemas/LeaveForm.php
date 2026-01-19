@@ -147,7 +147,12 @@ class LeaveForm
                                 });
                         }
                     })
-                    ->required()
+                    ->required(function () {
+                        $user = Auth::user();
+                        $user->staff_id = $user->staff_id ?? 1;
+                        
+                        $user->staff->unit->work_system == 'Tetap' ? false : true;
+                    })
                     ->native(false),
                 FileUpload::make('evidence')
                     ->label(fn (callable $get) => 'Surat ' . $get('type'))

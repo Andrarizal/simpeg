@@ -27,7 +27,7 @@ class Staff extends Model
         static::saved(function ($staff) {
             if ($staff->is_processing_history) return;
 
-            $statusChanged = $staff->wasChanged(['staff_status_id', 'unit_id', 'chair_id']);
+            $statusChanged = $staff->wasChanged(['staff_status_id', 'unit_id', 'chair_id', 'group_id']);
 
             DB::transaction(function () use ($staff, $statusChanged) {
                 $staff->is_processing_history = true;
