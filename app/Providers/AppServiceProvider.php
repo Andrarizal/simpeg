@@ -33,8 +33,14 @@ class AppServiceProvider extends ServiceProvider
                         src: url('/fonts/SF-Pro.ttf');
                     }
 
+                    @font-face {
+                        font-family: 'SF-Mono';
+                        src: url('/fonts/SF-Mono.otf');
+                    }
+
                     :root {
                         --font-family: 'SF-Pro', sans-serif !important;
+                        --mono-font-family: 'SF-Mono', monospace!important;
                         --sidebar-width: 18rem!important;
                     }
 
@@ -230,6 +236,10 @@ class AppServiceProvider extends ServiceProvider
                         border-radius: var(--radius-2xl) !important;
                         border-top-right-radius: 0 !important;
                         border-top-left-radius: 0 !important;
+                    }
+
+                    .fi-ta-text-has-descriptions {
+                        row-gap: 0!important;
                     }
 
                     @media (min-width: 1024px) {

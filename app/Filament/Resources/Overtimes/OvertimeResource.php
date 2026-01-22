@@ -6,6 +6,7 @@ use App\Filament\Resources\Overtimes\Pages\ApproveOvertime;
 use App\Filament\Resources\Overtimes\Pages\CreateOvertime;
 use App\Filament\Resources\Overtimes\Pages\EditOvertime;
 use App\Filament\Resources\Overtimes\Pages\ListOvertimes;
+use App\Filament\Resources\Overtimes\Pages\ManageOvertimes;
 use App\Filament\Resources\Overtimes\Pages\ViewOvertime;
 use App\Filament\Resources\Overtimes\Schemas\OvertimeForm;
 use App\Filament\Resources\Overtimes\Schemas\OvertimeInfolist;
@@ -57,10 +58,10 @@ class OvertimeResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListOvertimes::route('/'),
-            'create' => CreateOvertime::route('/create'),
-            'view' => ViewOvertime::route('/{record}'),
-            'edit' => EditOvertime::route('/{record}/edit'),
+            'index' => ManageOvertimes::route('/'),
+            // 'create' => CreateOvertime::route('/create'),
+            // 'view' => ViewOvertime::route('/{record}'),
+            // 'edit' => EditOvertime::route('/{record}/edit'),
             'approve' => ApproveOvertime::route('/{record}/approve')
         ];
     }

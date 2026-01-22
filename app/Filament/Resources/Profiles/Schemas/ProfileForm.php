@@ -29,9 +29,6 @@ class ProfileForm
             ->components([
                 Grid::make()
                 ->schema([
-                    // ============================
-                    // 📍 Kolom Kiri (1/3)
-                    // ============================
                     Grid::make()
                         ->columns(1)
                         ->columnSpan(1)
@@ -69,13 +66,13 @@ class ProfileForm
                                         ->hiddenLabel()
                                         ->alignCenter()
                                         ->extraAttributes([
-                                            'class' => 'text-center font-bold text-2xl -mt-4', // bold, besar, mepet foto
+                                            'class' => 'text-center font-bold text-2xl -mt-4',
                                         ]),
                                     TextEntry::make('nip')
                                         ->hiddenLabel()
                                         ->alignCenter()
                                         ->extraAttributes([
-                                            'class' => 'text-center text-sm text-gray-500 -mt-6', // kecil, abu-abu, mepet ke name
+                                            'class' => 'text-center text-sm text-gray-500 font-mono -mt-6',
                                         ]),
                                     TextEntry::make('chair.name')
                                         ->label('Jabatan'),
@@ -88,16 +85,12 @@ class ProfileForm
                                 ]),
                         ]),
 
-                    // ============================
-                    // 📍 Kolom Kanan (2/3)
-                    // ============================
                     Grid::make()
                         ->columns(1)
                         ->columnSpan(2)
                         ->schema([
                             Tabs::make('Informasi Pegawai')
                                 ->tabs([
-                                    // --- TAB DATA DIRI ---
                                     Tab::make('Data Diri')
                                         ->icon('heroicon-o-identification')
                                         ->schema([
@@ -108,6 +101,9 @@ class ProfileForm
                                                         ->label('Nomor Induk Kependudukan')
                                                         ->placeholder('ex. 3321029920192099')
                                                         ->maxLength(16)
+                                                        ->extraAttributes([
+                                                            'class' => 'font-mono'
+                                                        ])
                                                         ->required(),
                                                     ToggleButtons::make('sex')
                                                         ->label('Jenis Kelamin')

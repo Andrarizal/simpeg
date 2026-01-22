@@ -123,7 +123,8 @@ class LeaveInfolist
                                                         return 'Ditolak Oleh';
                                                     }
                                                 })
-                                                ->visible(fn ($record) => $record->approver_id)
+                                                ->hiddenLabel(fn ($record) => !$record->approver_id)
+                                                ->default('Belum ada respon')
                                                 ->weight(FontWeight::Bold)
                                                 ->extraAttributes([
                                                     'class' => '-mt-2'
@@ -163,6 +164,7 @@ class LeaveInfolist
                                         
                                     return [
                                         'class' => implode(' ', [
+                                            '[&_.fi-section-content-ctn]:hidden',
                                             '[&_.fi-section-header]:bg-gradient-to-br',
                                             '[&_.fi-section-header]:rounded-2xl',
                                             '[&_.fi-section-header-heading]:!text-white',
@@ -192,6 +194,7 @@ class LeaveInfolist
                                         
                                     return [
                                         'class' => implode(' ', [
+                                            '[&_.fi-section-content-ctn]:hidden',
                                             '[&_.fi-section-header]:bg-gradient-to-br',
                                             '[&_.fi-section-header]:rounded-2xl',
                                             '[&_.fi-section-header-heading]:!text-white',

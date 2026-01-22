@@ -54,8 +54,6 @@ class ManagePerformances extends ManageRecords
         return [
             CreateAction::make()
                 ->label('Tambah Capaian')
-                ->modalHeading('Tambah Capaian untuk Periode Ini')
-                ->modalWidth('xl')
                 ->createAnother(false)
                 ->visible(fn() => (!$this->activeTab || $this->activeTab == 'sendiri') && (function(){
                     $period = PerformancePeriod::where('status', 1)->latest()->value('id');
@@ -63,49 +61,7 @@ class ManagePerformances extends ManageRecords
 
                     if ($performance) return false;
                     return true;
-                })())
-                ->schema([
-                    Grid::make()
-                        ->schema([
-                            Select::make('staff_id')
-                                ->label('Nama Pegawai')
-                                ->options(Staff::all()->pluck('name', 'id'))
-                                ->default(Auth::user()->staff_id) 
-                                ->disabled() 
-                                ->dehydrated(),
-                            Select::make('period_id')
-                                ->label('Periode')
-                                ->options(function(){
-                                    return PerformancePeriod::query()
-                                    ->orderBy('start_date', 'desc')
-                                    ->get()
-                                    ->mapWithKeys(function ($period) {
-                                        $start = Carbon::parse($period->start_date)->translatedFormat('F');
-                                        $end = Carbon::parse($period->end_date)->translatedFormat('F Y');
-                                        return [$period->id => "$start - $end"];
-                                    });
-                                })
-                                ->default(function(){
-                                    // return PerformancePeriod::query()
-                                    //     ->whereDate('start_date', '<=', now())
-                                    //     ->whereDate('end_date', '>=', now())
-                                    //     ->value('id');
-
-                                    return PerformancePeriod::where('status', 1)->latest()->value('id');
-                                })
-                                ->disabled() 
-                                ->dehydrated()
-                                ->selectablePlaceholder(false),
-                        ]),
-                    TextInput::make('title')
-                        ->label('Judul Capaian')
-                        ->maxLength(255)
-                        ->required(),
-                    Textarea::make('description')
-                        ->label('Deskripsi Capaian')
-                        ->rows(3)
-                        ->required()
-                ]),
+                })()),
             Action::make('periods')
                 ->label('Kelola Periode')
                 ->modalHeading('Manajemen Periode Penilaian')
@@ -219,7 +175,7 @@ class ManagePerformances extends ManageRecords
                         ->searchable()
                         ->sortable(),
                     TextColumn::make('title')
-                        ->label('Capaian Kinerja')
+                        ->label('Capaian')
                         ->searchable()
                         ->wrap(),
                     TextColumn::make('description')
@@ -376,7 +332,7 @@ class ManagePerformances extends ManageRecords
                         ->native(false),
                 ])
                 ->contentFooter(view('filament.tables.avgscore-pagination', [
-                    'score' => $this->averageScore, // <--- Ini otomatis dinamis
+                    'score' => $this->averageScore,
                 ]))
                 ->recordActions([
                     Action::make('approve')
@@ -420,7 +376,7 @@ class ManagePerformances extends ManageRecords
                         return $start->translatedFormat('F') . ' - ' . $end->translatedFormat('F') . $start->translatedFormat(' Y');
                     }),
                     TextColumn::make('title')
-                        ->label('Capaian Kinerja')
+                        ->label('Capaian')
                         ->searchable()
                         ->wrap(),
                     TextColumn::make('description')
@@ -428,7 +384,7 @@ class ManagePerformances extends ManageRecords
                         ->limit(250)
                         ->formatStateUsing(fn ($state) => $state . '...')
                         ->wrap()
-                        ->toggleable(isToggledHiddenByDefault: false),
+                        ->toggleable(isToggledHiddenByDefault: true),
                     TextColumn::make('appraisal.score')
                         ->label('Nilai')
                         ->state(function (StaffPerformance $record) {

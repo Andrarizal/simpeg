@@ -10,7 +10,7 @@ if (!function_exists('shouldShowApprovalButton')) {
             return false; 
         }
 
-        if ($record->status == 'Ditolak' || !$record->is_replaced) {
+        if ($record->status == 'Ditolak' || $record->is_replaced == 0) {
             return false;
         }
 

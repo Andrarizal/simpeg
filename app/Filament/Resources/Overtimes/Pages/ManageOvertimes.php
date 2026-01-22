@@ -4,42 +4,39 @@ namespace App\Filament\Resources\Overtimes\Pages;
 
 use App\Filament\Pages\Signature;
 use App\Filament\Resources\Overtimes\OvertimeResource;
-use App\Filament\Resources\Overtimes\Tables\ApproveTable;
+use App\Filament\Resources\Overtimes\Schemas\OvertimeInfolist;
+use App\Filament\Resources\Overtimes\Tables\OvertimesTable;
+use App\Filament\Resources\Overtimes\Tables\StaffsTable;
 use App\Models\Overtime;
 use App\Models\Staff;
 use Filament\Actions\Action;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Resources\Pages\Page;
+use Filament\Actions\CreateAction;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\ManageRecords;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
-use Filament\Tables\Contracts\HasTable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-class ApproveOvertime extends Page implements HasTable, HasInfolists
+class ManageOvertimes extends ManageRecords
 {
-    use InteractsWithTable;
-    use InteractsWithInfolists;
-
     protected static string $resource = OvertimeResource::class;
 
-    protected string $view = 'filament.resources.overtimes.pages.approve-overtime';
-
-    protected static ?string $title = 'Riwayat Lembur';
-
-    public ?Staff $staff = null;
     public ?string $pdfToken = null;
     public ?bool $verified = true;
     public ?bool $known = true;
 
-    protected function getHeaderActions(): array {
+    protected function getHeaderActions(): array
+    {
         return [
             Action::make('exportPdf')
                 ->label('Export PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('warning')
+                ->visible(fn () => $this->activeTab == 'pengajuan' ?? false)
                 ->modalHeading('Preview Cuti')
                 ->modalWidth('5xl')
                 ->modalContent(function ($livewire) {
@@ -47,14 +44,38 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
 
                     $data = Overtime::query()
                         ->with(['staff.chair', 'staff.unit'])
-                        ->where('staff_id', $this->staff->id)
+                        ->where('staff_id', Auth::user()->staff_id)
                         ->where('month_year', $month)
                         ->orderBy('overtime_date')
                         ->get();
 
-                        
+                    if ($data->isEmpty()) {
+                        Notification::make()
+                            ->title('Tidak ada data lembur di bulan ini')
+                            ->warning()
+                            ->send();
+                        return; 
+                    }
+                    
                     $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()->name;
+
+                    if (!$head) {
+                        Notification::make()
+                            ->title('Atasan user belum dipilih!')
+                            ->danger()
+                            ->send();
+                        return; 
+                    }
+                    
                     $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+
+                    if (!$sdm) {
+                        Notification::make()
+                            ->title('Belum ada data untuk posisi SDM!')
+                            ->danger()
+                            ->send();
+                        return; 
+                    }
 
                     foreach ($data as $i => $p) {
                         $this->verified = $p->is_verified ?? false;
@@ -120,19 +141,58 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                 ->modalCloseButton(false)
                 ->closeModalByClickingAway(false)
                 ->closeModalByEscaping(false),
-        ];
-    } 
+            CreateAction::make()
+                ->label('Ajukan Lembur')
+                ->visible(function () {
+                    if (Auth::user()->staff->chair->level < 4) return false;
+                    if ($this->activeTab != 'pengajuan') return false;
 
-    public function table(Table $table): Table
-    {
-        return ApproveTable::configure($table, $this->staff);
+                    return true;
+                }),
+        ];
     }
-    
-    public function mount(int|string $record): void
+
+    public function getTabs(): array
     {
-        $this->staff = Staff::findOrFail($record);
+        $user = Auth::user();
+        $user->staff_id = $user->staff_id ?? 1;
+
+        $arrOfTabs = [];
+        
+        if (($user->staff->chair->level == 4 && $user->staff->unit->leader_id == $user->staff->chair_id) || $user->staff->chair->level == 4 && $user->role_id == 1){
+            $arrOfTabs['pengajuan'] = Tab::make('Pengajuan Anda')
+                ->icon('heroicon-o-document-text');
+            $arrOfTabs['persetujuan'] = Tab::make('Perlu ' . ($user->role_id == 1 ? 'Verifikasi' : 'Persetujuan'))
+                ->icon('heroicon-o-clipboard-document-check');
+        }
+
+        return $arrOfTabs;
     }
-    
+
+    public function getTable(): Table
+    {
+        $this->activeTab = $this->activeTab ?? 'pengajuan';
+        if (Auth::user()->staff->chair->level < 4){
+            $this->activeTab = "persetujuan";
+        }
+        $table = parent::getTable();
+
+        if ($this->activeTab == 'pengajuan') {
+            return OvertimesTable::configure($table);
+        }
+
+        if ($this->activeTab == 'persetujuan') {
+            return StaffsTable::configure($table);
+        }
+
+        return $table;
+    }
+
+    public function infolist(Schema $schema): Schema
+    {
+        return OvertimeInfolist::configure($schema);
+    }
+
     public function closePreviewAndCleanup() {
         if ($this->pdfToken) {
             $path = storage_path("app/private/livewire-tmp/{$this->pdfToken}.pdf");

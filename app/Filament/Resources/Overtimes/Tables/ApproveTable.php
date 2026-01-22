@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Overtimes\Tables;
 
 use App\Filament\Resources\Overtimes\OvertimeResource;
+use App\Filament\Resources\Overtimes\Schemas\OvertimeInfolist;
 use App\Models\Overtime;
 use App\Models\Staff;
 use Carbon\Carbon;
@@ -12,6 +13,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Indicator;
@@ -32,20 +34,22 @@ class ApproveTable
             ->columns([
                 TextColumn::make('overtime_date')
                     ->label('Tanggal')
-                    ->date(),
+                    ->date('d F Y')
+                    ->alignCenter(),
                 TextColumn::make('command')
                     ->label('Perintah'),
                 TextColumn::make('start_time')
                     ->label('Mulai')
-                    ->time('H:i'),
+                    ->time('H:i')
+                    ->alignCenter(),
                 TextColumn::make('end_time')
                     ->label('Selesai')
-                    ->time('H:i')
-                    ->getStateUsing(function ($record) {
-                        return $record->end_time ?: '---';
-                    }),
+                    ->placeholder('---')
+                    ->alignCenter()
+                    ->time(fn ($record) => $record->end_time ? 'H:i' : null),
                 TextColumn::make('hours')
                     ->label('Total Jam')
+                    ->alignCenter()
                     ->state(function ($record) {
                         if (! $record || ! $record->end_time) {
                             return '---';
@@ -94,14 +98,6 @@ class ApproveTable
                         0 => 'Ditolak',
                         'null' => 'Belum direspon',
                     }),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('month_year')
@@ -324,88 +320,92 @@ class ApproveTable
                             ->success()
                             ->send();
                     }),
-                ViewAction::make(),
+                ViewAction::make()
+                    ->label('Lihat')
+                    ->modalHeading('Detail Lembur')
+                    ->schema(fn (Schema $schema) => OvertimeInfolist::configure($schema)),
             ])
+            ->recordAction('view')
             ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkAction::make('ketahui')
-                        ->label('Ketahui')
-                        ->color('success')
-                        ->requiresConfirmation()
-                        ->visible(fn () => Auth::user()->staff->chair->level == 3 || (Auth::user()->staff->chair->level == 4 && Auth::user()->staff->unit->leader_id == Auth::user()->staff->chair_id))
-                        ->disabled(fn (Collection $records) => !$records->doesntContain('is_known', 1) || !$records->doesntContain('is_known', 2))
-                        ->action(function ($records) {
-                            $user = Auth::user();
+                    // BulkAction::make('ketahui')
+                    //     ->label('Ketahui')
+                    //     ->color('success')
+                    //     ->requiresConfirmation()
+                    //     ->visible(fn () => Auth::user()->staff->chair->level == 3 || (Auth::user()->staff->chair->level == 4 && Auth::user()->staff->unit->leader_id == Auth::user()->staff->chair_id))
+                    //     ->disabled(fn (Collection $records) => !$records->doesntContain('is_known', 1) || !$records->doesntContain('is_known', 2))
+                    //     ->action(function ($records) {
+                    //         $user = Auth::user();
         
-                            foreach ($records as $record) {
-                                $user->staff_id = $user->staff_id ?? 1;
+                    //         foreach ($records as $record) {
+                    //             $user->staff_id = $user->staff_id ?? 1;
 
-                                if ($user->staff->chair->level == 4){
-                                    $record->update([
-                                        'is_known' => 1,
-                                    ]);
-                                } else {
-                                    $record->update([
-                                        'is_known' => 2,
-                                    ]);
-                                }
+                    //             if ($user->staff->chair->level == 4){
+                    //                 $record->update([
+                    //                     'is_known' => 1,
+                    //                 ]);
+                    //             } else {
+                    //                 $record->update([
+                    //                     'is_known' => 2,
+                    //                 ]);
+                    //             }
 
-                                $record->update([
-                                    'known_by' => $user->staff_id,
-                                    'known_at' => Carbon::now()
-                                ]);
+                    //             $record->update([
+                    //                 'known_by' => $user->staff_id,
+                    //                 'known_at' => Carbon::now()
+                    //             ]);
 
-                                Notification::make()
-                                    ->title('Pengajuan Lembur Diketahui')
-                                    ->body('Lembur Anda untuk tanggal ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diketahui oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
-                                    ->success()
-                                    ->actions([
-                                        Action::make('read')
-                                            ->button()
-                                            ->url(OvertimeResource::getUrl('index'))
-                                            ->markAsRead()
-                                    ])
-                                    ->sendToDatabase($record->staff->user);
-                            }
+                    //             Notification::make()
+                    //                 ->title('Pengajuan Lembur Diketahui')
+                    //                 ->body('Lembur Anda untuk tanggal ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diketahui oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
+                    //                 ->success()
+                    //                 ->actions([
+                    //                     Action::make('read')
+                    //                         ->button()
+                    //                         ->url(OvertimeResource::getUrl('index'))
+                    //                         ->markAsRead()
+                    //                 ])
+                    //                 ->sendToDatabase($record->staff->user);
+                    //         }
 
-                            Notification::make()
-                                ->title('Data lembur diketahui.')
-                                ->success()
-                                ->send();
-                        }),
+                    //         Notification::make()
+                    //             ->title('Data lembur diketahui.')
+                    //             ->success()
+                    //             ->send();
+                    //     }),
 
-                    BulkAction::make('verifikasi')
-                        ->label('Verifikasi ')
-                        ->color('info')
-                        ->requiresConfirmation()
-                        ->visible(fn () => Auth::user()->role_id == 1 && Auth::user()->staff->chair->level == 4)
-                        ->disabled(fn (Collection $records) => !$records->doesntContain('is_verified', 1))
-                        ->action(function ($records) {
-                            foreach ($records as $record) {
-                                $record->update([
-                                    'is_verified' => 1,
-                                    'verified_by' => Auth::user()->staff_id,
-                                    'verified_at' => Carbon::now()
-                                ]);
+                    // BulkAction::make('verifikasi')
+                    //     ->label('Verifikasi ')
+                    //     ->color('info')
+                    //     ->requiresConfirmation()
+                    //     ->visible(fn () => Auth::user()->role_id == 1 && Auth::user()->staff->chair->level == 4)
+                    //     ->disabled(fn (Collection $records) => !$records->doesntContain('is_verified', 1))
+                    //     ->action(function ($records) {
+                    //         foreach ($records as $record) {
+                    //             $record->update([
+                    //                 'is_verified' => 1,
+                    //                 'verified_by' => Auth::user()->staff_id,
+                    //                 'verified_at' => Carbon::now()
+                    //             ]);
 
-                                Notification::make()
-                                    ->title('Pengajuan Lembur Diverifikasi')
-                                    ->body('Lembur Anda untuk tanggal ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
-                                    ->success()
-                                    ->actions([
-                                        Action::make('read')
-                                            ->button()
-                                            ->url(OvertimeResource::getUrl('index'))
-                                            ->markAsRead()
-                                    ])
-                                    ->sendToDatabase($record->staff->user);
-                            }
+                    //             Notification::make()
+                    //                 ->title('Pengajuan Lembur Diverifikasi')
+                    //                 ->body('Lembur Anda untuk tanggal ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
+                    //                 ->success()
+                    //                 ->actions([
+                    //                     Action::make('read')
+                    //                         ->button()
+                    //                         ->url(OvertimeResource::getUrl('index'))
+                    //                         ->markAsRead()
+                    //                 ])
+                    //                 ->sendToDatabase($record->staff->user);
+                    //         }
 
-                            Notification::make()
-                                ->title(count($records) . ' Data lembur diverifikasi.')
-                                ->success()
-                                ->send();
-                        }),
+                    //         Notification::make()
+                    //             ->title(count($records) . ' Data lembur diverifikasi.')
+                    //             ->success()
+                    //             ->send();
+                    //     }),
                 ]),
             ]);
     }

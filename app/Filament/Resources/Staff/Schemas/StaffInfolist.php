@@ -72,7 +72,7 @@ class StaffInfolist
                                         ->hiddenLabel()
                                         ->alignCenter()
                                         ->extraAttributes([
-                                            'class' => 'text-center text-sm text-gray-500 -mt-6',
+                                            'class' => 'text-center text-sm text-gray-500 font-mono -mt-6',
                                         ]),
                                 ])
                                 ->columns(1),
@@ -146,8 +146,7 @@ class StaffInfolist
                                     ->label('Nomor Induk Kepegawaian')
                                     ->columnSpanFull()
                                     ->extraAttributes([
-                                        'class' => 'font-bold text-4xl -mt-2',
-                                        'style' => 'font-family: monospace;',
+                                        'class' => 'font-bold text-4xl -mt-2 font-mono',
                                     ]),
                                 TextEntry::make('birth_place')
                                     ->label('Tempat Lahir')

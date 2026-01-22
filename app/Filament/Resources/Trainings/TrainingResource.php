@@ -259,6 +259,14 @@ class TrainingResource extends Resource
                 TextColumn::make('name')
                     ->label('Nama Pegawai')
                     ->description(fn ($record) => $record->nip) 
+                    ->extraAttributes([
+                        'class' => '
+                            font-medium
+                            [&_.fi-ta-text-description]:font-mono
+                            [&_.fi-ta-text-description]:text-xs
+                            [&_.fi-ta-text-description]:-mt-1
+                        '
+                    ])
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('unit.name')

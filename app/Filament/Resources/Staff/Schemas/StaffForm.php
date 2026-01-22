@@ -11,6 +11,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -23,115 +25,238 @@ class StaffForm
     {
         return $schema
             ->components([
-                TextInput::make('nik')
-                    ->label('Nomor Induk Kependudukan')
-                    ->placeholder('ex. 3321029920192099')
-                    ->maxLength(16)
-                    ->required(),
-                TextInput::make('nip')
-                    ->label('Nomor Induk Kepegawaian')
-                    ->mask('9999.9999.999.9')
-                    ->maxLength(15)
-                    ->placeholder('ex. 3321.0299.201.9')
-                    ->required(),
-                TextInput::make('name')
-                    ->label('Nama')
-                    ->placeholder('ex. Tamam Muhammad')
-                    ->required(),
-                TextInput::make('birth_place')
-                    ->label('Tempat Lahir')
-                    ->placeholder('ex. Sleman')
-                    ->required(),
-                DatePicker::make('birth_date')
-                    ->label('Tanggal Lahir')
-                    ->required()
-                    ->reactive()
-                    ->afterStateUpdated(function (callable $set, $state) {
-                        $set('retirement_date', Carbon::parse($state)->addYear(56)->format('Y-m-d'));
-                    })
-                    ->native(false),
-                ToggleButtons::make('sex')
-                    ->label('Jenis Kelamin')
-                    ->options(['L' => 'Laki-laki', 'P' => 'Perempuan'])
-                    ->inline()
-                    ->required(),
-                Textarea::make('origin')
-                    ->label('Alamat KTP')
-                    ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
-                    ->required(),
-                Textarea::make('domicile')
-                    ->label('Alamat Domisili')
-                    ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
-                    ->required(),
-                TextInput::make('email')
-                    ->label('Email Pribadi')
-                    ->email()
-                    ->placeholder('ex. tamam@gmail.com')
-                    ->required(),
-                TextInput::make('phone')
-                    ->label('No. Telepon')
-                    ->tel()
-                    ->mask('9999-9999-9999')
-                    ->placeholder('ex. 0812-3456-7890')
-                    ->required(),
-                TextInput::make('other_phone')
-                    ->label('No. Telepon Kerabat')
-                    ->tel()
-                    ->mask('9999-9999-9999')
-                    ->placeholder('ex. 0812-3456-7890')
-                    ->required(),
-                Select::make('other_phone_adverb')
-                    ->label('Hubungan dengan Kerabat')
-                    ->options(['Suami' => 'Suami', 'Istri' => 'Istri', 'Orang tua' =>  'Orang tua', 'Wali' => 'Wali', 'Saudara' => 'Saudara', 'Lainnya' => 'Lainnya'])
-                    ->required()
-                    ->native(false),
-                Select::make('marital')
-                    ->label('Status Perkawinan')
-                    ->options(['Lajang' => 'Lajang', 'Menikah' => 'Menikah', 'Cerai Hidup' => 'Cerai Hidup', 'Cerai Mati' => 'Cerai Mati'])
-                    ->required()
-                    ->native(false),
-                DatePicker::make('entry_date')
-                    ->label('Tanggal Masuk Kerja')
-                    ->maxDate(now())
-                    ->required()
-                    ->native(false),
-                DatePicker::make('retirement_date')
-                    ->label('Tanggal Pensiun')
-                    ->minDate(now())
-                    ->required()
-                    ->disabled()
-                    ->dehydrated(),
-                Select::make('staff_status_id')
-                    ->label('Status Kepegawaian')
-                    ->relationship('staffStatus', 'name')
-                    ->reactive()
-                    ->required()
-                    ->live()
-                    ->native(false),
-                Select::make('chair_id')
-                    ->label('Jabatan')
-                    ->relationship('chair', 'name')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->live()
-                    ->native(false),
-                Select::make('group_id')
-                    ->label('Kelompok Tenaga Kerja')
-                    ->relationship('group', 'name')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->live()
-                    ->native(false),
-                Select::make('unit_id')
-                    ->label('Unit Kerja')
-                    ->relationship('unit', 'name')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->live()
-                    ->native(false),
+                Grid::make(['default' => 1, 'lg' => 3])
+                ->schema([
+                    Group::make()
+                        ->schema([
+                            Section::make()
+                                ->schema([
+                                    FileUpload::make('pas')
+                                        ->label('Foto Profil')
+                                        ->image()
+                                        ->imageEditor()
+                                        ->directory('profile')
+                                        ->maxSize(2048)
+                                        ->avatar()
+                                        ->circleCropper()
+                                        ->columnSpanFull()
+                                        ->alignCenter()
+                                        ->hiddenLabel()
+                                        ->extraAttributes(['class' => 'mx-auto mb-4']),
+
+                                    TextInput::make('name')
+                                        ->label('Nama Lengkap')
+                                        ->placeholder('Nama sesuai KTP')
+                                        ->required()
+                                        ->columnSpanFull(),
+
+                                    TextInput::make('nip')
+                                        ->label('Nomor Induk Kepegawaian')
+                                        ->mask('9999.9999.999.9')
+                                        ->placeholder('ex. 3321.0299...')
+                                        ->suffixIcon('heroicon-m-identification')
+                                        ->extraAttributes([
+                                            'class' => 'font-mono'
+                                        ])
+                                        ->required(),
+
+                                    TextInput::make('nik')
+                                        ->label('Nomor Induk Kependudukan')
+                                        ->maxLength(16)
+                                        ->placeholder('16 Digit NIK')
+                                        ->suffixIcon('heroicon-m-credit-card')
+                                        ->extraAttributes([
+                                            'class' => 'font-mono'
+                                        ])
+                                        ->required(),
+
+                                    ToggleButtons::make('sex')
+                                        ->label('Jenis Kelamin')
+                                        ->options([
+                                            'L' => 'Laki-laki',
+                                            'P' => 'Perempuan'
+                                        ])
+                                        ->icons([
+                                            'L' => 'heroicon-o-user',
+                                            'P' => 'heroicon-o-user',
+                                        ])
+                                        ->colors([
+                                            'L' => 'info',
+                                            'P' => 'danger',
+                                        ])
+                                        ->inline()
+                                        ->extraAttributes([
+                                            'class' => '[&_label]:text-xs'
+                                        ])
+                                        ->required(),
+
+                                        DatePicker::make('birth_date')
+                                        ->label('Tanggal Lahir')
+                                        ->required()
+                                        ->native(false)
+                                        ->displayFormat('d F Y')
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (callable $set, $state) {
+                                            if ($state) {
+                                                $set('retirement_date', Carbon::parse($state)->addYear(56)->format('Y-m-d'));
+                                            }
+                                        }),
+
+                                    TextInput::make('birth_place')
+                                        ->label('Tempat Lahir')
+                                        ->placeholder('Kota Kelahiran')
+                                        ->required(),
+
+                                    Select::make('marital')
+                                        ->label('Status Perkawinan')
+                                        ->options([
+                                            'Lajang' => 'Lajang',
+                                            'Menikah' => 'Menikah',
+                                            'Cerai Hidup' => 'Cerai Hidup',
+                                            'Cerai Mati' => 'Cerai Mati'
+                                        ])
+                                        ->native(false)
+                                        ->required(),
+                                ])
+                                ->compact(),
+                        ])
+                        ->columnSpan(['lg' => 1]),
+
+                    Group::make()
+                        ->schema([
+                            Section::make('Kontak & Domisili')
+                                ->icon('heroicon-m-map-pin')
+                                ->collapsible()
+                                ->extraAttributes([
+                                    'class' => implode(' ', [
+                                        '[&_.fi-section-header]:bg-gradient-to-br',
+                                        '[&_.fi-section-header]:from-emerald-500',
+                                        '[&_.fi-section-header]:to-teal-600',
+                                        '[&_.fi-section-header]:dark:from-emerald-900',
+                                        '[&_.fi-section-header]:dark:to-teal-950',
+                                        '[&_.fi-section-header]:rounded-t-2xl',
+                                        '[&_.fi-section-header-heading]:!text-white',
+                                        '[&_.fi-section-header-description]:!text-white/80',
+                                        '[&_.fi-section-header_.fi-icon-btn]:!text-white',
+                                    ])
+                                ])
+                                ->schema([
+                                    Grid::make(2)->schema([
+                                        TextInput::make('email')
+                                            ->label('Email')
+                                            ->email()
+                                            ->prefixIcon('heroicon-m-envelope')
+                                            ->required(),
+
+                                        TextInput::make('phone')
+                                            ->label('No. WhatsApp/HP')
+                                            ->tel()
+                                            ->mask('9999-9999-9999')
+                                            ->prefixIcon('heroicon-m-phone')
+                                            ->required(),
+                                    ]),
+
+                                    Grid::make(2)->schema([
+                                        TextInput::make('other_phone')
+                                            ->label('No. Telepon Kerabat')
+                                            ->tel()
+                                            ->mask('9999-9999-9999')
+                                            ->required(),
+                                        
+                                        Select::make('other_phone_adverb')
+                                            ->label('Hubungan')
+                                            ->options(['Suami' => 'Suami', 'Istri' => 'Istri', 'Orang tua' => 'Orang tua', 'Wali' => 'Wali', 'Saudara' => 'Saudara', 'Lainnya' => 'Lainnya'])
+                                            ->native(false)
+                                            ->required(),
+                                    ]),
+
+                                    Grid::make(2)->schema([
+                                        Textarea::make('origin')
+                                            ->label('Alamat KTP')
+                                            ->rows(4)
+                                            ->required(),
+                                        
+                                        Textarea::make('domicile')
+                                            ->label('Alamat Domisili')
+                                            ->rows(4)
+                                            ->required(),
+                                    ]),
+                                ]),
+
+                            Section::make('Data Kepegawaian')
+                                ->icon('heroicon-m-briefcase')
+                                ->extraAttributes([
+                                    'class' => implode(' ', [
+                                        '[&_.fi-section-header]:bg-gradient-to-br',
+                                        '[&_.fi-section-header]:from-emerald-500',
+                                        '[&_.fi-section-header]:to-teal-600',
+                                        '[&_.fi-section-header]:dark:from-emerald-900',
+                                        '[&_.fi-section-header]:dark:to-teal-950',
+                                        '[&_.fi-section-header]:rounded-t-2xl',
+                                        '[&_.fi-section-header-heading]:!text-white',
+                                        '[&_.fi-section-header-description]:!text-white/80',
+                                        '[&_.fi-section-header_.fi-icon-btn]:!text-white',
+                                    ])
+                                ])
+                                ->schema([
+                                    Grid::make(2)->schema([
+                                        DatePicker::make('entry_date')
+                                            ->label('Terhitung Mulai Tanggal')
+                                            ->native(false)
+                                            ->displayFormat('d F Y')
+                                            ->required(),
+                                        
+                                        DatePicker::make('retirement_date')
+                                            ->label('Perkiraan Pensiun')
+                                            ->native(false)
+                                            ->displayFormat('d F Y')
+                                            ->disabled()
+                                            ->dehydrated()
+                                            ->required(),
+                                    ]),
+
+                                    Grid::make(2)->schema([
+                                        Select::make('staff_status_id')
+                                            ->label('Status Pegawai')
+                                            ->relationship('staffStatus', 'name')
+                                            ->preload()
+                                            ->native(false)
+                                            ->live()
+                                            ->required(),
+
+                                        Select::make('group_id')
+                                            ->label('Kelompok Tenaga')
+                                            ->relationship('group', 'name')
+                                            ->preload()
+                                            ->native(false)
+                                            ->live()
+                                            ->required(),
+                                    ]),
+
+                                    Grid::make(2)->schema([
+                                        Select::make('unit_id')
+                                            ->label('Unit Kerja')
+                                            ->relationship('unit', 'name')
+                                            ->searchable()
+                                            ->preload()
+                                            ->native(false)
+                                            ->live()
+                                            ->required(),
+
+                                        Select::make('chair_id')
+                                            ->label('Jabatan Struktural')
+                                            ->relationship('chair', 'name')
+                                            ->searchable()
+                                            ->preload()
+                                            ->native(false)
+                                            ->live()
+                                            ->required(),
+                                    ]),
+                                ]),
+                        ])
+                        ->columnSpan(['lg' => 2]), 
+                ])
+                ->columnSpanFull(),
                 Fieldset::make('Data Kontrak')
                     ->visible(fn (Get $get) => ($get('staff_status_id') ?? null) == 2)
                     ->schema([

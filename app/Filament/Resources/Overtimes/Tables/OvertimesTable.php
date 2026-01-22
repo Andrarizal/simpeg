@@ -8,6 +8,8 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -32,16 +34,22 @@ class OvertimesTable
                 return $query;
             })
             ->columns([
-                TextColumn::make('overtime_date')->label('Tanggal'),
-                TextColumn::make('command')->label('Perintah'),
+                TextColumn::make('overtime_date')
+                    ->label('Tanggal')
+                    ->date('d F Y')
+                    ->sortable(),
+                TextColumn::make('command')
+                    ->label('Perintah')
+                    ->wrap(),
                 TextColumn::make('start_time')
-                    ->label('Mulai'),
+                    ->label('Mulai')
+                    ->time('H:i')
+                    ->alignCenter(),
                 TextColumn::make('end_time')
                     ->label('Selesai')
-                    ->getStateUsing(function ($record) {
-                        return $record->end_time ?: '---';
-                    }),
-
+                    ->placeholder('---')
+                    ->alignCenter()
+                    ->time(fn ($record) => $record->end_time ? 'H:i' : null),
                 TextColumn::make('hours')
                     ->label('Total Jam')
                     ->state(function ($record) {
@@ -51,7 +59,8 @@ class OvertimesTable
 
                         $total = $record->getTotalHours();
                         return $total ? "{$total} jam" : '-';
-                    }),
+                    })
+                    ->alignCenter(),
                 IconColumn::make('is_known')
                     ->label('Mengetahui Atasan')
                     ->alignCenter()
@@ -122,8 +131,13 @@ class OvertimesTable
                 Action::make('selesai')
                     ->label('Selesai')
                     ->icon('heroicon-o-check')
-                    ->color('success')
-                    ->visible(fn($record) => is_null($record->end_time))
+                    ->color('info')
+                    ->visible(fn($record) => 
+                        is_null($record->end_time) && 
+                        (
+                            Carbon::parse($record->overtime_date)->isToday() ||
+                            Carbon::parse($record->overtime_date)->isYesterday()
+                        ))
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->end_time = now()->format('H:i');
@@ -135,7 +149,11 @@ class OvertimesTable
                             ->success()
                             ->send();
                     }),
-                    DeleteAction::make()
+                ViewAction::make(),
+                EditAction::make()
+                    ->visible(fn($record) => is_null($record->is_verified) && is_null($record->is_known)),
+                DeleteAction::make()
+                    ->visible(fn($record) => is_null($record->is_verified) && is_null($record->is_known) && is_null($record->end_time)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

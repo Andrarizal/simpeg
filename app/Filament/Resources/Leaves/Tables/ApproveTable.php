@@ -88,12 +88,15 @@ class ApproveTable
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('type')
+                    ->formatStateUsing(fn ($record) => $record->type . ' ' . $record->subtype)
                     ->label('Jenis'),
                 TextColumn::make('start_date')
                     ->label('Mulai')
+                    ->alignCenter()
                     ->date(),
                 TextColumn::make('end_date')
                     ->label('Selesai')
+                    ->alignCenter()
                     ->date(),
                 TextColumn::make('status')
                     ->label('Status')
@@ -147,25 +150,38 @@ class ApproveTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('replacement.name')
                     ->label('Nama Pengganti')
-                    ->sortable(),
+                    ->default('Tidak Ada')
+                    ->alignCenter(),
                 IconColumn::make('is_replaced')
                     ->label('Bersedia')
                     ->alignCenter()
                     ->getStateUsing(fn ($record) => $record->is_replaced ?? 'null')
-                    ->icon(fn ($state) => match ($state) {
-                        1 => 'heroicon-o-check-circle',
-                        0 => 'heroicon-o-x-circle',
-                        'null' => 'heroicon-o-clock',
+                    ->icon(function ($state, $record) {
+                        if (! $record->replacement_id) return 'heroicon-o-minus-circle'; 
+
+                        return match ($state) {
+                            1 => 'heroicon-o-check-circle',
+                            0 => 'heroicon-o-x-circle',
+                            default => 'heroicon-o-clock',
+                        };
                     })
-                    ->color(fn ($state) => match ($state) {
-                        1 => 'success',
-                        0 => 'danger',
-                        'null' => 'gray',
+                    ->color(function ($state, $record) {
+                        if (! $record->replacement_id) return 'warning';
+
+                        return match ($state) {
+                            1 => 'success',
+                            0 => 'danger',
+                            default => 'gray',
+                        };
                     })
-                    ->tooltip(fn ($state) => match ($state) {
-                        1 => 'Disetujui',
-                        0 => 'Ditolak',
-                        'null' => 'Belum direspon',
+                    ->tooltip(function ($state, $record) {
+                        if (! $record->replacement_id) return 'Tidak digantikan';
+
+                        return match ($state) {
+                            1 => 'Disetujui',
+                            0 => 'Ditolak',
+                            default => 'Belum direspon',
+                        };
                     }),
                 TextColumn::make('approver.name')
                     ->numeric()
