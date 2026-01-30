@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Leaves\Tables;
 use App\Filament\Resources\Leaves\LeaveResource;
 use App\Models\Chair;
 use App\Models\Leave;
+use App\Models\Staff;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -214,8 +216,9 @@ class ApproveTable
                     ->action(function (array $data, $record) {
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
+                        $staff = $user->staff;
 
-                        $level = $user->staff->chair->level;
+                        $level = $staff->chair->level;
 
                         $role = '';
                         $verb = '';
@@ -247,17 +250,17 @@ class ApproveTable
                         if (!empty($role)) {
                             $updateData = [
                                 'status'      => ucfirst($verb) . ' ' . $role,
-                                'approver_id' => $user->staff_id,
+                                'approver_id' => $staff->id,
                                 'approve_at'  => Carbon::now(),
                                 'adverb'      => $data['adverb']
                             ];
 
                             if ($level == 3 || $level == 4) {
-                                $updateData['known_by'] = $user->staff_id;
+                                $updateData['known_by'] = $staff->id;
                                 $updateData['known_at'] = Carbon::now();
                             } 
                             elseif ($level == 2 && $record->staff->chair->level == 3) {
-                                $updateData['known_by'] = $user->staff_id;
+                                $updateData['known_by'] = $staff->id;
                                 $updateData['known_at'] = Carbon::now();
                             }
 
@@ -274,6 +277,22 @@ class ApproveTable
                                         ->markAsRead(),
                                 ])
                                 ->sendToDatabase($record->staff->user);
+
+                            $head = ($level == 1 || ($record->staff->chair->level == 4 && $level == 2)) 
+                                ? Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()
+                                : $staff->chair->parent->staff->first();
+
+                            Notification::make()
+                                ->title("{$record->type} menunggu " . str_contains($head->chair->name, 'SDM') ? 'Verifikasi' : 'Persetujuan')
+                                ->body("{$record->staff->name} telah mengajukan {$record->type} pada tanggal " . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                                ->warning()
+                                ->actions([
+                                    Action::make('review')
+                                        ->label('Tinjau')
+                                        ->url(LeaveResource::getUrl('view', ['record' => $record]))
+                                        ->markAsRead(),
+                                ])
+                                ->sendToDatabase($head->user);
 
                             Notification::make()
                                 ->title($record->type . ' ' . ucfirst($verb))
@@ -296,15 +315,16 @@ class ApproveTable
                     ->action(function (array $data, $record) {
                         $user = Auth::user();
                         $user->staff_id = $user->staff_id ?? 1;
+                        $staff = $user->staff;
 
                         $record->update([
                             'status' => 'Ditolak',
-                            'approver_id' => $user->staff_id,
+                            'approver_id' => $staff->id,
                             'approve_at' => Carbon::now(),
                             'adverb' => $data['adverb']
                         ]);
 
-                        $level = $user->staff->chair->level;
+                        $level = $staff->chair->level;
 
                         $role = '';
 

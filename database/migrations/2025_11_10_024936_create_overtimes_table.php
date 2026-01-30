@@ -30,13 +30,13 @@ return new class extends Migration
                 table: 'staff',
                 indexName: 'overtimes_known_by'
             )->nullOnDelete();
-            $table->date('known_at')->nullable();
+            $table->datetime('known_at')->nullable();
             $table->unsignedTinyInteger('is_verified')->nullable();
             $table->foreignId('verified_by')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'overtimes_verified_by'
             )->nullOnDelete();
-            $table->date('verified_at')->nullable();
+            $table->datetime('verified_at')->nullable();
             $table->timestamps();
 
             $table->index(['month_year', 'staff_id']);

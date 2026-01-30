@@ -9,6 +9,7 @@ use App\Filament\Resources\Overtimes\Tables\OvertimesTable;
 use App\Filament\Resources\Overtimes\Tables\StaffsTable;
 use App\Models\Overtime;
 use App\Models\Staff;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
@@ -28,6 +29,27 @@ class ManageOvertimes extends ManageRecords
     public ?string $pdfToken = null;
     public ?bool $verified = true;
     public ?bool $known = true;
+
+    public function mount(): void
+    {
+        $requestedTab = request()->query('tab') ?? request()->query('activeTab');
+
+        if ($requestedTab) {
+            $this->activeTab = $requestedTab;
+        }
+
+        if ($requestedTab === 'persetujuan') {
+            $user = Auth::user();
+            $isBoss = $user->staff->chair->level != 4 || $user->staff->unit->leader_id == $user->staff->chair_id;
+
+            if (! $isBoss) {
+                $this->redirect($this->getResource()::getUrl('index'));
+                return;
+            }
+        }
+
+        parent::mount();
+    }
 
     protected function getHeaderActions(): array
     {
@@ -148,6 +170,48 @@ class ManageOvertimes extends ManageRecords
                     if ($this->activeTab != 'pengajuan') return false;
 
                     return true;
+                })
+                ->after(function ($record) {
+                    $sender = Auth::user();
+                    $senderStaff = $sender->staff;
+
+                    if ($senderStaff){
+                        $unitStaff = $senderStaff->unit ?? null;
+                        $recipientUser = null;
+
+                        if (!$unitStaff->leader_id || $unitStaff->leader_id == $senderStaff->id) {
+                            $recipientUser = $senderStaff->chair->parent->staff->first()->user ?? null;
+                        } else {
+                            $recipientUser = $unitStaff->leader->staff->first()->user ?? null;
+                        }
+    
+                        if ($recipientUser) {
+                            Notification::make()
+                                ->title('Pengajuan Lembur Baru')
+                                ->body("{$senderStaff->name} mengajukan lembur pada tanggal " . Carbon::parse($record->overtime_date)->format('d F Y'))
+                                ->icon('heroicon-o-clock')
+                                ->iconColor('warning')
+                                ->actions([
+                                    Action::make('Lihat')
+                                        ->button()
+                                        ->url(OvertimeResource::getUrl('approve', ['record' => $senderStaff->id])),
+                                ])
+                                ->sendToDatabase($recipientUser);
+                        }
+                    }
+
+                    $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()->user ?? null;
+                    Notification::make()
+                        ->title('Pengajuan Lembur Baru')
+                        ->body("{$senderStaff->name} mengajukan lembur pada tanggal " . Carbon::parse($record->overtime_date)->format('d F Y'))
+                        ->icon('heroicon-o-clock')
+                        ->iconColor('warning')
+                        ->actions([
+                            Action::make('Lihat')
+                                ->button()
+                                ->url(OvertimeResource::getUrl('approve', ['record' => $record])),
+                        ])
+                        ->sendToDatabase($sdm);
                 }),
         ];
     }

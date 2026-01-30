@@ -6,6 +6,8 @@ use App\Filament\Resources\Leaves\LeaveResource;
 use App\Filament\Resources\Leaves\Tables\ApproveTable;
 use App\Filament\Resources\Leaves\Tables\LeavesTable;
 use App\Filament\Resources\Leaves\Tables\ReplacerTable;
+use App\Models\Leave;
+use Carbon\Carbon;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -16,15 +18,39 @@ class ListLeaves extends ListRecords
 {
     protected static string $resource = LeaveResource::class;
 
+    public function mount(): void
+    {
+        $requestedTab = request()->query('tab') ?? request()->query('activeTab');
+
+        if ($requestedTab === 'persetujuan') {
+            $user = Auth::user();
+            $isBoss = $user->staff->chair->level != 4 || $user->staff->unit->leader_id == $user->staff->chair_id;
+
+            if (! $isBoss) {
+                $this->redirect($this->getResource()::getUrl('index'));
+                return;
+            }
+        }
+
+        Leave::query()
+            ->whereDate('start_date', '<', Carbon::now()->toDateString())
+            ->where(function ($query) {
+                $query->where('status', '!=', 'Disetujui Kepala Seksi')
+                      ->orWhere('status', '!=', 'Disetujui Direktur')
+                      ->orWhereNull('is_verified');
+            })->delete();
+        parent::mount();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             CreateAction::make()
-                ->label('Ajukan Cuti / Izin'),
+                ->label('Ajukan Cuti / Izin')
+                ->hidden(fn () => Auth::user()->staff->chair->level == 1),
         ];
     }
  
-    // Bikin dua tabs
     public function getTabs(): array
     {
         $user = Auth::user();

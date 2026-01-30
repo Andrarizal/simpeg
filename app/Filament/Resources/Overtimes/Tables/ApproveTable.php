@@ -8,7 +8,6 @@ use App\Models\Overtime;
 use App\Models\Staff;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
@@ -20,7 +19,6 @@ use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class ApproveTable
@@ -37,7 +35,9 @@ class ApproveTable
                     ->date('d F Y')
                     ->alignCenter(),
                 TextColumn::make('command')
-                    ->label('Perintah'),
+                    ->label('Perintah')
+                    ->wrap()
+                    ->extraAttributes(['class' => 'min-w-xs']),
                 TextColumn::make('start_time')
                     ->label('Mulai')
                     ->time('H:i')

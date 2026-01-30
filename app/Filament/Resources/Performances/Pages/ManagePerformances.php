@@ -6,7 +6,6 @@ use App\Filament\Resources\Performances\PerformanceResource;
 use App\Models\Chair;
 use App\Models\PerformanceAppraisal;
 use App\Models\PerformancePeriod;
-use App\Models\Staff;
 use App\Models\StaffPerformance;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -16,12 +15,10 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Indicator;
@@ -38,6 +35,18 @@ class ManagePerformances extends ManageRecords
     {
         if (request()->has('activeTab')) {
             $this->activeTab = request()->query('activeTab');
+        }
+
+        $requestedTab = request()->query('tab') ?? request()->query('activeTab');
+
+        if ($requestedTab === 'penilaian') {
+            $user = Auth::user();
+            $isBoss = $user->staff->chair->level != 4 || $user->staff->unit->leader_id == $user->staff->chair_id;
+
+            if (! $isBoss) {
+                $this->redirect($this->getResource()::getUrl('index'));
+                return;
+            }
         }
 
         parent::mount();
@@ -270,10 +279,9 @@ class ManagePerformances extends ManageRecords
                                             4 => $record->appraisal->appraiser->chair->level == 4 && Auth::user()->role_id != 1 ? false : true,
                                             3 => in_array($record->appraisal->appraiser->chair->level, [3,4]) ? false : true,
                                             2 => in_array($record->appraisal->appraiser->chair->level, [2,3]) ? false : true,
-                                            1 => in_array($record->appraisal->appraiser->chair->level, [1,2]) ? false : true,
+                                            1 => in_array($record->appraisal->appraiser->chair->level, [1,2]) && $record->staff->chair->level != 4 ? false : true,
                                         };
                                     } else {
-                                        // Atur penginput nilai pertama kali
                                         if (Auth::user()->staff->chair->level == 4){
                                             if (!Auth::user()->staff->unit->leader_id) return true;
                                         } else {
@@ -287,7 +295,7 @@ class ManagePerformances extends ManageRecords
                                     return false;
                                 })
                         ),
-                    TextColumn::make('appraiser') // Beri nama unik sembarang
+                    TextColumn::make('appraiser')
                         ->label('Telah Dinilai Oleh')
                         ->state(function (StaffPerformance $record) {
                             if (!$record->appraisal) {
@@ -295,10 +303,10 @@ class ManagePerformances extends ManageRecords
                             } 
                             
                             return match ($record->appraisal->appraiser->chair->level) {
-                                4 => 'Kepala Unit',
-                                3 => 'Koordinator',
-                                2 => 'Kepala Seksi',
-                                1 => 'Direktur',
+                                4 => 'Assesor Tingkat 1',
+                                3 => 'Assesor Tingkat 2',
+                                2 => 'Assesor Tingkat 3',
+                                1 => 'Assesor Tingkat 4',
                                 default => false,
                             };
                         })
@@ -407,10 +415,10 @@ class ManagePerformances extends ManageRecords
                             } 
                             
                             return match ($record->appraisal->appraiser->chair->level) {
-                                4 => 'Kepala Unit',
-                                3 => 'Koordinator',
-                                2 => 'Kepala Seksi',
-                                1 => 'Direktur',
+                                4 => 'Assesor Tingkat 1',
+                                3 => 'Assesor Tingkat 2',
+                                2 => 'Assesor Tingkat 3',
+                                1 => 'Assesor Tingkat 4',
                                 default => false,
                             };
                         })

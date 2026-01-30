@@ -24,16 +24,107 @@ class ViewLeave extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('available')
+                ->label('Bersedia')
+                ->icon('heroicon-o-check')
+                ->color('success')
+                ->visible(fn ($record) => 
+                    $record->staff_id != Auth::user()->staff_id &&
+                    !$record->is_replaced &&
+                    $record->status !== 'Ditolak' &&
+                    is_null($record->is_verified))
+                ->requiresConfirmation()
+                ->action(function ($record) {
+                    $record->update([
+                        'is_replaced' => 1,
+                        'replacement_at' => Carbon::now()
+                    ]);
+
+                    Notification::make()
+                        ->title($record->type . ' Anda bersedia digantikan')
+                        ->body('Pengganti Anda telah menyatakan ketersediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                        ->success()
+                        ->actions([
+                            Action::make('read')
+                                ->button()
+                                ->url(LeaveResource::getUrl('index'))
+                                ->markAsRead()
+                        ])
+                        ->sendToDatabase($record->staff->user);
+
+                    $head = null;
+                    if ($record->staff->chair->level == 4){
+                        $head = $record->staff->unit->leader->staff->first() ?? $record->staff->chair->parent->staff->first();
+                    } else {
+                        $head = $record->staff->chair->parent->staff->first();
+                    }
+
+                    Notification::make()
+                        ->title("{$record->type} menunggu persetujuan")
+                        ->body("{$record->staff->name} telah mengajukan {$record->type} pada tanggal " . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                        ->warning()
+                        ->actions([
+                            Action::make('review')
+                                ->label('Tinjau')
+                                ->url(LeaveResource::getUrl('view', ['record' => $record]))
+                                ->markAsRead(),
+                        ])
+                        ->sendToDatabase($head->user);
+
+                    Notification::make()
+                        ->title('Berhasil menyetujui ketersediaan')
+                        ->success()
+                        ->send();
+                }),
+            Action::make('unavailable')
+                ->label('Tolak')
+                ->icon('heroicon-o-no-symbol')
+                ->color('danger')
+                ->visible(fn ($record) => 
+                    $record->staff_id != Auth::user()->staff_id &&
+                    !$record->is_replaced &&
+                    $record->status !== 'Ditolak' &&
+                    is_null($record->is_verified))
+                ->requiresConfirmation()
+                ->action(function ($record) {
+                    $record->update([
+                        'is_replaced' => 0,
+                        'replacement_at' => Carbon::now()
+                    ]);
+
+                    Notification::make()
+                        ->title('Pengganti ' . $record->type . ' Anda tidak bersedia')
+                        ->body('Pengganti Anda telah menyatakan ketidaksediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                        ->warning()
+                        ->actions([
+                            Action::make('read')
+                                ->button()
+                                ->url(LeaveResource::getUrl('index'))
+                                ->markAsRead()
+                        ])
+                        ->sendToDatabase($record->staff->user);
+
+                    Notification::make()
+                        ->title('Berhasil menolak ketersediaan')
+                        ->success()
+                        ->send();
+                }),
             Action::make('approve')
                 ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Ketahui' : 'Setujui')
                 ->icon('heroicon-o-check')
-                ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
+                ->visible(fn ($record) => shouldShowApprovalButton($record))
                 ->requiresConfirmation()
+                ->schema([
+                    Textarea::make('adverb')
+                        ->label('Alasan')
+                        ->rows(3),
+                ])
                 ->action(function (array $data, $record) {
                     $user = Auth::user();
                     $user->staff_id = $user->staff_id ?? 1;
+                    $staff = $user->staff;
 
-                    $level = $user->staff->chair->level;
+                    $level = $staff->chair->level;
 
                     $role = '';
                     $verb = '';
@@ -65,17 +156,17 @@ class ViewLeave extends ViewRecord
                     if (!empty($role)) {
                         $updateData = [
                             'status'      => ucfirst($verb) . ' ' . $role,
-                            'approver_id' => $user->staff_id,
+                            'approver_id' => $staff->id,
                             'approve_at'  => Carbon::now(),
                             'adverb'      => $data['adverb']
                         ];
 
                         if ($level == 3 || $level == 4) {
-                            $updateData['known_by'] = $user->staff_id;
+                            $updateData['known_by'] = $staff->id;
                             $updateData['known_at'] = Carbon::now();
                         } 
                         elseif ($level == 2 && $record->staff->chair->level == 3) {
-                            $updateData['known_by'] = $user->staff_id;
+                            $updateData['known_by'] = $staff->id;
                             $updateData['known_at'] = Carbon::now();
                         }
 
@@ -93,6 +184,22 @@ class ViewLeave extends ViewRecord
                             ])
                             ->sendToDatabase($record->staff->user);
 
+                        $head = ($level == 1 || ($record->staff->chair->level == 4 && $level == 2))
+                            ? Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()
+                            : $staff->chair->parent->staff->first();
+
+                        Notification::make()
+                            ->title("{$record->type} menunggu " . str_contains($head->chair->name, 'SDM') ? 'Verifikasi' : 'Persetujuan')
+                            ->body("{$record->staff->name} telah mengajukan {$record->type} pada tanggal " . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                            ->warning()
+                            ->actions([
+                                Action::make('review')
+                                    ->label('Tinjau')
+                                    ->url(LeaveResource::getUrl('view', ['record' => $record]))
+                                    ->markAsRead(),
+                            ])
+                            ->sendToDatabase($head->user);
+
                         Notification::make()
                             ->title($record->type . ' ' . ucfirst($verb))
                             ->success()
@@ -103,7 +210,7 @@ class ViewLeave extends ViewRecord
                 ->label('Tolak')
                 ->icon('heroicon-o-no-symbol')
                 ->color('danger')
-                ->visible(fn ($record) => shouldShowApprovalButton($record)) // Pakai helpers custom untuk atur visibilitas antar role
+                ->visible(fn ($record) => shouldShowApprovalButton($record))
                 ->requiresConfirmation()
                 ->schema([
                     Textarea::make('adverb')
@@ -114,15 +221,16 @@ class ViewLeave extends ViewRecord
                 ->action(function (array $data, $record) {
                     $user = Auth::user();
                     $user->staff_id = $user->staff_id ?? 1;
+                    $staff = $user->staff;
 
                     $record->update([
                         'status' => 'Ditolak',
-                        'approver_id' => $user->staff_id,
+                        'approver_id' => $staff->id,
                         'approve_at' => Carbon::now(),
                         'adverb' => $data['adverb']
                     ]);
 
-                    $level = $user->staff->chair->level;
+                    $level = $staff->chair->level;
 
                     $role = '';
 
@@ -163,11 +271,11 @@ class ViewLeave extends ViewRecord
                 ->icon('heroicon-o-check')
                 ->color('info')
                 ->visible(function ($record) {
-                        return Auth::user()->role_id == 1 
-                            && is_null($record->is_verified)
-                            && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
-                            && $record->status != 'Ditolak'
-                            && $record->is_replaced != 0;
+                    return Auth::user()->role_id == 1 
+                        && is_null($record->is_verified)
+                        && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
+                        && $record->status != 'Ditolak'
+                        && $record->is_replaced != 0;
                     })
                 ->requiresConfirmation()
                 ->action(function ($record) {

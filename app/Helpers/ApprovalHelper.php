@@ -14,6 +14,10 @@ if (!function_exists('shouldShowApprovalButton')) {
             return false;
         }
 
+        if ($record->replacement_id == $user->staff_id && $user->staff->chair_id != $record->staff->unit->leader_id) {
+            return false;
+        }
+
         $userLevel = $user->staff->chair->level;
 
         switch ($userLevel) {
@@ -29,17 +33,11 @@ if (!function_exists('shouldShowApprovalButton')) {
                             !$record->staff->unit->leader_id;
                 return $isWaitingLevel4 || $isEscalated;
             case 2:
-                if (!$record->is_verified) {
-                    return false;
-                }
                 $isWaitingLevel3 = $record->status == 'Menunggu' && 
                                 $record->staff->chair->level == 3;
                 $isKnownByCoord = $record->status == 'Diketahui Koordinator';
                 return $isWaitingLevel3 || $isKnownByCoord;
             case 1:
-                if (!$record->is_verified) {
-                    return false;
-                }
                 $isWaitingLevel2 = $record->status == 'Menunggu' && 
                                 $record->staff->chair->level == 2;
                 $isApprovedByKasi = $record->status == 'Disetujui Kepala Seksi' && 

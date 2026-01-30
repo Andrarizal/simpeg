@@ -36,9 +36,13 @@ class LeavesOverview extends StatsOverviewWidget
         }
 
         $leaves = Leave::where('staff_id', $staff->id)
-            ->where('status', '!=', 'Ditolak')
-            ->whereYear('start_date', $year)
-            ->get(['type', 'subtype', 'start_date', 'end_date']);
+                    ->whereYear('start_date', now()->year)
+                    ->where(function ($query) {
+                        $query->where('status', '!=', 'Ditolak')
+                            ->orWhere('is_verified', '!=', 0)
+                            ->orWhere('is_replaced', '!=', 0);
+                    })
+                    ->get(['type', 'subtype', 'start_date', 'end_date']);
 
         $usedLeave = $leaves->where('type', 'Cuti')
             ->where('subtype', 'Tahunan')

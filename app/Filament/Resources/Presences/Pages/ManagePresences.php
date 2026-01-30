@@ -40,6 +40,18 @@ class ManagePresences extends ManageRecords implements HasTable
             $this->activeTab = request()->query('activeTab');
         }
 
+        $requestedTab = request()->query('tab') ?? request()->query('activeTab');
+
+        if ($requestedTab === 'karyawan') {
+            $user = Auth::user();
+            $isBoss = $user->staff->chair->level == 1 || $user->role_id == 1;
+
+            if (! $isBoss) {
+                $this->redirect($this->getResource()::getUrl('index'));
+                return;
+            }
+        }
+
         parent::mount();
     }
 

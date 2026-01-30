@@ -101,7 +101,6 @@ class PreStaffResource extends Resource
                                 TextInput::make('nip')
                                     ->label('NIP')
                                     ->mask('9999.9999.999.9')
-                                    ->disabled()
                                     ->dehydrated(),
                                 DatePicker::make('entry_date')
                                     ->label('Terhitung Mulai Tanggal')

@@ -264,8 +264,12 @@ class LeaveInfolist
                                                 return $record
                                                     ->where('type', 'Cuti')
                                                     ->where('subtype', 'Tahunan')
-                                                    ->where('status', '!=', 'Ditolak')
                                                     ->whereYear('start_date', now()->year)
+                                                    ->where(function ($query) {
+                                                        $query->where('status', '!=', 'Ditolak')
+                                                            ->orWhere('is_verified', '!=', 0)
+                                                            ->orWhere('is_replaced', '!=', 0);
+                                                    })
                                                     ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
                                             })
                                             ->extraAttributes([
@@ -282,8 +286,12 @@ class LeaveInfolist
                                                 $taken = $record
                                                     ->where('type', 'Cuti')
                                                     ->where('subtype', 'Tahunan')
-                                                    ->where('status', '!=', 'Ditolak')
                                                     ->whereYear('start_date', now()->year)
+                                                    ->where(function ($query) {
+                                                        $query->where('status', '!=', 'Ditolak')
+                                                            ->orWhere('is_verified', '!=', 0)
+                                                            ->orWhere('is_replaced', '!=', 0);
+                                                    })
                                                     ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1'));
                                                     
                                                 return ($quota - $taken) . ' Hari';
@@ -300,8 +308,12 @@ class LeaveInfolist
                                                 return $record
                                                     ->where('type', 'Izin')
                                                     ->where('subtype', 'Non-Sakit')
-                                                    ->where('status', '!=', 'Ditolak')
                                                     ->whereYear('start_date', now()->year)
+                                                    ->where(function ($query) {
+                                                        $query->where('status', '!=', 'Ditolak')
+                                                            ->orWhere('is_verified', '!=', 0)
+                                                            ->orWhere('is_replaced', '!=', 0);
+                                                    })
                                                     ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
                                             })
                                             ->extraAttributes([
@@ -318,8 +330,12 @@ class LeaveInfolist
                                                 $taken = $record
                                                     ->where('type', 'Izin')
                                                     ->where('subtype', 'Non-Sakit')
-                                                    ->where('status', '!=', 'Ditolak')
                                                     ->whereYear('start_date', now()->year)
+                                                    ->where(function ($query) {
+                                                        $query->where('status', '!=', 'Ditolak')
+                                                            ->orWhere('is_verified', '!=', 0)
+                                                            ->orWhere('is_replaced', '!=', 0);
+                                                    })
                                                     ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1'));
                                                     
                                                 return ($quota - $taken) . ' Hari';

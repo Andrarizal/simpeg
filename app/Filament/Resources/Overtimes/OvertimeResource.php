@@ -59,9 +59,6 @@ class OvertimeResource extends Resource
     {
         return [
             'index' => ManageOvertimes::route('/'),
-            // 'create' => CreateOvertime::route('/create'),
-            // 'view' => ViewOvertime::route('/{record}'),
-            // 'edit' => EditOvertime::route('/{record}/edit'),
             'approve' => ApproveOvertime::route('/{record}/approve')
         ];
     }

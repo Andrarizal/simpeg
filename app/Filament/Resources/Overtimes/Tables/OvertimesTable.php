@@ -40,7 +40,8 @@ class OvertimesTable
                     ->sortable(),
                 TextColumn::make('command')
                     ->label('Perintah')
-                    ->wrap(),
+                    ->wrap()
+                    ->extraAttributes(['class' => 'min-w-xs']),
                 TextColumn::make('start_time')
                     ->label('Mulai')
                     ->time('H:i')

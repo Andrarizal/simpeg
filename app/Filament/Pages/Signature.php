@@ -35,13 +35,7 @@ class Signature extends Page
         }
 
         if ($dateParams) {
-            try {
-                $this->date = Carbon::parse($dateParams)
-                    ->locale('id')
-                    ->isoFormat('D MMMM Y'); 
-            } catch (\Exception $e) {
-                $this->date = $dateParams;
-            }
+            $this->date = $dateParams;
         }
     }
 

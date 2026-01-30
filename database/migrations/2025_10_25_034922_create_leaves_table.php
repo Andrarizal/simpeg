@@ -29,13 +29,13 @@ return new class extends Migration
                 table: 'staff',
                 indexName: 'leaves_replacement_id'
             )->nullOnDelete();
-            $table->date('replacement_at')->nullable();
+            $table->datetime('replacement_at')->nullable();
             $table->enum('status', ['Menunggu', 'Diketahui Kepala Unit', 'Diketahui Koordinator', 'Disetujui Kepala Seksi', 'Disetujui Direktur', 'Ditolak']);
             $table->foreignId('known_by')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'leaves_known_by'
             )->nullOnDelete();
-            $table->date('known_at')->nullable();
+            $table->datetime('known_at')->nullable();
             $table->foreignId('approver_id')->nullable()->constrained(
                 table: 'staff',
                 indexName: 'leaves_approver_id'
@@ -46,7 +46,7 @@ return new class extends Migration
                 table: 'staff',
                 indexName: 'overtimes_verified_by'
             )->nullOnDelete();
-            $table->date('verified_at')->nullable();
+            $table->datetime('verified_at')->nullable();
             $table->string('adverb')->nullable();
             $table->timestamps();
         });

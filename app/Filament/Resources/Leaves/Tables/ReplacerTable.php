@@ -166,6 +166,25 @@ class ReplacerTable
                             ])
                             ->sendToDatabase($record->staff->user);
 
+                        $head = null;
+                        if ($record->staff->chair->level == 4){
+                            $head = $record->staff->unit->leader->staff->first() ?? $record->staff->chair->parent->staff->first();
+                        } else {
+                            $head = $record->staff->chair->parent->staff->first();
+                        }
+
+                        Notification::make()
+                            ->title("{$record->type} menunggu persetujuan")
+                            ->body("{$record->staff->name} telah mengajukan {$record->type} pada tanggal " . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                            ->warning()
+                            ->actions([
+                                Action::make('review')
+                                    ->label('Tinjau')
+                                    ->url(LeaveResource::getUrl('view', ['record' => $record]))
+                                    ->markAsRead(),
+                            ])
+                            ->sendToDatabase($head->user);
+
                         Notification::make()
                             ->title('Berhasil menyetujui ketersediaan')
                             ->success()

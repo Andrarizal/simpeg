@@ -169,10 +169,10 @@ class PerformanceResource extends Resource
                                         $level = $record->appraisal->appraiser->chair->level ?? null;
 
                                         return match ($level) {
-                                            4 => 'Kepala Unit',
-                                            3 => 'Koordinator',
-                                            2 => 'Kepala Seksi',
-                                            1 => 'Direktur',
+                                            4 => 'Assesor Tingkat 1',
+                                            3 => 'Assesor Tingkat 2',
+                                            2 => 'Assesor Tingkat 3',
+                                            1 => 'Assesor Tingkat 4',
                                             default => 'Staff / Lainnya',
                                         };
                                     })

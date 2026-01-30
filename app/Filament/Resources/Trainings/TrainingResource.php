@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Trainings;
 
 use App\Filament\Resources\Trainings\Pages\ManageTrainings;
 use App\Models\Staff;
+use App\Models\StaffTraining;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
@@ -66,12 +67,13 @@ class TrainingResource extends Resource
                                         Grid::make([
                                             'default' => str_contains(Auth::user()->staff->chair->name, 'Diklat') ? 12 : 10
                                         ])
-                                            ->extraAttributes(['class' => 'border-b border-gray-200 dark:border-gray-700 pb-2 font-bold text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded-t-lg',])
+                                            ->extraAttributes(['class' => 'border-b border-gray-200 dark:border-gray-700 pb-2 font-bold text-sm bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-900 dark:to-teal-950 p-2 rounded-t-xl',])
                                             ->schema([
                                                 TextEntry::make('h_name')
                                                     ->state('Nama Pelatihan')
                                                     ->weight(FontWeight::Bold)
                                                     ->hiddenLabel()
+                                                    ->extraAttributes(['class' => 'pl-4'])
                                                     ->columnSpan([
                                                         'default' => 3
                                                     ]),
@@ -122,6 +124,7 @@ class TrainingResource extends Resource
                                                 $selectedYear = $filters['filter_year']['value'] ?? now()->year;
                                                 return $record->training()
                                                     ->whereYear('training_date', $selectedYear)
+                                                    ->latest('training_date')
                                                     ->get(); 
                                             })
                                             ->extraAttributes(['class' => 'gap-0'])
@@ -134,6 +137,7 @@ class TrainingResource extends Resource
                                                         TextEntry::make('name')
                                                             ->hiddenLabel()
                                                             ->weight(FontWeight::Medium)
+                                                            ->extraAttributes(['class' => 'pl-4'])
                                                             ->columnSpan([
                                                                 'default' => 3
                                                             ]),
@@ -225,11 +229,13 @@ class TrainingResource extends Resource
             ->filters([
                 SelectFilter::make('filter_year')
                     ->label('Tahun')
-                    ->options([
-                        2024 => '2024',
-                        2025 => '2025',
-                        2026 => '2026',
-                    ])
+                    ->options(function () {
+                        return StaffTraining::query()
+                            ->selectRaw('YEAR(training_date) as year') 
+                            ->distinct() 
+                            ->orderBy('year', 'desc') 
+                            ->pluck('year', 'year'); 
+                    })
                     ->indicateUsing(function (array $data) {
                         return [
                             Indicator::make('Tahun: ' . $data['value'])
@@ -301,5 +307,10 @@ class TrainingResource extends Resource
         return [
             'index' => ManageTrainings::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->role_id == 1 || str_contains(Auth::user()->staff->chair->name, 'Diklat');
     }
 }

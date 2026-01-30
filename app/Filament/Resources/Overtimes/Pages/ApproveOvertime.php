@@ -14,6 +14,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Resources\Pages\Page;
 use Filament\Tables\Table;
 use Filament\Tables\Contracts\HasTable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -143,5 +144,16 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
         }
 
         $this->unmountAction();
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->staff || !$user->staff->chair) {
+            return false; 
+        }
+
+        return $user->staff->chair->level != 4 
+            || $user->staff->unit->leader_id == $user->staff->chair_id || $user->role_id == 1;
     }
 }
