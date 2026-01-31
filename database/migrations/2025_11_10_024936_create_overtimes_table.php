@@ -22,7 +22,10 @@ return new class extends Migration
             $table->time('end_time')->nullable();
             $table->text('command');
             $table->decimal('hours', 8, 1)->nullable();
-            $table->string('month_year');
+            $table->foreignId('period_id')->constrained(
+                table: 'monthly_periods',
+                indexName: 'overtimes_period_id'
+            )->cascadeOnDelete();
             $table->text('note')->nullable();
             $table->unsignedTinyInteger('is_known')->nullable();
             $table->unsignedTinyInteger('known_by')->nullable();
@@ -38,8 +41,6 @@ return new class extends Migration
             )->nullOnDelete();
             $table->datetime('verified_at')->nullable();
             $table->timestamps();
-
-            $table->index(['month_year', 'staff_id']);
         });
     }
 

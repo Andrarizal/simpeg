@@ -213,6 +213,17 @@ class ManageOvertimes extends ManageRecords
                         ])
                         ->sendToDatabase($sdm);
                 }),
+            Action::make('periods')
+                ->label('Kelola Periode')
+                ->modalHeading('Manajemen Periode Bulanan')
+                ->modalContent(view('filament.pages.partials.monthly-period-manager-modal')) 
+                ->modalSubmitAction(false) 
+                ->modalCancelAction(false)
+                ->modalWidth('xl')
+                ->icon('heroicon-o-swatch')
+                ->color('gray')
+                ->visible(fn() => Auth::user()->role_id == 1)
+                ->slideOver(),
         ];
     }
 

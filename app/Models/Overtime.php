@@ -22,6 +22,10 @@ class Overtime extends Model
         return $this->belongsTo(Staff::class);
     }
 
+    public function period(): BelongsTo {
+        return $this->belongsTo(MonthlyPeriod::class, 'period_id');
+    }
+
     protected static function booted()
     {
         static::creating(function ($overtime) {

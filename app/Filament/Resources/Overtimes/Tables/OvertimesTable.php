@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Overtimes\Tables;
 
+use App\Models\MonthlyPeriod;
 use App\Models\Overtime;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -105,29 +106,35 @@ class OvertimesTable
                     }),
             ])
             ->filters([
-                SelectFilter::make('month_year')
-                    ->label('Bulan')
-                    ->options(
-                        collect(range(0, 11))
-                            ->mapWithKeys(fn($i) => [
-                                now()->subMonths($i)->format('Y-m') =>
-                                    now()->subMonths($i)->translatedFormat('F Y'),
-                            ])
-                    )
-                    ->default(now()->format('Y-m'))
+                SelectFilter::make('period_id')
+                    ->label('Periode Lembur')
+                    ->options(function () {
+                        return MonthlyPeriod::orderBy('start_date', 'desc')
+                            ->get()
+                            ->mapWithKeys(fn ($period) => [$period->id => "{$period->name}"]);
+                    })
+                    ->default(function () {
+                        return MonthlyPeriod::where('start_date', '<=', now())
+                            ->where('end_date', '>=', now())
+                            ->value('id');
+                    })
                     ->query(function (Builder $query, $data) {
-                        $query->where('month_year', $data['value']);
+                        $query->where('period_id', $data['value']);
                     })
                     ->indicateUsing(function ($data) {
+                        if (! $data['value']) {
+                            return null;
+                        }
+                        
+                        $periodName = MonthlyPeriod::find($data['value'])?->name;
                         return [
-                            Indicator::make('Bulan: ' . Carbon::parse($data['value'])->translatedFormat('F Y'))
+                            Indicator::make('Periode: ' . $periodName)
                                 ->removable(false),
                         ];
                     })
                     ->selectablePlaceholder(false)
                     ->native(false),
             ])
-            ->hiddenFilterIndicators()
             ->recordActions([
                 Action::make('selesai')
                     ->label('Selesai')

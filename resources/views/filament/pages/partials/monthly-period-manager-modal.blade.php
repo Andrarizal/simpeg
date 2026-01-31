@@ -1,0 +1,1 @@
+@livewire('monthly-period-manager')
