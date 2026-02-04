@@ -19,6 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
@@ -26,8 +27,8 @@ class UnitResource extends Resource
 {
     protected static ?string $model = Unit::class;
 
-    protected static ?string $modelLabel = 'Unit Kerja';        // singular
-    protected static ?string $pluralModelLabel = 'Unit Kerja'; // plural/menu
+    protected static ?string $modelLabel = 'Unit Kerja';
+    protected static ?string $pluralModelLabel = 'Unit Kerja';
     protected static ?string $navigationLabel = 'Unit Kerja';
     protected static ?int $navigationSort = 3;
     protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
@@ -58,6 +59,32 @@ class UnitResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                if (Auth::user()->role_id != 1) {
+                    $chairId = Auth::user()->staff?->chair_id;
+
+                    if ($chairId) {
+                        $query->where(function (Builder $group) use ($chairId) {
+                            
+                            $group->where(function (Builder $q1) use ($chairId) {
+                                $q1->whereNotNull('leader_id')
+                                ->whereHas('leader', function (Builder $leaderQ) use ($chairId) {
+                                    $leaderQ->where('head_id', $chairId);
+                                });
+                            })
+                            ->orWhere(function (Builder $q2) use ($chairId) {
+                                $q2->whereNull('leader_id')
+                                ->whereHas('chair', function (Builder $chairQ) use ($chairId) {
+                                    $chairQ->where('head_id', $chairId);
+                                });
+                            });
+                            
+                        });
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                }
+            })
             ->recordTitleAttribute('Unit')
             ->columns([
                 TextColumn::make('name')
@@ -65,9 +92,12 @@ class UnitResource extends Resource
                     ->searchable(),
                 TextColumn::make('leader.name')
                     ->label('Kepala Unit')
+                    ->default('-')
+                    ->alignCenter()
                     ->sortable(),
                 TextColumn::make('work_system')
                     ->label('Sistem Kerja')
+                    ->alignCenter()
                     ->sortable(),
             ])
             ->recordActions([
@@ -76,8 +106,10 @@ class UnitResource extends Resource
                     ->icon('heroicon-m-clock')
                     ->color('info')
                     ->url(fn (Unit $record): string => UnitResource::getUrl('shifts', ['record' => $record])),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => Auth::user()->role_id == 1),
                 DeleteAction::make()
+                    ->visible(fn () => Auth::user()->role_id == 1)
                     ->before(function (Unit $record, $action) {
                         if ($record->staff()->exists()) {
                             Notification::make()
@@ -102,6 +134,6 @@ class UnitResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->role_id == 1;
+        return Auth::user()->staff->chair->level == 3 || Auth::user()->role_id == 1;
     }
 }

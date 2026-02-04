@@ -18,7 +18,11 @@ class Unit extends Model
         return $this->hasMany(Shift::class);
     }
 
-    public function staff() { 
+    public function staff(): HasMany { 
         return $this->hasMany(Staff::class); 
+    }
+
+    public function chair(): HasMany {
+        return $this->hasMany(Chair::class);
     }
 }

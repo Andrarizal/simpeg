@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\Units\Pages;
+namespace App\Filament\Resources\Schedules\Pages;
 
-use App\Filament\Resources\Units\UnitResource;
+use App\Filament\Resources\Schedules\ScheduleResource;
+use App\Models\Chair;
 use App\Models\Schedule;
 use App\Models\Shift;
 use App\Models\Staff;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -30,26 +32,40 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
-class ManageUnitSchedules extends Page implements HasForms, HasTable
+class ManageSchedules extends Page implements HasForms, HasTable
 {
     use InteractsWithForms, InteractsWithTable;
-
-    protected static string $resource = UnitResource::class;
+    
+    protected static string $resource = ScheduleResource::class;
 
     protected string $view = 'filament.resources.units.pages.manage-unit-schedule';
 
-    public Unit $record;
+    public ?Unit $record;
     public Collection $staffList;
     public $month;
     public $year;
     public $schedules = [];
     public $daysInMonth = [];
     
-    public function mount(Unit $record): void
+    public function mount(): void
     {
-        $this->record = $record;
-        $this->month = now()->month();
-        $this->year = now()->year();
+        $user = Auth::user();
+        $unitId = $user->staff?->unit_id;
+
+        if ($user->role_id == 1){
+            $this->record = Unit::first();
+        }
+
+        elseif ($unitId) {
+            if ($unitId == 1){
+                $this->record = Chair::where('head_id', $user->staff->chair_id)->first()?->unit;
+            } else {
+                $this->record = Unit::find($unitId);
+            }
+        } 
+
+        $this->month = now()->month;
+        $this->year = now()->year;
     }
 
     public function getTitle(): string
@@ -215,7 +231,6 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                         }
                     }
 
-                    // Lakukan UPSERT (Insert or Update) per chunk 500 data agar memory aman
                     foreach (array_chunk($dataToInsert, 500) as $chunk) {
                         Schedule::upsert(
                             $chunk, 
@@ -278,12 +293,7 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                 ->state(function (Staff $record) use ($dateString) {
                     return $record->schedule->firstWhere('schedule_date', $dateString)?->shift_id;
                 })
-                ->disabled(function(Staff $record) use ($year, $month, $day) {
-                    $unit = $record->unit;
-
-                    if ($unit->leader_id && Auth::user()->staff->chair->level != 4){
-                        return true;
-                    }
+                ->disabled(function() use ($year, $month, $day) {
                     return $year <= now()->year && $month < now()->month;
                 })
                 ->view('filament.components.native-select')
