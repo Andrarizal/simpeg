@@ -10,7 +10,6 @@ use App\Models\Staff;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -52,17 +51,11 @@ class ManageSchedules extends Page implements HasForms, HasTable
         $user = Auth::user();
         $unitId = $user->staff?->unit_id;
 
-        if ($user->role_id == 1){
-            $this->record = Unit::first();
+        if ($unitId == 1){
+            $this->record = Chair::where('head_id', $user->staff->chair_id)->first()?->unit;
+        } else {
+            $this->record = Unit::find($unitId);
         }
-
-        elseif ($unitId) {
-            if ($unitId == 1){
-                $this->record = Chair::where('head_id', $user->staff->chair_id)->first()?->unit;
-            } else {
-                $this->record = Unit::find($unitId);
-            }
-        } 
 
         $this->month = now()->month;
         $this->year = now()->year;
@@ -82,6 +75,10 @@ class ManageSchedules extends Page implements HasForms, HasTable
                 ->color('gray')
                 ->slideOver()
                 ->modalWidth('lg')
+                ->visible(function() {
+                    $isLeader = Auth::user()->staff->chair_id == Auth::user()->staff->unit?->leader_id;
+                    return $isLeader;
+                })
                 ->fillForm(function () {
                     $shifts = $this->record->shift()
                         ->where('is_off', false)
@@ -168,7 +165,10 @@ class ManageSchedules extends Page implements HasForms, HasTable
                 ->label('Generate')
                 ->icon('heroicon-m-bolt')
                 ->color('warning')
-                ->visible(fn () => $this->record->work_system == 'Tetap')
+                ->visible(function() {
+                    $isLeader = Auth::user()->staff->chair_id == Auth::user()->staff->unit?->leader_id;
+                    return $isLeader && $this->record->work_system == 'Tetap';
+                })
                 ->modalHeading('Generate Jadwal Otomatis')
                 ->modalWidth('sm')
                 ->modalDescription('Fitur ini akan mengisi jadwal seluruh pegawai di unit ini secara otomatis (Senin-Sabtu Masuk, Minggu Libur).')
@@ -293,8 +293,13 @@ class ManageSchedules extends Page implements HasForms, HasTable
                 ->state(function (Staff $record) use ($dateString) {
                     return $record->schedule->firstWhere('schedule_date', $dateString)?->shift_id;
                 })
-                ->disabled(function() use ($year, $month, $day) {
-                    return $year <= now()->year && $month < now()->month;
+                ->disabled(function () use ($year, $month) {
+                    $user = Auth::user();
+                    $isLeader = $user->staff->chair_id == $user->staff->unit?->leader_id;
+
+                    $isPast = ($year < now()->year) || ($year == now()->year && $month < now()->month);
+
+                    return !$isLeader || $isPast;
                 })
                 ->view('filament.components.native-select')
                 ->viewData([

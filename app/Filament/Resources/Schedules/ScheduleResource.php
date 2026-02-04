@@ -15,10 +15,10 @@ class ScheduleResource extends Resource
 {
     protected static ?string $model = Schedule::class;
 
-    protected static ?string $modelLabel = 'Jam Kerja';
-    protected static ?string $pluralModelLabel = 'Jam Kerja'; 
-    protected static ?string $navigationLabel = 'Jam Kerja';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $modelLabel = 'Jadwal Unit';
+    protected static ?string $pluralModelLabel = 'Jadwal Unit'; 
+    protected static ?string $navigationLabel = 'Jadwal Unit';
+    protected static ?int $navigationSort = 4;
     protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Clock;
@@ -34,8 +34,6 @@ class ScheduleResource extends Resource
 
     public static function canViewAny(): bool
     {
-        $isLeader = Auth::user()->staff->chair_id == Auth::user()->staff->unit?->leader_id;
-
-        return Auth::user()->staff->chair->level == 4 && Auth::user()->staff->chair_id == $isLeader;
+        return Auth::user()->staff->chair->level == 4;
     }
 }

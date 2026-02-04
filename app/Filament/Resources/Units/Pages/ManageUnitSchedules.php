@@ -66,6 +66,13 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                 ->color('gray')
                 ->slideOver()
                 ->modalWidth('lg')
+                ->visible(function() {
+                    $unit = $this->record;
+
+                    if ($unit->leader_id && Auth::user()->staff->chair->level != 4){
+                        return false;
+                    }
+                })
                 ->fillForm(function () {
                     $shifts = $this->record->shift()
                         ->where('is_off', false)
@@ -152,7 +159,14 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                 ->label('Generate')
                 ->icon('heroicon-m-bolt')
                 ->color('warning')
-                ->visible(fn () => $this->record->work_system == 'Tetap')
+                ->visible(function () {
+                    $unit = $this->record;
+
+                    if ($unit->leader_id && Auth::user()->staff->chair->level != 4){
+                        return false;
+                    }
+                    return $this->record->work_system == 'Tetap';
+                })
                 ->modalHeading('Generate Jadwal Otomatis')
                 ->modalWidth('sm')
                 ->modalDescription('Fitur ini akan mengisi jadwal seluruh pegawai di unit ini secara otomatis (Senin-Sabtu Masuk, Minggu Libur).')

@@ -45,6 +45,7 @@
         <option value="-" class="text-gray-500 dark:text-gray-400">-</option>
 
         {{-- Loop Options --}}
+        @if(!$isDisabled)
         @foreach($options as $key => $label)
             <option 
                 value="{{ $key }}" 
@@ -55,5 +56,6 @@
                 {{ $label }}
             </option>
         @endforeach
+        @endif
     </select>
 </div>
