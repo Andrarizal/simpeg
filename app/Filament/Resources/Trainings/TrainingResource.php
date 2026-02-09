@@ -38,7 +38,7 @@ class TrainingResource extends Resource
     protected static ?string $modelLabel = 'Pelatihan Pegawai';       
     protected static ?string $pluralModelLabel = 'Pelatihan Pegawai'; 
     protected static ?string $navigationLabel = 'Pelatihan Pegawai';
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 4;
     protected static UnitEnum|string|null $navigationGroup = 'Keperluan';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Swatch;

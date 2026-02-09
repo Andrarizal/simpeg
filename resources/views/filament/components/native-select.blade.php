@@ -45,17 +45,24 @@
         <option value="-" class="text-gray-500 dark:text-gray-400">-</option>
 
         {{-- Loop Options --}}
-        @if(!$isDisabled)
         @foreach($options as $key => $label)
-            <option 
+            @if(!$isDisabled)
+                <option 
+                    value="{{ $key }}" 
+                    @selected((string)$key === (string)$currentValue)
+                    class="bg-gray-100 text-gray-950 dark:bg-gray-900 dark:text-white radius-xl"
+                >
+                    {{ $label }}
+                </option>
+            @elseif((string)$key === (string)$currentValue)
+                <option 
                 value="{{ $key }}" 
                 @selected((string)$key === (string)$currentValue)
-                {{-- Styling dropdown list options (Browser behavior varies here, but giving hint) --}}
                 class="bg-gray-100 text-gray-950 dark:bg-gray-900 dark:text-white radius-xl"
-            >
-                {{ $label }}
-            </option>
+                >
+                    {{ $label }}
+                </option>
+            @endif
         @endforeach
-        @endif
     </select>
 </div>

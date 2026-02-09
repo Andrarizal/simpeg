@@ -43,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 'Kepegawaian',
+                'Jadwal',
                 'Keperluan',
                 'Perusahaan',
                 'Sistem',

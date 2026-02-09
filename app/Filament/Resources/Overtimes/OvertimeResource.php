@@ -3,11 +3,7 @@
 namespace App\Filament\Resources\Overtimes;
 
 use App\Filament\Resources\Overtimes\Pages\ApproveOvertime;
-use App\Filament\Resources\Overtimes\Pages\CreateOvertime;
-use App\Filament\Resources\Overtimes\Pages\EditOvertime;
-use App\Filament\Resources\Overtimes\Pages\ListOvertimes;
 use App\Filament\Resources\Overtimes\Pages\ManageOvertimes;
-use App\Filament\Resources\Overtimes\Pages\ViewOvertime;
 use App\Filament\Resources\Overtimes\Schemas\OvertimeForm;
 use App\Filament\Resources\Overtimes\Schemas\OvertimeInfolist;
 use App\Filament\Resources\Overtimes\Tables\OvertimesTable;
@@ -26,7 +22,7 @@ class OvertimeResource extends Resource
     protected static ?string $modelLabel = 'Lembur';       
     protected static ?string $pluralModelLabel = 'Daftar Lembur'; 
     protected static ?string $navigationLabel = 'Lembur';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
     protected static UnitEnum|string|null $navigationGroup = 'Keperluan';
     
     protected static string|BackedEnum|null $navigationIcon = Heroicon::SquaresPlus;

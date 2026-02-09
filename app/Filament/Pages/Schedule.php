@@ -17,8 +17,8 @@ class Schedule extends Page
     protected static string|BackedEnum|null $navigationIcon = Heroicon::CalendarDays;
     protected static ?string $navigationLabel = 'Kalender Kerja';
     protected static ?string $title = 'Kalender Kerja';
-    protected static ?int $navigationSort = 5;
-    protected static string|UnitEnum|null $navigationGroup = 'Kepegawaian';
+    protected static ?int $navigationSort = 2;
+    protected static string|UnitEnum|null $navigationGroup = 'Jadwal';
     
     protected string $view = 'filament.pages.schedule';
 

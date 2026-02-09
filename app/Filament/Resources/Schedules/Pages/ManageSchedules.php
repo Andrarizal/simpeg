@@ -3,22 +3,30 @@
 namespace App\Filament\Resources\Schedules\Pages;
 
 use App\Filament\Resources\Schedules\ScheduleResource;
+use App\Filament\Resources\ShiftExchanges\ShiftExchangeResource;
 use App\Models\Chair;
 use App\Models\Schedule;
 use App\Models\Shift;
+use App\Models\ShiftExchange;
 use App\Models\Staff;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -244,6 +252,170 @@ class ManageSchedules extends Page implements HasForms, HasTable
                         ->success()
                         ->send();
                 }),
+            Action::make('exchange')
+                ->label('Tukar Jadwal')
+                ->color('info')
+                ->icon('heroicon-m-arrow-path-rounded-square')
+                ->visible(fn () => $this->record->work_system == 'Shift' && Auth::user()->staff->chair_id != Auth::user()->staff->unit->leader_id)
+                ->modalHeading('Tukar Jadwal')
+                ->modalWidth('xl')
+                ->modalDescription('Fitur ini akan mengajukan penukaran jadwal Anda pada tanggal yang telah Anda tentukan dengan rekan kerja Anda.')
+                ->modalSubmitActionLabel('Tukar Jadwal')
+                ->modalFooterActionsAlignment('center')
+                ->schema([
+                    Grid::make(2)
+                        ->schema([
+                        DatePicker::make('exchange_date')
+                            ->label('Tanggal Tukar')
+                            ->required()
+                            ->minDate(now())
+                            ->columnSpan(fn (Get $get) => !$get('staff_schedule_id') ? 2 : 1)
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set) {
+                                $set('replacer_id', null);
+                                $set('staff_schedule_id', null);
+                                $set('replacer_schedule_id', null);
+
+                                if (!$state) return;
+
+                                $myId = Auth::user()->staff->id;
+                                $mySchedule = Schedule::where('staff_id', $myId)
+                                    ->where('schedule_date', $state)
+                                    ->first();
+
+                                if ($mySchedule) {
+                                    $set('staff_schedule_id', $mySchedule->id);
+                                } else {
+                                    Notification::make()
+                                        ->title('Jadwal Tidak Ditemukan')
+                                        ->body('Anda tidak memiliki jadwal kerja pada tanggal ini.')
+                                        ->warning()
+                                        ->send();
+                                    $set('exchange_date', null); // Clear tanggal
+                                }
+                            }),
+
+                        TextEntry::make('staff_schedule_info')
+                            ->label('Jadwal Anda Saat Ini')
+                            ->hidden(fn(Get $get) => !$get('staff_schedule_id'))
+                            ->state(function(Get $get){
+                                $scheduleId = $get('staff_schedule_id');
+                                if (!$scheduleId) return '-';
+
+                                $schedule = Schedule::find($scheduleId);
+                                $shiftName = $schedule->shift->name;
+                                $time = Carbon::parse($schedule->shift->start_time)->format('H:i') . ' - ' . Carbon::parse($schedule->shift->end_time)->format('H:i');
+                                
+                                return new HtmlString("
+                                    <span class='font-bold text-primary-600'>{$shiftName}</span> <br> 
+                                    <span class='text-sm text-gray-500'>($time)</span>
+                                ");
+                            }),
+
+                        Select::make('replacer_id')
+                            ->label('Rekan Pengganti')
+                            ->placeholder('Pilih rekan kerja...')
+                            ->searchable()
+                            ->options(function () {
+                                $user = Auth::user();
+
+                                return Staff::where('unit_id', $user->staff->unit_id)
+                                    ->where('id', '!=', $user->staff_id)
+                                    ->pluck('name', 'id');
+                            })
+                            ->required()
+                            ->columnSpan(fn (Get $get) => !$get('replacer_schedule_id') ? 2 : 1)
+                            ->visible(fn (Get $get) => $get('staff_schedule_id'))
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                $date = $get('exchange_date');
+                                if (!$date || !$state) return;
+                                
+                                $replacerSchedule = Schedule::where('staff_id', $state)
+                                    ->where('schedule_date', $date)
+                                    ->first();
+
+                                if ($replacerSchedule) {
+                                    $set('replacer_schedule_id', $replacerSchedule->id);
+                                } else {
+                                    Notification::make()
+                                        ->title('Jadwal Pengganti Tidak Ditemukan')
+                                        ->body('Rekan yang Anda pilih tidak memiliki jadwal (Libur/Cuti) pada tanggal tersebut.')
+                                        ->danger()
+                                        ->send();
+                                    $set('replacer_id', null);
+                                }
+                            }),
+
+                        TextEntry::make('replacer_schedule_info')
+                            ->label('Jadwal Rekan Pengganti')
+                            ->visible(fn (Get $get) => $get('replacer_schedule_id'))
+                            ->state(function (Get $get) {
+                                $scheduleId = $get('replacer_schedule_id');
+                                if (!$scheduleId) return '-';
+
+                                $schedule = Schedule::find($scheduleId);
+                                $shiftName = $schedule->shift->name;
+                                $time = Carbon::parse($schedule->shift->start_time)->format('H:i') . ' - ' . Carbon::parse($schedule->shift->end_time)->format('H:i');
+
+                                return new HtmlString("
+                                    <div class='p-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700'>
+                                        <span class='font-bold text-warning-600'>{$shiftName}</span> ($time)
+                                    </div>
+                                ");
+                            }),
+
+                        Textarea::make('reason')
+                            ->label('Alasan Tukar Jadwal')
+                            ->rows(3)
+                            ->visible(fn (Get $get) => $get('replacer_schedule_id'))
+                            ->columnSpanFull(),
+
+                        Hidden::make('staff_id')
+                            ->default(Auth::user()->staff->id),
+                        
+                        Hidden::make('staff_schedule_id')
+                            ->required(),
+                            
+                        Hidden::make('replacer_schedule_id')
+                            ->required(),
+                    ])
+                ])
+                ->action(function (array $data): void {
+                    ShiftExchange::create([
+                        'exchange_date'        => $data['exchange_date'],
+                        'staff_id'             => $data['staff_id'],
+                        'staff_schedule_id'    => $data['staff_schedule_id'],
+                        'replacer_id'          => $data['replacer_id'],
+                        'replacer_schedule_id' => $data['replacer_schedule_id'],
+                        'reason'               => $data['reason'],
+                        'status'               => 'Menunggu',
+                    ]);
+
+                    Notification::make()
+                        ->title('Permohonan Terkirim')
+                        ->body('Pengajuan tukar jadwal berhasil dibuat dan menunggu persetujuan.')
+                        ->success()
+                        ->send();
+
+                    $staff = Auth::user()->staff;
+                    $isLeader = $staff->unit?->leader_id;
+                    $recipient = $isLeader ? $staff->unit->leader->user : $staff->chair->parent->user;
+
+                    if ($recipient) {
+                        Notification::make()
+                            ->title($staff->name . ' telah mengajukan tukar jadwal')
+                            ->body($staff->name . ' mengajukan tukar jadwal untuk tanggal ' . Carbon::parse($data['exchange_date'])->translatedFormat('d F Y'))
+                            ->warning()
+                            ->actions([
+                                Action::make('read')
+                                    ->button()
+                                    ->url(ShiftExchangeResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($recipient);
+                    }
+                }),
         ];
     }
 
@@ -467,13 +639,11 @@ class ManageSchedules extends Page implements HasForms, HasTable
             return;
         }
 
-        // Simpan Data
         Schedule::updateOrCreate(
             ['staff_id' => $staffId, 'schedule_date' => $date],
             ['shift_id' => $value]
         );
         
-        // Opsional: Notifikasi kecil
         Notification::make()->title('Saved')->success()->send();
     }
 }

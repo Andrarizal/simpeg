@@ -17,7 +17,7 @@ class PresenceResource extends Resource
     protected static ?string $pluralModelLabel = 'Presensi'; 
     protected static ?string $navigationLabel = 'Presensi';
     protected static ?int $navigationSort = 1;
-    protected static UnitEnum|string|null $navigationGroup = 'Keperluan';
+    protected static UnitEnum|string|null $navigationGroup = 'Jadwal';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::FingerPrint;
 
     protected static ?string $recordTitleAttribute = 'Presence';

@@ -18,8 +18,8 @@ class ScheduleResource extends Resource
     protected static ?string $modelLabel = 'Jadwal Unit';
     protected static ?string $pluralModelLabel = 'Jadwal Unit'; 
     protected static ?string $navigationLabel = 'Jadwal Unit';
-    protected static ?int $navigationSort = 4;
-    protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
+    protected static ?int $navigationSort = 3;
+    protected static UnitEnum|string|null $navigationGroup = 'Jadwal';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Clock;
 
