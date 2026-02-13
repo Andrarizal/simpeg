@@ -262,6 +262,7 @@ class LeaveInfolist
                                             ->visible(fn ($record) => $record->type == 'Cuti')
                                             ->state(function ($record) {
                                                 return $record
+                                                    ->where('staff_id', $record->staff_id)
                                                     ->where('type', 'Cuti')
                                                     ->where('subtype', 'Tahunan')
                                                     ->whereYear('start_date', now()->year)
@@ -284,6 +285,7 @@ class LeaveInfolist
                                                 $quota = setting('max_leave_days'); 
                                                 
                                                 $taken = $record
+                                                    ->where('staff_id', $record->staff_id)
                                                     ->where('type', 'Cuti')
                                                     ->where('subtype', 'Tahunan')
                                                     ->whereYear('start_date', now()->year)
@@ -306,6 +308,7 @@ class LeaveInfolist
                                             ->visible(fn ($record) => $record->type == 'Izin')
                                             ->state(function ($record) {
                                                 return $record
+                                                    ->where('staff_id', $record->staff_id)
                                                     ->where('type', 'Izin')
                                                     ->where('subtype', 'Non-Sakit')
                                                     ->whereYear('start_date', now()->year)
@@ -328,6 +331,7 @@ class LeaveInfolist
                                                 $quota = setting('max_permission_days'); 
                                                 
                                                 $taken = $record
+                                                    ->where('staff_id', $record->staff_id)
                                                     ->where('type', 'Izin')
                                                     ->where('subtype', 'Non-Sakit')
                                                     ->whereYear('start_date', now()->year)

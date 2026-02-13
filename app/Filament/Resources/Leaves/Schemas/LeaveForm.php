@@ -6,6 +6,7 @@ use App\Models\Leave;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -131,6 +132,14 @@ class LeaveForm
                                         ->columnSpanFull(),
                                 ]),
 
+                            Hidden::make('staff_id')
+                                ->visible(function () {
+                                    $user = Auth::user();
+                                    return optional($user->staff->unit)->work_system != 'Shift';
+                                })
+                                ->default(fn() => $chair > 1 ? $staff->id : null)
+                                ->required(),
+                                
                             Section::make('Personil')
                                 ->icon('heroicon-m-user-group')
                                 ->visible(function () {
@@ -207,7 +216,7 @@ class LeaveForm
                                         ->minDate(function (callable $get) {
                                             $type = $get('subtype'); 
                                             if (in_array($type, ['Tahunan', 'Melahirkan'])) {
-                                                return Carbon::now()->addMonth(); 
+                                                return Carbon::now()->addMonth()->addDay(); 
                                             }
                                             return Carbon::tomorrow(); 
                                         })

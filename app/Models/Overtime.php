@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Overtime extends Model
 {
-    protected $fillable = ['staff_id', 'overtime_date', 'start_time', 'end_time', 'command', 'hours', 'month_year', 'note', 'is_known', 'known_by', 'known_at', 'is_verified', 'verified_by', 'verified_at'];
+    protected $fillable = ['staff_id', 'overtime_date', 'start_time', 'end_time', 'command', 'hours', 'period_id', 'note', 'is_known', 'known_by', 'known_at', 'is_verified', 'verified_by', 'verified_at'];
 
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);
@@ -28,9 +29,21 @@ class Overtime extends Model
 
     protected static function booted()
     {
-        static::creating(function ($overtime) {
-            if (! $overtime->month_year && $overtime->overtime_date) {
-                $overtime->month_year = Carbon::parse($overtime->overtime_date)->format('Y-m');
+        static::saving(function (Overtime $overtime) {
+            if ($overtime->overtime_date) {
+                
+                $period = MonthlyPeriod::where('start_date', '<=', $overtime->overtime_date)
+                    ->where('end_date', '>=', $overtime->overtime_date)
+                    ->first();
+
+                if ($period) {
+                    $overtime->period_id = $period->id;
+                } else {
+                    Notification::make()
+                        ->warning()
+                        ->title('Periode bulanan tidak ditemukan untuk tanggal on call yang dipilih.')
+                        ->send();
+                }
             }
         });
     }
@@ -44,15 +57,12 @@ class Overtime extends Model
         $start = Carbon::parse($this->start_time);
         $end = Carbon::parse($this->end_time);
 
-        // Jika waktu selesai lebih kecil dari waktu mulai (melewati tengah malam)
         if ($end->lessThan($start)) {
             $end->addDay();
         }
 
-        // Hitung selisih dalam jam (termasuk menit, hasil desimal)
         $hours = abs($end->diffInMinutes($start) / 60);
 
-        // Format 2 desimal biar rapi
         return round($hours, 2);
     }
 
