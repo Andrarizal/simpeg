@@ -1,0 +1,48 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('letters', function (Blueprint $table) {
+            $table->id();
+            $table->enum('classification', ['Disposisi', 'Undangan', 'Surat Dinas', 'Notulensi']);
+            $table->string('agenda_number')->nullable();
+            $table->string('reference_number');
+            $table->date('agenda_date');
+            $table->date('letter_date');
+            $table->foreignId('template_id')->nullable()->constrained(
+                table: 'letter_templates',
+                indexName: 'letters_template_id'
+            )->nullOnDelete();
+            $table->string('urgency')->nullable();
+            $table->string('sender');
+            $table->string('title');
+            $table->time('time')->nullable();
+            $table->string('location')->nullable();
+            $table->text('instruction')->nullable();
+            $table->text('note')->nullable();
+            $table->foreignId('known_by')->nullable()->constrained(
+                table: 'staff',
+                indexName: 'letters_known_by'
+            )->nullOnDelete();
+            $table->string('file_path')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('letters');
+    }
+};

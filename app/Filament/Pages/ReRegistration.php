@@ -30,7 +30,6 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 
@@ -47,25 +46,19 @@ class ReRegistration extends Page implements HasSchemas
 
     public function mount(): void
     {
-        // A. Ambil token dari URL ( ?token=... )
         $token = request()->query('token');
 
-        // B. Cek apakah token ada?
         if (!$token) {
             abort(404, 'Token tidak ditemukan.');
         }
 
-        // C. Cari data user berdasarkan token
         $preStaff = PreStaff::where('token', $token)->first();
 
-        // D. Validasi jika data tidak ditemukan / token salah
         if (!$preStaff) {
             Notification::make()->title('Token Invalid')->danger()->send();
             redirect('/');
         }
 
-        // E. ISI FORM SECARA OTOMATIS (AUTO-FILL)
-        // Kita isi wadah $data dengan data dari database
         $this->form->fill([
             'token' => $token,
             'nik' => $preStaff->nik,
@@ -79,7 +72,7 @@ class ReRegistration extends Page implements HasSchemas
             'chair_id' => $preStaff->chair_id,
             'group_id' => $preStaff->group_id,
             'unit_id' => $preStaff->unit_id,
-            'entry_date' => $preStaff->entry_date,
+            'entry_date' => Carbon::parse($preStaff->entry_date)->format('Y-m-d'),
         ]);
     }
 
@@ -143,7 +136,6 @@ class ReRegistration extends Page implements HasSchemas
                         ->schema([
                             Tabs::make('Informasi Pegawai')
                                 ->tabs([
-                                    // --- TAB DATA DIRI ---
                                     Tab::make('Data Diri')
                                         ->icon('heroicon-o-identification')
                                         ->schema([
@@ -199,14 +191,12 @@ class ReRegistration extends Page implements HasSchemas
                                                 ->dehydrated(),
                                             DatePicker::make('entry_date')
                                                 ->label('Terhitung Mulai Tanggal')
-                                                ->maxDate(now())
-                                                ->required()
+                                                ->maxDate(today())
                                                 ->disabled()
-                                                ->dehydrated()
-                                                ->native(false),
+                                                ->dehydrated(),
                                             DatePicker::make('retirement_date')
                                                 ->label('Tanggal Pensiun')
-                                                ->minDate(now())
+                                                ->minDate(today())
                                                 ->disabled()
                                                 ->dehydrated(),
                                             Select::make('staff_status_id')
@@ -232,7 +222,6 @@ class ReRegistration extends Page implements HasSchemas
                                         ])
                                         ->columns(2),
 
-                                    // --- TAB PENDIDIKAN ---
                                     Tab::make('Riwayat Pendidikan')
                                         ->icon('heroicon-o-academic-cap')
                                         ->schema([
@@ -305,7 +294,6 @@ class ReRegistration extends Page implements HasSchemas
                                                 ]),
                                         ]),
 
-                                    // --- TAB PENGALAMAN ---
                                     Tab::make('Riwayat Pengalaman')
                                         ->icon('heroicon-o-briefcase')
                                         ->schema([
@@ -326,7 +314,7 @@ class ReRegistration extends Page implements HasSchemas
                                                         ->visibility('public')
                                                         ->directory('ijazah')
                                                         ->acceptedFileTypes(['application/pdf'])
-                                                        ->maxSize(2048) // maksimal 2MB
+                                                        ->maxSize(2048) 
                                                         ->helperText('Unggah sertifikat dalam format PDF'),
                                                 ]),
                                         ]),
@@ -335,7 +323,6 @@ class ReRegistration extends Page implements HasSchemas
                                 ->label('Registrasi Ulang')
                                 ->color('primary')
                                 ->action(function() {
-                                    // Panggil fungsi submit logic Anda
                                     $this->submit(); 
                                 })
                                 ->extraAttributes([
@@ -430,7 +417,6 @@ class ReRegistration extends Page implements HasSchemas
         return redirect('/login');
     }
 
-    // Layout & Middleware methods tetap sama...
     public function getLayout(): string
     {
         return 'filament.pages.regLayout';

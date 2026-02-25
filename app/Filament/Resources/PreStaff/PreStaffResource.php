@@ -20,6 +20,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -90,6 +91,7 @@ class PreStaffResource extends Resource
                     ->label('Verifikasi')
                     ->icon('heroicon-m-paper-airplane')
                     ->color('info') 
+                    ->visible(fn ($record) => $record->status == 'Menunggu')
                     ->requiresConfirmation()
                     ->modalHeading('Kirim Email Verifikasi?')
                     ->modalWidth('xl')
@@ -119,7 +121,19 @@ class PreStaffResource extends Resource
                                     ->required()
                                     ->searchable()
                                     ->preload()
-                                    ->native(false),
+                                    ->native(false)
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, Set $set) {
+                                        if (!$state) {
+                                            $set('unit_id', null);
+                                            return;
+                                        }
+
+                                        $chair = Chair::find($state);
+                                        if ($chair && $chair->unit_id) {
+                                            $set('unit_id', $chair->unit_id);
+                                        }
+                                    }),
                                 Select::make('group_id')
                                     ->label('Kelompok Tenaga Kerja')
                                     ->options(Group::pluck('name', 'id'))

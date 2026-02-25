@@ -15,9 +15,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TimePicker;
 use Filament\Infolists\Components\TextEntry;
@@ -37,7 +35,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class OnCallResource extends Resource
@@ -438,7 +435,7 @@ class OnCallResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('period_id')
-                    ->label('Periode Lembur')
+                    ->label('Periode On Call')
                     ->options(function () {
                         return MonthlyPeriod::orderBy('start_date', 'desc')
                             ->get()

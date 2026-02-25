@@ -30,7 +30,7 @@ class UnitResource extends Resource
     protected static ?string $modelLabel = 'Unit Kerja';
     protected static ?string $pluralModelLabel = 'Unit Kerja';
     protected static ?string $navigationLabel = 'Unit Kerja';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
     protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::BuildingOffice;

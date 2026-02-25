@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Overtimes\Tables;
 
 use App\Filament\Resources\Overtimes\OvertimeResource;
-use App\Models\Overtime;
 use App\Models\Staff;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;

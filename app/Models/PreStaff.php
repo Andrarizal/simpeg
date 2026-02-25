@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PreStaff extends Model
 {
-    protected $fillable = ['nik', 'nip', 'name', 'birth_date', 'email', 'phone', 'staff_status_id', 'chair_id', 'group_id', 'unit_id', 'token', 'status'];
+    protected $fillable = ['nik', 'nip', 'name', 'birth_date', 'email', 'phone', 'entry_date', 'staff_status_id', 'chair_id', 'group_id', 'unit_id', 'token', 'status'];
 
     public function staffStatus(): BelongsTo {
         return $this->belongsTo(StaffStatus::class);

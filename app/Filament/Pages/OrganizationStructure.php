@@ -11,7 +11,7 @@ use UnitEnum;
 
 class OrganizationStructure extends Page
 {
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
     protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::RectangleGroup;
     
