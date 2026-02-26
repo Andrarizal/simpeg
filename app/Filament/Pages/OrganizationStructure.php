@@ -7,12 +7,11 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use UnitEnum;
+use Illuminate\Support\Facades\Auth;
 
 class OrganizationStructure extends Page
 {
     protected static ?int $navigationSort = 2;
-    protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::RectangleGroup;
     
     protected static ?string $navigationLabel = 'Struktur Organisasi';
@@ -20,6 +19,14 @@ class OrganizationStructure extends Page
     protected static ?string $title = 'Bagan Struktur Organisasi';
     
     protected string $view = 'filament.pages.organization-structure';
+
+    public static function getNavigationGroup(): ?string
+    {
+        if (Auth::user()?->role_id === 1) {
+            return 'Perusahaan';
+        }
+        return null; 
+    }
 
     protected function getHeaderActions(): array
     {
@@ -39,11 +46,9 @@ class OrganizationStructure extends Page
         return [
             'rootChairs' => Chair::whereNull('head_id')
                 ->with([
-                    // PENTING: Load 'ledUnit' pada children agar filter Model tahu dia pemimpin atau bukan
                     'children.ledUnit', 
                     'children.unit', 
-                    
-                    'ledUnit' // Untuk root (opsional tapi bagus)
+                    'ledUnit'
                 ]) 
                 ->get(),
         ];

@@ -18,7 +18,7 @@ class ListLetters extends ListRecords
     {
         return [
             Action::make('template-manager')
-                ->label('Kelola Template Surat')
+                ->label('Kelola Template Undangan')
                 ->modalHeading('Manajemen Template Surat')
                 ->modalContent(view('filament.pages.partials.template-manager-modal')) 
                 ->modalSubmitAction(false) 
@@ -26,6 +26,7 @@ class ListLetters extends ListRecords
                 ->modalWidth('3xl')
                 ->icon('heroicon-o-swatch')
                 ->color('gray')
+                ->visible(fn () => str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                 ->slideOver(),
             CreateAction::make()
                 ->label('Keluarkan Surat')

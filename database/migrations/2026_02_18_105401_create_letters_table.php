@@ -13,19 +13,22 @@ return new class extends Migration
     {
         Schema::create('letters', function (Blueprint $table) {
             $table->id();
-            $table->enum('classification', ['Disposisi', 'Undangan', 'Surat Dinas', 'Notulensi']);
+            $table->enum('classification', ['Disposisi', 'Undangan']);
             $table->string('agenda_number')->nullable();
             $table->string('reference_number');
-            $table->date('agenda_date');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->date('letter_date');
             $table->foreignId('template_id')->nullable()->constrained(
                 table: 'letter_templates',
                 indexName: 'letters_template_id'
             )->nullOnDelete();
+            $table->enum('receiver_type', ['Terlampir', 'Utuh'])->nullable();
             $table->string('urgency')->nullable();
-            $table->string('sender');
+            $table->string('sender')->nullable();
             $table->string('title');
-            $table->time('time')->nullable();
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
             $table->string('location')->nullable();
             $table->text('instruction')->nullable();
             $table->text('note')->nullable();

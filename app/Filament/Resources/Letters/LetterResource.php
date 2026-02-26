@@ -20,8 +20,11 @@ class LetterResource extends Resource
 {
     protected static ?string $model = Letter::class;
 
+    protected static ?string $modelLabel = 'Disposisi & Undangan';       
+    protected static ?string $pluralModelLabel = 'Disposisi & Undangan'; 
+    protected static ?string $navigationLabel = 'Disposisi & Undangan';
     protected static ?int $navigationSort = 1;
-    protected static UnitEnum|string|null $navigationGroup = 'Perusahaan';
+    protected static UnitEnum|string|null $navigationGroup = 'Surat';
 
     public static function isSubordinate(): bool
     {
@@ -38,27 +41,6 @@ class LetterResource extends Resource
         return self::isSubordinate() 
             ? Heroicon::EnvelopeOpen 
             : Heroicon::Envelope;
-    }
-
-    public static function getModelLabel(): string
-    {
-        return self::isSubordinate() 
-            ? 'Surat Keluar' 
-            : 'Surat Masuk';
-    }
-
-    public static function getPluralModelLabel(): string
-    {
-        return self::isSubordinate() 
-            ? 'Kotak Keluar' 
-            : 'Kotak Masuk';
-    }
-
-    public static function getNavigationLabel(): string
-    {
-        return self::isSubordinate() 
-            ? 'Surat Keluar' 
-            : 'Surat Masuk';
     }
 
     protected static ?string $recordTitleAttribute = 'Letter';

@@ -20,7 +20,7 @@ class CreateLetter extends CreateRecord
         Notification::make()
             ->title('Surat Masuk Baru')
             ->icon('heroicon-o-document-text')
-            ->body("Anda menerima surat masuk baru.\nPerihal: **{$record->title}**")
+            ->body("Anda menerima surat masuk baru.\nPerihal: {$record->title}")
             ->actions([
                 Action::make('lihat')
                     ->label('Lihat Dokumen')

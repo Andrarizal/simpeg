@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Letter extends Model
 {
-    protected $fillable = ['classification', 'agenda_number', 'reference_number', 'agenda_date', 'letter_date', 'template_id', 'urgency', 'sender', 'title', 'time', 'location', 'instruction', 'note', 'known_by', 'file_path'];
+    protected $fillable = ['classification', 'agenda_number', 'reference_number', 'start_date', 'end_date', 'letter_date', 'template_id', 'receiver_type', 'urgency', 'sender', 'title', 'start_time', 'end_time', 'location', 'instruction', 'note', 'known_by', 'file_path'];
 
     public function known(): BelongsTo {
       return $this->belongsTo(Staff::class, 'known_by');

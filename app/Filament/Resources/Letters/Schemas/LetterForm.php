@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Letters\Schemas;
 
 use App\Models\LetterTemplate;
+use App\Models\Staff;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -10,10 +11,12 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class LetterForm
@@ -39,18 +42,21 @@ class LetterForm
                     ])
                     ->schema([
                         Grid::make(1)->schema([
-                            Select::make('classification')
+                            ToggleButtons::make('classification')
                                 ->label('Jenis Surat')
                                 ->options([
                                     'Disposisi' => 'Disposisi',
                                     'Undangan' => 'Undangan',
-                                    'Surat Dinas' => 'Surat Dinas',
-                                    'Notulensi' => 'Notulensi',
                                 ])
                                 ->required()
                                 ->default('Disposisi')
+                                ->inline()
                                 ->live()
-                                ->native(false),
+                                ->afterStateUpdated(function (Set $set, $state) {
+                                    if ($state === 'Undangan') {
+                                        $set('letter_date', now()->format('Y-m-d'));
+                                    } 
+                                }),
 
                             CheckboxList::make('urgency')
                                 ->label('Sifat / Urgensi')
@@ -69,15 +75,28 @@ class LetterForm
                                 ->visible(fn (Get $get) => $get('classification') === 'Disposisi')
                                 ->required(fn (Get $get) => $get('classification') === 'Disposisi'),
 
-                            DatePicker::make('agenda_date')
-                                ->label('Tanggal Agenda')
-                                ->minDate(today())
-                                ->required(),
+                            Grid::make(2)
+                                ->schema([
+                                    DatePicker::make('start_date')
+                                        ->label('Tgl Mulai')
+                                        ->minDate(today())
+                                        ->required(),
+        
+                                    DatePicker::make('end_date')
+                                        ->label('Tgl Selesai')
+                                        ->minDate(today()),
+                                ]),
 
-                            TimePicker::make('time')
-                                ->label('Waktu Pelaksanaan')
+                            Grid::make(2)
                                 ->visible(fn (Get $get) => $get('classification') === 'Undangan')
-                                ->required(fn (Get $get) => $get('classification') === 'Undangan'),
+                                ->schema([
+                                    TimePicker::make('start_time')
+                                        ->label('Waktu Mulai')
+                                        ->required(fn (Get $get) => $get('classification') === 'Undangan'),
+        
+                                    TimePicker::make('end_time')
+                                        ->label('Waktu Selesai'),
+                                ]),
                                     
                             TextInput::make('location')
                                 ->label('Lokasi Acara')
@@ -92,11 +111,11 @@ class LetterForm
                                 ->live()
                                 ->visible(fn (Get $get) => $get('classification') === 'Undangan')
                                 ->required(fn (Get $get) => $get('classification') === 'Undangan')
-                                ->dehydrated(false),
+                                ->dehydrated(),
 
                             Textarea::make('note')
                                 ->label('Keterangan Tambahan')
-                                ->rows(fn (Get $get) => $get('classification') === 'Undangan' ? 1 : 2),
+                                ->rows(2),
                         ]),
                     ])
                     ->columnSpan(1),
@@ -124,17 +143,38 @@ class LetterForm
 
                                 TextInput::make('sender')
                                     ->label('Asal Surat / Pengirim')
-                                    ->required(),
+                                    ->visible(fn (Get $get) => $get('classification') === 'Disposisi')
+                                    ->required(fn (Get $get) => $get('classification') === 'Disposisi'),
 
                                 DatePicker::make('letter_date')
                                     ->label('Tanggal Surat')
                                     ->maxDate(today())
                                     ->required(),
 
+                                ToggleButtons::make('receiver_type')
+                                    ->label('Tipe Penerima Surat')
+                                    ->options([
+                                        'Utuh' => 'Utuh',
+                                        'Terlampir' => 'Terlampir',
+                                    ])
+                                    ->visible(fn (Get $get) => $get('classification') === 'Undangan')
+                                    ->required(fn (Get $get) => $get('classification') === 'Undangan')
+                                    ->live()
+                                    ->inline(),
+
+                                Select::make('known_by')
+                                    ->label('Diketahui Oleh')
+                                    ->options(Staff::pluck('name', 'id'))
+                                    ->searchable()
+                                    ->preload()
+                                    ->visible(fn (Get $get) => $get('classification') === 'Undangan')
+                                    ->required(fn (Get $get) => $get('classification') === 'Undangan'),
+
                                 Textarea::make('title')
-                                ->label('Perihal / Acara')
-                                ->rows(fn (Get $get) => $get('classification') === 'Undangan' ? 5 : 3)
-                                ->required(),
+                                    ->label('Perihal / Acara')
+                                    ->rows(fn (Get $get) => $get('classification') === 'Undangan' ? 2 : 3)
+                                    ->columnSpan(fn (Get $get) => $get('classification') === 'Undangan' ? 2 : 1)
+                                    ->required(),
                             ]),
                         ])
                         ->columnSpan(2),
@@ -182,15 +222,15 @@ class LetterForm
                                     ->label('Lampiran Berkas (PDF)')
                                     ->disk('public')
                                     ->directory('surat')
-                                    ->required()
+                                    ->required(fn (Get $get) => $get('classification') === 'Disposisi' || $get('receiver_type') === 'Terlampir')
                                     ->acceptedFileTypes(['application/pdf'])
                                     ->maxSize(2048)
                                     ->helperText('Maksimal ukuran file 2MB')
                                     ->columnSpanFull(),
-                            ])
-                            ->extraAttributes(fn (Get $get) => $get('classification') === 'Undangan' ? [
-                                'class' => '[&_.filepond--root]:!h-[72px] [&_.filepond--panel-root]:!h-[72px]',
-                            ] : []),
+                            ]),
+                            // ->extraAttributes(fn (Get $get) => $get('classification') === 'Undangan' ? [
+                            //     'class' => '[&_.filepond--root]:!h-[72px] [&_.filepond--panel-root]:!h-[72px]',
+                            // ] : []),
                         ])
                         ->columnSpan(fn (Get $get) => $get('classification') === 'Disposisi' ? 1 : 2),
                 ])
