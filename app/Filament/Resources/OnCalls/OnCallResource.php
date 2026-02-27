@@ -52,6 +52,11 @@ class OnCallResource extends Resource
     public static function isSubordinate(): bool
     {
         $user = Auth::user();
+
+        if ($user->role_id == 1) {
+            return false;
+        }
+
         if (!$user || !$user->staff || !$user->staff->chair) {
             return false;
         }
@@ -328,42 +333,34 @@ class OnCallResource extends Resource
     {
         return $table
             ->recordTitleAttribute('OnCall')
-            ->modifyQueryUsing(function(Builder $query){
-                $user = Auth::user();
-                if (self::isSubordinate() == false) {
-                    if ($user && $user->staff) $query->where('command_by', $user->staff_id);
-                } elseif ($user->staff->unit->leader_id == $user->staff->chair_id) {
-                    if ($user && $user->staff) $query->where('command_by', $user->staff_id)->orWhere('staff_id', $user->staff_id);
-                } else {
-                    if ($user && $user->staff) $query->where('staff_id', $user->staff_id);
-                }
-                return $query;
-            })
             ->columns([
                 TextColumn::make('staff.name')
                     ->label('Penerima Perintah')
                     ->visible(function ($livewire) {
-                        if (self::isSubordinate()) {
-                            return false;
+                        if (self::isSubordinate()) return false;
+
+                        $filterMode = $livewire->tableFilters['role_view']['value'] ?? null;
+
+                        if (! $filterMode) {
+                            $filterMode = Auth::user()->role_id == 1 ? 'as_verifier' : 'as_commander';
                         }
+                        
+                        return $filterMode === 'as_commander' || $filterMode === 'as_verifier';
+                    }),
 
-                        $filterMode = $livewire->tableFilters['role_view']['value'] ?? 'as_commander';
-
-                        return $filterMode === 'as_commander';
-                    })
-                    ->sortable(),
                 TextColumn::make('commander.name')
                     ->label('Pemberi Perintah')
                     ->visible(function ($livewire) {
-                        if (self::isSubordinate()) {
-                            return true;
+                        if (self::isSubordinate()) return true;
+
+                        $filterMode = $livewire->tableFilters['role_view']['value'] ?? null;
+
+                        if (! $filterMode) {
+                            $filterMode = Auth::user()->role_id == 1 ? 'as_verifier' : 'as_commander';
                         }
 
-                        $filterMode = $livewire->tableFilters['role_view']['value'] ?? 'as_commander';
-
-                        return $filterMode === 'as_receiver';
-                    })
-                    ->sortable(),
+                        return $filterMode === 'as_receiver' || $filterMode === 'as_verifier';
+                    }),
                 TextColumn::make('command')
                     ->label('Perintah')
                     ->wrap()
@@ -464,31 +461,49 @@ class OnCallResource extends Resource
                     ->native(false),
                 SelectFilter::make('role_view')
                     ->label('Mode Tampilan')
-                    ->options([
-                        'as_commander' => 'Perintah Saya',
-                        'as_receiver'  => 'Tugas Saya',
-                    ])
-                    ->default('as_commander')
-                    ->visible(fn () => !self::isSubordinate() && Auth::user()->staff->unit->leader_id == Auth::user()->staff->chair_id)
+                    ->options(function () {
+                        $user = Auth::user();
+                        if ($user->role_id == 1) {
+                            return [
+                                'as_verifier' => 'Verifikasi SDM',
+                                'as_receiver' => 'Tugas Saya',
+                            ];
+                        }
+
+                        return [
+                            'as_commander' => 'Perintah Saya',
+                            'as_receiver'  => 'Tugas Saya',
+                        ];
+                    })
+                    ->default(fn () => Auth::user()->role_id == 1 ? 'as_verifier' : 'as_commander')
+                    ->visible(fn () => Auth::user()->role_id == 1 || (!self::isSubordinate() && Auth::user()->staff->unit->leader_id == Auth::user()->staff->chair_id))
                     ->query(function (Builder $query, array $data) {
                         $user = Auth::user();
-                        
-                        if ($data['value'] === 'as_commander') {
+                        $mode = $data['value'];
+
+                        if ($mode === 'as_commander') {
                             return $query->where('command_by', $user->staff_id);
                         }
                         
-                        if ($data['value'] === 'as_receiver') {
+                        if ($mode === 'as_receiver') {
                             return $query->where('staff_id', $user->staff_id);
+                        }
+
+                        if ($mode === 'as_verifier') {
+                            return $query; 
                         }
                     })
                     ->indicateUsing(function ($data) {
-                        if (! $data['value']) {
-                            return null;
-                        }
-                        $data['value'] = $data['value'] == 'as_commander' ? 'Perintah Saya' : 'Tugas Saya';
+                        if (! $data['value']) return null;
+
+                        $labels = [
+                            'as_commander' => 'Perintah Saya',
+                            'as_receiver'  => 'Tugas Saya',
+                            'as_verifier'  => 'Verifikasi SDM',
+                        ];
 
                         return [
-                            Indicator::make('Tampilan: ' . $data['value'])
+                            Indicator::make('Tampilan: ' . ($labels[$data['value']] ?? '-'))
                                 ->removable(false),
                         ];
                     })
@@ -580,9 +595,9 @@ class OnCallResource extends Resource
                     ->label('Verifikasi')
                     ->icon('heroicon-o-check')
                     ->color('info')
-                    ->visible(fn ($record) => 
+                    ->visible(fn ($record, $livewire) => 
                         is_null($record->is_verified) && 
-                        Auth::user()->role_id == 1)
+                        $livewire->tableFilters['role_view']['value'] == 'as_verifier')
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $recipient = $record->staff->user;
@@ -614,9 +629,9 @@ class OnCallResource extends Resource
                     ->label('Batalkan')
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
-                    ->visible(fn ($record) => 
+                    ->visible(fn ($record, $livewire) => 
                         is_null($record->is_verified) && 
-                        Auth::user()->role_id == 1)
+                        $livewire->tableFilters['role_view']['value'] == 'as_verifier')
                     ->schema([
                         Textarea::make('note')
                             ->label('Alasan')

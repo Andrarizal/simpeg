@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Letters\Schemas;
 
+use App\Models\Letter;
 use App\Models\LetterTemplate;
 use App\Models\Staff;
+use Carbon\Carbon;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -21,6 +23,44 @@ use Filament\Schemas\Schema;
 
 class LetterForm
 {
+    public static function generateLetterNumber(Set $set, Get $get): void
+    {
+        if ($get('classification') !== 'Undangan') {
+            $set('reference_number', '');
+            return;
+        }
+
+        $date = $get('letter_date') ? Carbon::parse($get('letter_date')) : now();
+        $year = $date->year;
+        $month = $date->month;
+
+        $romans = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+        ];
+        $romanMonth = $romans[$month] ?? 'I';
+
+        $lastLetter = Letter::query()
+            ->where('classification', 'Undangan')
+            ->whereYear('letter_date', $year)
+            ->latest('created_at')
+            ->first();
+
+        $newSequence = 1;
+
+        if ($lastLetter) {
+            $parts = explode('/', $lastLetter->reference_number);
+            
+            if (isset($parts[0]) && is_numeric($parts[0])) {
+                $newSequence = (int) $parts[0] + 1;
+            }
+        }
+
+        $number = "{$newSequence}/RSU-MP/{$romanMonth}/{$year}";
+
+        $set('reference_number', $number);
+    }
+    
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -52,10 +92,11 @@ class LetterForm
                                 ->default('Disposisi')
                                 ->inline()
                                 ->live()
-                                ->afterStateUpdated(function (Set $set, $state) {
+                                ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                     if ($state === 'Undangan') {
                                         $set('letter_date', now()->format('Y-m-d'));
                                     } 
+                                    self::generateLetterNumber($set, $get);
                                 }),
 
                             CheckboxList::make('urgency')
@@ -139,6 +180,8 @@ class LetterForm
                             Grid::make(2)->schema([
                                 TextInput::make('reference_number')
                                     ->label('Nomor Surat')
+                                    ->readOnly(fn (Get $get) => $get('classification') === 'Undangan')
+                                    ->dehydrated()
                                     ->required(),
 
                                 TextInput::make('sender')
@@ -149,6 +192,8 @@ class LetterForm
                                 DatePicker::make('letter_date')
                                     ->label('Tanggal Surat')
                                     ->maxDate(today())
+                                    ->readOnly(fn (Get $get) => $get('classification') === 'Undangan')
+                                    ->dehydrated()
                                     ->required(),
 
                                 ToggleButtons::make('receiver_type')
