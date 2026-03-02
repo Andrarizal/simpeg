@@ -9,7 +9,6 @@
             line-height: 1.15;
         }
         
-        /* Garis bawah kop surat (biasanya double) */
         .divider {
             border-top: 3px double #000;
             margin-bottom: 20px;
@@ -20,6 +19,7 @@
             margin-bottom: 10px;
             border-collapse: collapse;
         }
+
         .info-table td {
             line-height: 1; 
             vertical-align: top;
@@ -40,7 +40,6 @@
             vertical-align: top; 
         }
         
-        /* Tanda Tangan */
         .signature-section {
             float: right;
             width: 40%;
@@ -53,7 +52,6 @@
             bottom: 64px;
         }
         
-        /* Helper */
         .bold { font-weight: bold; }
         .mr-1 { margin-right: 5px; }
     </style>
@@ -194,7 +192,10 @@
     <div class="signature-section">
         {{ $record->known->chair->name }}<br>
         RSU Mitra Paramedika
-        <br><br><br><br> <p class="bold" style="text-decoration: underline; margin-bottom: 0;">
+        <br>
+        <br>
+        <img src="data:image/svg+xml;base64,{{ $known }}" style="width: 96px; ">
+        <p class="bold" style="text-decoration: underline; margin-bottom: 0;">
             {{ $record->known->name }}
         </p>
         <p style="margin-top: 2px;">

@@ -174,12 +174,16 @@ class OnCallResource extends Resource
                                         TimePicker::make('start_time')
                                             ->label('Waktu Mulai')
                                             ->prefixIcon('heroicon-m-play')
+                                            ->native(false)
+                                            ->displayFormat('H:i')
                                             ->required()
                                             ->seconds(false),
 
                                         TimePicker::make('end_time')
                                             ->label('Waktu Selesai')
                                             ->prefixIcon('heroicon-m-stop')
+                                            ->native(false)
+                                            ->displayFormat('H:i')
                                             ->required()
                                             ->seconds(false),
                                     ]),

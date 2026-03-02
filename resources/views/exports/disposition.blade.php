@@ -123,9 +123,11 @@
             </td>
             <td>
                 @if($record->classification == 'Disposisi')
-                    <div style="margin-bottom: 20px;">
-                        {{ $record->instruction }}
-                    </div>
+                <div style="margin-bottom: 20px;">
+                    {{ $record->instruction }}
+                </div>
+                <br>
+                <img src="data:image/svg+xml;base64,{{ $known }}" style="width: 48px; margin-left: 300px">
                 @endif
             </td>
         </tr>

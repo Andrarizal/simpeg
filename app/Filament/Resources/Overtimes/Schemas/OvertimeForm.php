@@ -118,6 +118,8 @@ class OvertimeForm
                                         TimePicker::make('start_time')
                                             ->label('Waktu Mulai')
                                             ->prefixIcon('heroicon-m-play')
+                                            ->native(false)
+                                            ->displayFormat('H:i')
                                             ->required()
                                             ->seconds(false)
                                             ->disabled()
@@ -131,6 +133,8 @@ class OvertimeForm
                                                     Terisi setelah lembur selesai
                                                 </span>
                                             '))
+                                            ->native(false)
+                                            ->displayFormat('H:i')
                                             ->disabled()
                                             ->seconds(false),
                                     ]),

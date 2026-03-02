@@ -121,11 +121,13 @@ class ManageSchedules extends Page implements HasForms, HasTable
                             TimePicker::make('start_time')
                                 ->label('Masuk')
                                 ->seconds(false)
-                                ->native(),
+                                ->native(false)
+                                ->displayFormat('H:i'),
                             TimePicker::make('end_time')
                                 ->label('Pulang')
                                 ->seconds(false)
-                                ->native(),
+                                ->native(false)
+                                ->displayFormat('H:i'),
                             Hidden::make('id'),
                         ])
                         ->maxItems(fn () => $this->record->work_system == 'Tetap' ? 1 : null)

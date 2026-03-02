@@ -95,7 +95,15 @@ class LetterForm
                                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                     if ($state === 'Undangan') {
                                         $set('letter_date', now()->format('Y-m-d'));
-                                    } 
+                                        $set('known_by', null);
+                                    } else {
+                                        $set('letter_date', null);
+                                        $coorId = Staff::whereHas('chair', function ($query) {
+                                            $query->where('name', 'like', '%Koordinator Umum & Kepegawaian%');
+                                        })->value('id');
+                                        
+                                        $set('known_by', $coorId);
+                                    }
                                     self::generateLetterNumber($set, $get);
                                 }),
 
@@ -133,10 +141,16 @@ class LetterForm
                                 ->schema([
                                     TimePicker::make('start_time')
                                         ->label('Waktu Mulai')
+                                        ->native(false)
+                                        ->displayFormat('H:i')
+                                        ->seconds(false)
                                         ->required(fn (Get $get) => $get('classification') === 'Undangan'),
         
                                     TimePicker::make('end_time')
-                                        ->label('Waktu Selesai'),
+                                        ->label('Waktu Selesai')
+                                        ->native(false)
+                                        ->seconds(false)
+                                        ->displayFormat('H:i'),
                                 ]),
                                     
                             TextInput::make('location')
@@ -212,6 +226,7 @@ class LetterForm
                                     ->options(Staff::pluck('name', 'id'))
                                     ->searchable()
                                     ->preload()
+                                    ->dehydrated()
                                     ->visible(fn (Get $get) => $get('classification') === 'Undangan')
                                     ->required(fn (Get $get) => $get('classification') === 'Undangan'),
 
