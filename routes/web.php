@@ -10,7 +10,6 @@ use App\Models\StaffEntryEducation;
 use App\Models\StaffWorkEducation;
 use App\Models\StaffWorkExperience;
 use Filament\Notifications\Notification;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -165,12 +164,22 @@ Route::get('/evidence-preview/{record}', function ($record) {
     return response()->file($path);
 })->name('evidence.preview');
 
+Route::get('/preview-file/{path}', function ($path) {
+    if (!Storage::disk('local')->exists($path)) {
+        abort(404, 'File tidak ditemukan.');
+    }
+
+    $final_path = Storage::disk('local')->path($path);
+    return response()->file($final_path);
+})
+->where('path', '.*') 
+->middleware('auth') 
+->name('file.preview');
+
 Route::middleware('auth')->get('/latest-notification', function (Request $request) {
-    // Ambil 1 notifikasi terakhir yang belum dibaca milik user yang login
     $notification = $request->user()->unreadNotifications()->latest()->first();
 
     if ($notification) {
-        // Filament menyimpan data di kolom JSON 'data' dengan key 'title' dan 'body'
         return response()->json([
             'status' => 'found',
             'title' => $notification->data['title'] ?? 'Notifikasi Baru',

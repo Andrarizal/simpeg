@@ -42,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
                 'Kepegawaian',
                 'Jadwal',
                 'Keperluan',
-                'Surat',
+                'Surat Masuk/Keluar',
                 'Perusahaan',
                 'Sistem',
             ])

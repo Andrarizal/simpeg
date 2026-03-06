@@ -220,8 +220,11 @@
                 </td>
                 <td style="vertical-align: middle; padding-left: 10px; text-align:center" width="50%">
                     Notulen Rapat dapat di isikan pada link /<br>
-                    barcode: <a href="https://tinyurl.com/TugasLuarMIPA" style="color: blue; text-decoration: none;">https://tinyurl.com/TugasLuarMIPA</a><br>
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://tinyurl.com/TugasLuarMIPA" style="width: 100px; height: 100px;">
+                    barcode:<br>
+                    @php
+                        $link = url('/duties/' . $record->id . '/outline');
+                    @endphp
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode($link) }}" style="width: 100px; height: 100px;">
                 </td>
             </tr>
         </table>

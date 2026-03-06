@@ -24,7 +24,7 @@ class LetterResource extends Resource
     protected static ?string $pluralModelLabel = 'Disposisi & Undangan'; 
     protected static ?string $navigationLabel = 'Disposisi & Undangan';
     protected static ?int $navigationSort = 1;
-    protected static UnitEnum|string|null $navigationGroup = 'Surat';
+    protected static UnitEnum|string|null $navigationGroup = 'Surat Masuk/Keluar';
 
     public static function isSubordinate(): bool
     {

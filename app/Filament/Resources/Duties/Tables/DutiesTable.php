@@ -90,7 +90,7 @@ class DutiesTable
                         ];
                     })
                     ->selectablePlaceholder(false)
-                    ->native(false)
+                    ->native(false),
             ])
             ->recordActions([
                 Action::make('preview')
@@ -173,6 +173,12 @@ class DutiesTable
                     ->modalCloseButton(false)
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false),
+                Action::make('outline')
+                    ->label('Notulensi')
+                    ->icon('heroicon-o-document-text')
+                    ->color('warning')
+                    ->url(fn ($record): string => route('filament.admin.resources.duties.outline', ['record' => $record]))
+                    ->visible(fn ($record) => $record->receivers()->where('staff_id', Auth::user()->staff_id)->exists()),
                 EditAction::make()
                     ->visible(fn () => str_contains(Auth::user()->staff->chair->name, 'Sekretariat')),
                 DeleteAction::make()

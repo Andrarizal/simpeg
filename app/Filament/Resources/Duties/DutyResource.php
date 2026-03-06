@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Duties;
 
+use App\Filament\Resources\Duties\Pages\ApproveDuty;
 use App\Filament\Resources\Duties\Pages\CreateDuty;
 use App\Filament\Resources\Duties\Pages\EditDuty;
 use App\Filament\Resources\Duties\Pages\ListDuties;
+use App\Filament\Resources\Duties\Pages\OutlineDuty;
 use App\Filament\Resources\Duties\Schemas\DutyForm;
 use App\Filament\Resources\Duties\Tables\DutiesTable;
 use App\Models\Duty;
@@ -23,7 +25,7 @@ class DutyResource extends Resource
     protected static ?string $pluralModelLabel = 'Penugasan'; 
     protected static ?string $navigationLabel = 'Penugasan';
     protected static ?int $navigationSort = 2;
-    protected static UnitEnum|string|null $navigationGroup = 'Surat';
+    protected static UnitEnum|string|null $navigationGroup = 'Surat Masuk/Keluar';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ClipboardDocumentList;
 
     protected static ?string $recordTitleAttribute = 'Duty';
@@ -51,6 +53,8 @@ class DutyResource extends Resource
             'index' => ListDuties::route('/'),
             'create' => CreateDuty::route('/create'),
             'edit' => EditDuty::route('/{record}/edit'),
+            'outline' => OutlineDuty::route('/{record}/outline'),
+            'approve' => ApproveDuty::route('/{record}/approve'),
         ];
     }
 }
