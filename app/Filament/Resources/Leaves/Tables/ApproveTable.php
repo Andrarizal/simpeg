@@ -6,7 +6,6 @@ use App\Filament\Resources\Leaves\LeaveResource;
 use App\Models\Chair;
 use App\Models\Leave;
 use App\Models\Staff;
-use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -28,14 +27,14 @@ class ApproveTable
         return $table
             ->query(function (): Builder {
                 $query = Leave::query();
-                $query->where('staff_id', '!=', Auth::user()->staff_id); // Buang cuti milik sendiri
-
+                
                 // Jika SDM
                 if (Auth::user()->role_id == 1){
                     $query->orderBy('created_at', 'DESC');
-                // JIka Bukan SDM
+                    // JIka Bukan SDM
                 } else {
                     // Jika Kanit
+                    $query->where('staff_id', '!=', Auth::user()->staff_id); // Buang cuti milik sendiri
                     if (Auth::user()->staff->chair->level == 4){
                         $query->whereHas('staff.chair', function ($q) {
                             // Ambil yang satu struktur kepengurusan (Koor User Cuti == Koor Kanit)

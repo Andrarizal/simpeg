@@ -7,6 +7,7 @@ use App\Filament\Resources\Overtimes\OvertimeResource;
 use App\Filament\Resources\Overtimes\Schemas\OvertimeInfolist;
 use App\Filament\Resources\Overtimes\Tables\OvertimesTable;
 use App\Filament\Resources\Overtimes\Tables\StaffsTable;
+use App\Models\MonthlyPeriod;
 use App\Models\Overtime;
 use App\Models\Staff;
 use Carbon\Carbon;
@@ -62,12 +63,14 @@ class ManageOvertimes extends ManageRecords
                 ->modalHeading('Preview Cuti')
                 ->modalWidth('5xl')
                 ->modalContent(function ($livewire) {
-                    $month = $livewire->tableFilters['month_year']['value'] ?? now()->format('m-Y');
+                    $month = $livewire->tableFilters['period_id']['value'];
+
+                    $period = MonthlyPeriod::find($month);
 
                     $data = Overtime::query()
                         ->with(['staff.chair', 'staff.unit'])
                         ->where('staff_id', Auth::user()->staff_id)
-                        ->where('month_year', $month)
+                        ->where('period_id', $month)
                         ->orderBy('overtime_date')
                         ->get();
 
@@ -129,19 +132,37 @@ class ManageOvertimes extends ManageRecords
 
                     $html = view('exports.overtimes', [
                         'data' => $data,
-                        'month' => $month,
+                        'month' => $period->name,
                         'head' => $head,
                         'sdm' => $sdm,
                         'qrCode' => $signData
                     ])->render();
 
+                    $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                    $fontDirs = $defaultConfig['fontDir'];
+
+                    $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                    $fontData = $defaultFontConfig['fontdata'];
+
                     $mpdf = new Mpdf([
-                        'mode' => 'utf-8',
-                        'format' => 'A4-L',
-                        'margin_left'   => 20, // 2.5 cm
-                        'margin_right'  => 25, // 2 cm
-                        'margin_top'    => 20, // 2.5 cm
-                        'margin_bottom' => 25, // 2 cm
+                        'mode' => 'utf-8', 
+                        'format' => [215.9, 342.9],
+                        'fontDir' => array_merge($fontDirs, [
+                            public_path('fonts'), 
+                        ]),
+                        'fontdata' => $fontData + [
+                            'tnr' => [
+                                'R' => 'times.ttf',    
+                                'B' => 'timesbd.ttf',  
+                                'I' => 'timesi.ttf',   
+                                'BI' => 'timesbi.ttf',  
+                            ]
+                        ],
+                        'default_font' => 'tnr',
+                        'margin_top' => 15,
+                        'margin_left' => 20,
+                        'margin_right' => 20,
+                        'margin_bottom' => 15,
                     ]);
 
                     $mpdf->WriteHTML($html);

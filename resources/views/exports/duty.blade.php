@@ -200,7 +200,7 @@
                 <br>
             </td>
             <td style="text-align: center;">
-                Yogyakarta, {{ \Carbon\Carbon::parse($record->letter_date)->translatedFormat('d F Y') }}<br>
+                Yogyakarta, {{ \Carbon\Carbon::parse($record->created_at)->translatedFormat('d F Y') }}<br>
                 {{ $commander ? $commander->chair->name : '-' }} RSU Mitra Paramedika
                 <br>
                 <img src="data:image/svg+xml;base64,{{ $known }}" style="width: 84px; "><br>

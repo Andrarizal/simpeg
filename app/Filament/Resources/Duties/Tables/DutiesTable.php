@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Duties\Tables;
 
 use App\Filament\Pages\Signature;
 use App\Models\Duty;
+use App\Models\DutyReceiver;
 use App\Models\Staff;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -26,6 +27,17 @@ class DutiesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                if (str_contains(Auth::user()->staff->chair->name, 'Sekretariat')){
+                    return $query->latest();
+                } else {
+                    $letters = DutyReceiver::where('staff_id', Auth::user()->staff_id)->pluck('duty_id')->toArray();
+                    foreach ($letters as $letterId) {
+                        $query->orWhere('id', $letterId);
+                    }
+                    return $query->latest();
+                }
+            })
             ->columns([
                 TextColumn::make('duty_date')
                     ->label('Tanggal Penugasan')
@@ -72,7 +84,15 @@ class DutiesTable
                             })
                             ->toArray();
                     })
-                    ->default(now()->format('Y-m'))
+                    ->default(function () {
+                        $latestLetter = Duty::whereNotNull('created_at')
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+
+                        return $latestLetter 
+                            ? Carbon::parse($latestLetter->created_at)->format('Y-m') 
+                            : now()->format('Y-m');
+                    })
                     ->query(function (Builder $query, array $data) {
                         if (empty($data['value'])) return;
 

@@ -83,7 +83,14 @@ class LettersTable
                             })
                             ->toArray();
                     })
-                    ->default(now()->format('Y-m'))
+                    ->default(function () {
+                        $latestLetter = Letter::whereNotNull('letter_date')
+                            ->orderBy('letter_date', 'desc')
+                            ->first();
+                        return $latestLetter 
+                            ? Carbon::parse($latestLetter->letter_date)->format('Y-m') 
+                            : now()->format('Y-m');
+                    })
                     ->query(function (Builder $query, array $data) {
                         if (empty($data['value'])) return;
 

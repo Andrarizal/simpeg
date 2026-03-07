@@ -265,7 +265,15 @@ class ApproveTable
                             })
                             ->toArray();
                     })
-                    ->default(now()->format('Y-m'))
+                    ->default(function () {
+                        $latestLetter = Duty::whereNotNull('created_at')
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+
+                        return $latestLetter 
+                            ? Carbon::parse($latestLetter->letter_date)->format('Y-m') 
+                            : now()->format('Y-m');
+                    })
                     ->query(function (Builder $query, array $data) {
                         if (empty($data['value'])) return;
 

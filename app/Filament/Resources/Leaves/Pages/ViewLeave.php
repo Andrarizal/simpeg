@@ -347,12 +347,6 @@ class ViewLeave extends ViewRecord
                 ->label('Export PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('warning')
-                ->visible(function ($record) {
-                    if (Auth::user()->staff_id == $record->staff_id) {
-                        return true;
-                    }
-                    return false;
-                })
                 ->modalHeading('Preview Cuti')
                 ->modalWidth('5xl')
                 ->modalContent(function ($record) {
@@ -361,7 +355,7 @@ class ViewLeave extends ViewRecord
 
                     if (!$head) {
                         Notification::make()
-                            ->title('Atasan user belum dipilih!')
+                            ->title('Belum ada data atasan!')
                             ->danger()
                             ->send();
                         return; 
@@ -433,13 +427,31 @@ class ViewLeave extends ViewRecord
                         'qrCode' => $signData
                     ])->render();
 
+                    $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                    $fontDirs = $defaultConfig['fontDir'];
+
+                    $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                    $fontData = $defaultFontConfig['fontdata'];
+
                     $mpdf = new Mpdf([
-                        'mode' => 'utf-8',
-                        'format' => 'A4',
-                        'margin_left'   => 25, // 2.5 cm
-                        'margin_right'  => 20, // 2 cm
-                        'margin_top'    => 25, // 2.5 cm
-                        'margin_bottom' => 20, // 2 cm
+                        'mode' => 'utf-8', 
+                        'format' => [215.9, 342.9],
+                        'fontDir' => array_merge($fontDirs, [
+                            public_path('fonts'), 
+                        ]),
+                        'fontdata' => $fontData + [
+                            'tnr' => [
+                                'R' => 'times.ttf',    
+                                'B' => 'timesbd.ttf',  
+                                'I' => 'timesi.ttf',   
+                                'BI' => 'timesbi.ttf',  
+                            ]
+                        ],
+                        'default_font' => 'tnr',
+                        'margin_top' => 15,
+                        'margin_left' => 20,
+                        'margin_right' => 20,
+                        'margin_bottom' => 15,
                     ]);
 
                     $mpdf->WriteHTML($html);

@@ -30,10 +30,10 @@ class StaffsTable
                                 ->orWhereNull($pivotTable . '.letter_verified');
                         });
                 })
-                ->select('staff.id', 'staff.name', 'chairs.name as chair_name')
+                ->select('staff.id', 'staff.name', 'chairs.name as chair_name', 'staff.created_at as created_at')
                 ->selectRaw('COUNT(' . $pivotTable . '.duty_id) as duties_count')
-                ->groupBy('staff.id', 'staff.name', 'chairs.name')
-                ->orderBy('staff.id');
+                ->groupBy('staff.id', 'staff.name', 'chairs.name', 'staff.created_at')
+                ->reorder('staff.id', 'asc');
                 
                 return $query;
             })
@@ -65,7 +65,7 @@ class StaffsTable
             ])
             ->recordAction('lihatTugas')
             ->recordUrl(null)
-            ->defaultSort(null);
+            ->defaultSort('staff.id', 'asc');
     }
     
 }
