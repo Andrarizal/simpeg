@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Letters;
 use App\Filament\Resources\Letters\Pages\CreateLetter;
 use App\Filament\Resources\Letters\Pages\EditLetter;
 use App\Filament\Resources\Letters\Pages\ListLetters;
+use App\Filament\Resources\Letters\Pages\OutlineLetter;
 use App\Filament\Resources\Letters\Schemas\LetterForm;
 use App\Filament\Resources\Letters\Tables\LettersTable;
 use App\Models\Letter;
@@ -68,6 +69,7 @@ class LetterResource extends Resource
             'index' => ListLetters::route('/'),
             'create' => CreateLetter::route('/create'),
             'edit' => EditLetter::route('/{record}/edit'),
+            'outline' => OutlineLetter::route('/{record}/outline'),
         ];
     }
 }

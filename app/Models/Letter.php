@@ -26,7 +26,7 @@ class Letter extends Model
     public function targetStaffs(): BelongsToMany
     {
         return $this->belongsToMany(Staff::class, 'letter_receivers', 'letter_id', 'staff_id')
-          ->withPivot(['is_read', 'read_at'])
+          ->withPivot(['is_attend', 'outline', 'content_path'])
           ->withTimestamps();
     }
 

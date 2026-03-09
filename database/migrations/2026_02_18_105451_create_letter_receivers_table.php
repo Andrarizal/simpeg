@@ -21,8 +21,9 @@ return new class extends Migration
                 table: 'staff',
                 indexName: 'letter_receivers_staff_id'
             )->cascadeOnDelete();
-            $table->boolean('is_read')->default(false);
-            $table->timestamp('read_at')->nullable();
+            $table->unsignedTinyInteger('is_attend')->nullable();
+            $table->text('outline')->nullable();
+            $table->string('content_path')->nullable();
             $table->timestamps();
         });
     }

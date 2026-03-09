@@ -255,6 +255,12 @@ class LettersTable
                     ->modalCloseButton(false)
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false),
+                Action::make('outline')
+                    ->label('Notulensi')
+                    ->icon('heroicon-o-document-text')
+                    ->color('warning')
+                    ->url(fn ($record): string => route('filament.admin.resources.letters.outline', ['record' => $record]))
+                    ->visible(fn ($record) => $record->receiver()->where('staff_id', Auth::user()->staff_id)->exists() && $record->classification === 'Undangan'),
                 EditAction::make()
                     ->visible(fn () => str_contains(Auth::user()->staff->chair->name, 'Sekretariat')),
                 DeleteAction::make()
