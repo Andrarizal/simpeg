@@ -31,6 +31,7 @@ class Leave extends Model
     }
 
     protected $casts = [
+        'remaining' => 'integer',
         'is_replaced' => 'integer',
         'is_verified' => 'integer'
     ];

@@ -337,7 +337,7 @@ class ProfileForm
                                                                 ->maxDate(now())
                                                                 ->required()
                                                                 ->native(false),
-                                                            TextArea::make('description')
+                                                            Textarea::make('description')
                                                                 ->label('Deskripsi')
                                                                 ->rows(3),
                                                             FileUpload::make('certificate')

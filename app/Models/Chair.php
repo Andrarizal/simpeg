@@ -35,6 +35,10 @@ class Chair extends Model
         return $this->hasMany(Staff::class); 
     }
 
+    protected $casts = [
+        'level' => 'integer',
+    ];
+
     public function allSubordinateIds()
     {
         $ids = $this->children()->pluck('id')->toArray();

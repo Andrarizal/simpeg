@@ -30,6 +30,11 @@ class OnCall extends Model
         return $this->belongsTo(Staff::class, 'verified_by');
     }
 
+    protected $casts = [
+        'is_known' => 'integer',
+        'is_verified' => 'integer',
+    ];
+
     protected static function booted(): void
     {
         static::saving(function (OnCall $onCall) {

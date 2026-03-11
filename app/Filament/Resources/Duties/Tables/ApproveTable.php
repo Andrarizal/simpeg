@@ -90,35 +90,34 @@ class ApproveTable
                     ->label('Verifikasi Foto')
                     ->alignCenter()
                     ->badge()
-                    ->default('null')
                     ->getStateUsing(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
                         return $pivot?->image_path ? 'Sudah Upload' : 'Belum Upload';
                     })
                     ->icon(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        return match ($pivot?->image_verified) {
+                        return match ($pivot->image_verified) {
                             1 => 'heroicon-m-check-circle',
                             0 => 'heroicon-m-x-circle',
-                            default => 'heroicon-m-clock',
+                            null => 'heroicon-m-clock',
                         };
                     })
                     ->color(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        if ($pivot?->image_path && is_null($pivot->image_verified)) return 'warning';
+                        if ($pivot->image_path && is_null($pivot->image_verified)) return 'warning';
 
-                        return match ($pivot?->image_verified) {
+                        return match ($pivot->image_verified) {
                             1 => 'info',
                             0 => 'danger',
-                            default => 'gray',
+                            null => 'gray',
                         };
                     })
                     ->tooltip(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        return match ($pivot?->image_verified) {
+                        return match ($pivot->image_verified) {
                             1 => 'Diverifikasi',
                             0 => 'Ditolak',
-                            default => 'Belum direspon',
+                            null => 'Belum direspon',
                         };
                     })
                     ->action(
@@ -140,35 +139,34 @@ class ApproveTable
                     ->label('Verifikasi Materi')
                     ->alignCenter()
                     ->badge()
-                    ->default('null')
                     ->getStateUsing(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
                         return $pivot?->content_path ? 'Sudah Upload' : 'Belum Upload';
                     })
                     ->icon(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        return match ($pivot?->content_verified) {
+                        return match ($pivot->content_verified) {
                             1 => 'heroicon-m-check-circle',
                             0 => 'heroicon-m-x-circle',
-                            default => 'heroicon-m-clock',
+                            null => 'heroicon-m-clock',
                         };
                     })
                     ->color(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        if ($pivot?->content_path && is_null($pivot->content_verified)) return 'warning';
+                        if ($pivot->content_path && is_null($pivot->content_verified)) return 'warning';
 
-                        return match ($pivot?->content_verified) {
+                        return match ($pivot->content_verified) {
                             1 => 'info',
                             0 => 'danger',
-                            default => 'gray',
+                            null => 'gray',
                         };
                     })
                     ->tooltip(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        return match ($pivot?->content_verified) {
+                        return match ($pivot->content_verified) {
                             1 => 'Diverifikasi',
                             0 => 'Ditolak',
-                            default => 'Belum direspon',
+                            null => 'Belum direspon',
                         };
                     })
                     ->action(
@@ -193,35 +191,34 @@ class ApproveTable
                     ->label('Verifikasi Surat')
                     ->alignCenter()
                     ->badge()
-                    ->default('null')
                     ->getStateUsing(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
                         return $pivot?->letter_path ? 'Sudah Upload' : 'Belum Upload';
                     })
                     ->icon(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        return match ($pivot?->letter_verified) {
+                        return match ($pivot->letter_verified) {
                             1 => 'heroicon-m-check-circle',
                             0 => 'heroicon-m-x-circle',
-                            default => 'heroicon-m-clock',
+                            null => 'heroicon-m-clock',
                         };
                     })
                     ->color(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        if ($pivot?->letter_path && is_null($pivot->letter_verified)) return 'warning';
+                        if ($pivot->letter_path && is_null($pivot->letter_verified)) return 'warning';
 
-                        return match ($pivot?->letter_verified) {
+                        return match ($pivot->letter_verified) {
                             1 => 'info',
                             0 => 'danger',
-                            default => 'gray',
+                            null => 'gray',
                         };
                     })
                     ->tooltip(function ($record) {
                         $pivot = $record->targetStaffs->first()?->pivot;
-                        return match ($pivot?->letter_verified) {
+                        return match ($pivot->letter_verified) {
                             1 => 'Diverifikasi',
                             0 => 'Ditolak',
-                            default => 'Belum direspon',
+                            null => 'Belum direspon',
                         };
                     })
                     ->action(
@@ -335,7 +332,6 @@ class ApproveTable
                               ])
                               ->inline()
                               ->inlineLabel()
-                              ->required()
                               ->extraAttributes([
                                   'class' => 'flex justify-end w-full [&_div[role="group"]]:justify-end',
                               ]),
@@ -351,7 +347,6 @@ class ApproveTable
                               ])
                               ->inline()
                               ->inlineLabel()
-                              ->required()
                               ->extraAttributes([
                                   'class' => 'flex justify-end w-full [&_div[role="group"]]:justify-end',
                               ]),
@@ -367,7 +362,6 @@ class ApproveTable
                               ])
                               ->inline()
                               ->inlineLabel()
-                              ->required()
                               ->extraAttributes([
                                   'class' => 'flex justify-end w-full [&_div[role="group"]]:justify-end',
                               ]),

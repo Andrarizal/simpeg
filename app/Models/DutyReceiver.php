@@ -29,4 +29,11 @@ class DutyReceiver extends Model
     {
         return $this->belongsTo(Staff::class);
     }
+
+    protected $casts = [
+        'is_workhour' => 'integer',
+        'image_verified' => 'integer',
+        'content_verified' => 'integer',
+        'letter_verified' => 'integer',
+    ];
 }

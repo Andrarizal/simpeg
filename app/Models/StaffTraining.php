@@ -18,6 +18,11 @@ class StaffTraining extends Model
         return $this->belongsTo(Staff::class, 'verified_by');
     }
 
+    protected $casts = [
+        'duration' => 'integer',
+        'is_verified' => 'integer',
+    ];
+
     protected static function booted(): void
     {
         static::deleted(function ($model) {

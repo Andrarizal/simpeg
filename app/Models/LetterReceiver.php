@@ -16,4 +16,8 @@ class LetterReceiver extends Model
     public function staff(): BelongsTo {
         return $this->belongsTo(Staff::class);
     }
+
+    protected $casts = [
+        'is_attend' => 'integer',
+    ];
 }
