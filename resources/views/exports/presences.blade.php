@@ -7,19 +7,26 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #000; padding: 6px 4px; }
         th { background: #eee; }
+        p, td, th {
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+        }
+        .MsoNormal {
+            margin: 0pt;
+        }
     </style>
 </head>
 
 <body>
-    <table style="width: 100%; border-bottom: 3px double #000000; padding-bottom: 10px;">
+    <table style="width: 100%; padding-bottom: 10px;">
         <tr>
             <td style="width: 18%; text-align: left; border: 0; vertical-align: center;">
-                <img src="{{ public_path('img/rsumpyk.png') }}" alt="Logo RS" style="width: 90px; height: 90px;">
+                <img src="{{ public_path('img/rsumpyk.png') }}" alt="Logo RS" width="90" height="90" />
             </td>
 
             <td style="width: 64%; text-align: center; border: 0; vertical-align: top;">
                 <h3 style="margin: 0; font-size: 16px; font-weight: normal;">YAYASAN RSU MITRA PARAMEDIKA</h3>
-                <h2 style="margin: 0; font-size: 30px; font-weight: bold;"> RSU MITRA PARAMEDIKA</h2>
+                <h2 style="margin: 0; font-size: 30px; font-weight: bold;">RSU MITRA PARAMEDIKA</h2>
                 <p style="margin: 0; font-size: 14px;">
                     Jl. Raya Ngemplak, Area Sawah, Widodomartani, Kec. Ngemplak,
                 </p>
@@ -31,30 +38,33 @@
                 </p>
             </td>
             <td style="width: 18%; text-align: right; border: 0; vertical-align: center;">
-                <img src="{{ public_path('img/KARS.jpg') }}" alt="Logo RS" style="width: 100px; height: 90px;">
+                <img src="{{ public_path('img/KARS.jpg') }}" alt="Logo RS" width="100" height="90" />
             </td>
         </tr>
+        <tr>
+            <td colspan="3" style="border-top: 3px solid black; border-bottom: 1px solid black; padding: 0; font-size: 2px; line-height: 2px;">&nbsp;</td>
+        </tr>
     </table>
-    <br><br><br>
+    <br /><br />
 
     <h3 style="text-align:center; margin:0">Rekap Absensi Periode {{ $month }}</h3>
-    <br><br>
+    <br /><br />
 
     <p style="margin: 0; font-size: 14px;">Nama Pegawai: <span>{{ $data[0]->staff->name }}</span></p>
     <p style="margin: 0; font-size: 14px;">Jabatan: <span>{{ $data[0]->staff->chair->name }}</span></p>
     <p style="margin: 0; font-size: 14px;">Unit: <span>{{ $data[0]->staff->unit->name }}</span></p>
-    <br><br>
+    <br /><br />
 
-    <table>
+    <table style="width: 100%; border-collapse: collapse;">
         <thead>
-            <tr>
-                <th>No</th>
-                <th>Hari dan Tanggal</th>
-                <th>Masuk</th>
-                <th>Pulang</th>
-                <th>Metode</th>
-                <th>Selisih Masuk</th>
-                <th>Selisih Pulang</th>
+            <tr >
+                <th style="border: 1px solid black; padding: 5px;" valign="middle">No</th>
+                <th style="border: 1px solid black; padding: 5px;" valign="middle">Hari dan Tanggal</th>
+                <th style="border: 1px solid black; padding: 5px;" valign="middle">Masuk</th>
+                <th style="border: 1px solid black; padding: 5px;" valign="middle">Pulang</th>
+                <th style="border: 1px solid black; padding: 5px;" valign="middle">Metode</th>
+                <th style="border: 1px solid black; padding: 5px;" valign="middle">Selisih Masuk</th>
+                <th style="border: 1px solid black; padding: 5px;" valign="middle">Selisih Pulang</th>
             </tr>
         </thead>
 
@@ -66,11 +76,11 @@
 
             @foreach ($data as $i => $p)
             <tr>
-                <td style="text-align: center;">{{ $i + 1 }}</td>
-                <td>{{ \Carbon\Carbon::parse($p->presence_date)->translatedFormat('l, d F Y') }}</td>
-                <td style="text-align: center;">{{ $p->check_in }}</td>
-                <td style="text-align: center;">{{ $p->check_out ?? '-' }}</td>
-                <td style="text-align: center;">{{ $p->method === 'network' ? 'Jaringan' : 'Lokasi' }}</td>
+                <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $i + 1 }}</td>
+                <td style="border: 1px solid black; padding: 5px;">{{ \Carbon\Carbon::parse($p->presence_date)->translatedFormat('l, d F Y') }}</td>
+                <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $p->check_in }}</td>
+                <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $p->check_out ?? '-' }}</td>
+                <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $p->method === 'network' ? 'Jaringan' : 'Lokasi' }}</td>
                 
                 @php
                     $gap_masuk = '-';
@@ -89,76 +99,75 @@
                             $target_masuk = \Carbon\Carbon::parse($shift->start_time);
                             $target_pulang = \Carbon\Carbon::parse($shift->end_time);
                             
-                            $real_masuk = \Carbon\Carbon::parse($p->check_in);
-                            
-                            $gap_masuk = $target_masuk->diff($real_masuk)->format('%H:%I:%S');
-                            $total_gap_detik_masuk += $target_masuk->diffInSeconds($real_masuk);
+                            if ($p->check_in) {
+                                $real_masuk = \Carbon\Carbon::parse($p->check_in);
+                                $gap_masuk = $target_masuk->diff($real_masuk)->format('%H:%I:%S');
+                                // Gunakan false agar telat = positif, datang lebih awal = negatif
+                                $total_gap_detik_masuk += $target_masuk->diffInSeconds($real_masuk, false);
+                            }
 
                             if ($p->check_out) {
                                 $real_pulang = \Carbon\Carbon::parse($p->check_out);
-                                
                                 $gap_pulang = $target_pulang->diff($real_pulang)->format('%H:%I:%S');
-                                $total_gap_detik_pulang += $target_pulang->diffInSeconds($real_pulang); 
+                                // Gunakan false agar pulang awal = negatif, pulang telat = positif
+                                $total_gap_detik_pulang += $target_pulang->diffInSeconds($real_pulang, false); 
                             }
                         }
                     }
                 @endphp
 
-                <td style="text-align: center; color: {{ $real_masuk > $target_masuk ? 'red' : 'green' }}">
-                    @if ($real_masuk > $target_masuk)
-                    +
+                <td style="border: 1px solid black; text-align: center; padding: 5px; color: {{ ($real_masuk && $target_masuk && $real_masuk > $target_masuk) ? 'red' : 'green' }}">
+                    @if ($gap_masuk !== '-')
+                        {{ $real_masuk > $target_masuk ? '+' : '-' }} {{ $gap_masuk }}
                     @else
-                    -
+                        -
                     @endif
-                     {{ $gap_masuk }}
                 </td>
-                <td style="text-align: center; color: {{ $real_pulang < $target_pulang ? 'red' : 'green' }}">
-                    @if ($real_pulang < $target_pulang)
-                    -
+                
+                <td style="border: 1px solid black; text-align: center; padding: 5px; color: {{ ($real_pulang && $target_pulang && $real_pulang < $target_pulang) ? 'red' : 'green' }}">
+                    @if ($gap_pulang !== '-')
+                        {{ $real_pulang < $target_pulang ? '-' : '+' }} {{ $gap_pulang }}
                     @else
-                    +
+                        -
                     @endif
-                     {{ $gap_pulang }}
                 </td>
             </tr>
             @endforeach
         </tbody>
+        
         <tfoot>
             <tr style="background-color: #f3f4f6;">
-                <td colspan="5" style="text-align: center; font-weight: bold; padding: 5px;">
+                <td colspan="5" style="border: 1px solid black; text-align: center; font-weight: bold; padding: 5px;">
                     TOTAL KETERLAMBATAN
                 </td>
                 
-                <td style="text-align: center; padding: 5px; font-weight: bold;">
+                <td style="border: 1px solid black; text-align: center; padding: 5px; font-weight: bold;">
                     @php
                         $negatif_masuk = $total_gap_detik_masuk < 0;
-
                         $absolute_masuk = abs($total_gap_detik_masuk);
                         $jam_masuk = floor($absolute_masuk / 3600);
                         $sisa_masuk = $absolute_masuk % 3600;
                         $menit_masuk = floor($sisa_masuk / 60);
                         $detik_masuk = $sisa_masuk % 60;
-                        $tanda_masuk = $negatif_masuk ? '- ' : '';
+                        $tanda_masuk = $negatif_masuk ? '- ' : '+ ';
                         
                         $total_formatted_masuk = sprintf('%s%02d:%02d:%02d', $tanda_masuk, $jam_masuk, $menit_masuk, $detik_masuk);
                     @endphp
-                    
                     {{ $total_formatted_masuk }}
                 </td>
-                <td style="text-align: center; padding: 5px; font-weight: bold;">
+                
+                <td style="border: 1px solid black; text-align: center; padding: 5px; font-weight: bold;">
                     @php
                         $negatif_pulang = $total_gap_detik_pulang < 0;
-
                         $absolute_pulang = abs($total_gap_detik_pulang);
                         $jam_pulang   = floor($absolute_pulang / 3600);
                         $sisa_pulang  = $absolute_pulang % 3600;
                         $menit_pulang = floor($sisa_pulang / 60);
                         $detik_pulang = $sisa_pulang % 60;
-                        $tanda_pulang = $negatif_pulang ? '- ' : '';
+                        $tanda_pulang = $negatif_pulang ? '- ' : '+ ';
                         
                         $total_formatted_pulang = sprintf('%s%02d:%02d:%02d', $tanda_pulang, $jam_pulang, $menit_pulang, $detik_pulang);
                     @endphp
-                    
                     {{ $total_formatted_pulang }}
                 </td>
             </tr>

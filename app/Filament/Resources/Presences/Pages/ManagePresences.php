@@ -11,6 +11,7 @@ use App\Models\Staff;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -235,116 +236,197 @@ class ManagePresences extends ManageRecords implements HasTable
                     return Presence::where('staff_id', Auth::user()->staff_id);
                 })
                 ->headerActions([
-                    Action::make('exportPdf')
-                        ->label('Export PDF')
-                        ->icon('heroicon-o-document-arrow-down')
-                        ->color('warning')
-                        ->modalHeading('Preview Cuti')
-                        ->modalWidth('5xl')
-                        ->modalContent(function ($livewire) {
-                            $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
+                    ActionGroup::make([
+                        Action::make('exportPdf')
+                            ->label('Export PDF')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->color('warning')
+                            ->modalHeading('Preview Cuti')
+                            ->modalWidth('5xl')
+                            ->modalContent(function ($livewire) {
+                                $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
 
-                            if ($periodId) {
-                                $period = MonthlyPeriod::find($periodId);
-                            } else {
-                                $period = MonthlyPeriod::whereDate('start_date', '<=', now())
-                                    ->whereDate('end_date', '>=', now())
-                                    ->first();
-                            }
+                                if ($periodId) {
+                                    $period = MonthlyPeriod::find($periodId);
+                                } else {
+                                    $period = MonthlyPeriod::whereDate('start_date', '<=', now())
+                                        ->whereDate('end_date', '>=', now())
+                                        ->first();
+                                }
 
-                            if (!$period) {
-                                Notification::make()
-                                    ->title('Periode presensi tidak ditemukan!')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-                            $presences = Presence::query()
-                                ->with(['staff.chair', 'staff.unit'])
-                                ->where('staff_id', Auth::user()->staff_id)
-                                ->whereDate('presence_date', '>=', $period->start_date)
-                                ->whereDate('presence_date', '<=', $period->end_date)
-                                ->orderBy('presence_date')
-                                ->get();
+                                if (!$period) {
+                                    Notification::make()
+                                        ->title('Periode presensi tidak ditemukan!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+                                $presences = Presence::query()
+                                    ->with(['staff.chair', 'staff.unit'])
+                                    ->where('staff_id', Auth::user()->staff_id)
+                                    ->whereDate('presence_date', '>=', $period->start_date)
+                                    ->whereDate('presence_date', '<=', $period->end_date)
+                                    ->orderBy('presence_date')
+                                    ->get();
 
-                            $schedules = Schedule::with('shift')
-                                ->where('staff_id', Auth::user()->staff_id)
-                                ->whereDate('schedule_date', '>=', $period->start_date)
-                                ->whereDate('schedule_date', '<=', $period->end_date)
-                                ->get()
-                                ->keyBy('schedule_date'); 
+                                $schedules = Schedule::with('shift')
+                                    ->where('staff_id', Auth::user()->staff_id)
+                                    ->whereDate('schedule_date', '>=', $period->start_date)
+                                    ->whereDate('schedule_date', '<=', $period->end_date)
+                                    ->get()
+                                    ->keyBy('schedule_date'); 
 
-                            if ($schedules->isEmpty()) {
-                                Notification::make()
-                                    ->title('Jadwal pada periode tersebut belum dibuat!')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
+                                if ($schedules->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Jadwal pada periode tersebut belum dibuat!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
 
-                            if ($presences->isEmpty()) {
-                                Notification::make()
-                                    ->title('Belum ada presensi pada periode tersebut!')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
+                                if ($presences->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Belum ada presensi pada periode tersebut!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
 
-                            $role = Auth::user()->role_id;
+                                $role = Auth::user()->role_id;
 
-                            $html = view('exports.presences', [
-                                'data' => $presences,
-                                'schedules' => $schedules,
-                                'month' => $period->name,
-                                'role' => $role
-                            ])->render();
+                                $html = view('exports.presences', [
+                                    'data' => $presences,
+                                    'schedules' => $schedules,
+                                    'month' => $period->name,
+                                    'role' => $role
+                                ])->render();
 
-                            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-                            $fontDirs = $defaultConfig['fontDir'];
+                                $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                                $fontDirs = $defaultConfig['fontDir'];
 
-                            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-                            $fontData = $defaultFontConfig['fontdata'];
+                                $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                                $fontData = $defaultFontConfig['fontdata'];
 
-                            $mpdf = new Mpdf([
-                                'mode' => 'utf-8', 
-                                'format' => [215.9, 342.9],
-                                'fontDir' => array_merge($fontDirs, [
-                                    public_path('fonts'), 
-                                ]),
-                                'fontdata' => $fontData + [
-                                    'tnr' => [
-                                        'R' => 'times.ttf',    
-                                        'B' => 'timesbd.ttf',  
-                                        'I' => 'timesi.ttf',   
-                                        'BI' => 'timesbi.ttf',  
-                                    ]
-                                ],
-                                'default_font' => 'tnr',
-                                'margin_top' => 15,
-                                'margin_left' => 20,
-                                'margin_right' => 20,
-                                'margin_bottom' => 15,
-                            ]);
+                                $mpdf = new Mpdf([
+                                    'mode' => 'utf-8', 
+                                    'format' => [215.9, 342.9],
+                                    'fontDir' => array_merge($fontDirs, [
+                                        public_path('fonts'), 
+                                    ]),
+                                    'fontdata' => $fontData + [
+                                        'tnr' => [
+                                            'R' => 'times.ttf',    
+                                            'B' => 'timesbd.ttf',  
+                                            'I' => 'timesi.ttf',   
+                                            'BI' => 'timesbi.ttf',  
+                                        ]
+                                    ],
+                                    'default_font' => 'tnr',
+                                    'margin_top' => 15,
+                                    'margin_left' => 20,
+                                    'margin_right' => 20,
+                                    'margin_bottom' => 15,
+                                ]);
 
-                            $mpdf->WriteHTML($html);
+                                $mpdf->WriteHTML($html);
 
-                            $token = Str::uuid()->toString();
-                            $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
+                                $token = Str::uuid()->toString();
+                                $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
 
-                            file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+                                file_put_contents($pdfPath, $mpdf->Output('', 'S'));
 
-                            $livewire->pdfToken = $token;
+                                $livewire->pdfToken = $token;
 
-                            return view('filament.components.preview-pdf', [
-                                'token' => $token,
-                            ]);
-                    })
-                    ->modalHeading(false)
-                    ->modalCancelAction(false)
-                    ->modalSubmitAction(false)
-                    ->modalCloseButton(false)
-                    ->closeModalByClickingAway(false)
-                    ->closeModalByEscaping(false),
+                                return view('filament.components.preview-pdf', [
+                                    'token' => $token,
+                                ]);
+                            })
+                            ->modalHeading(false)
+                            ->modalCancelAction(false)
+                            ->modalSubmitAction(false)
+                            ->modalCloseButton(false)
+                            ->closeModalByClickingAway(false)
+                            ->closeModalByEscaping(false),
+                        Action::make('exportWord')
+                            ->label('Export Word')
+                            ->icon('heroicon-o-document-text')
+                            ->color('info')
+                            ->action(function ($livewire) {
+                                $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
+
+                                if ($periodId) {
+                                    $period = MonthlyPeriod::find($periodId);
+                                } else {
+                                    $period = MonthlyPeriod::whereDate('start_date', '<=', now())
+                                        ->whereDate('end_date', '>=', now())
+                                        ->first();
+                                }
+
+                                if (!$period) {
+                                    Notification::make()
+                                        ->title('Periode presensi tidak ditemukan!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $presences = Presence::query()
+                                    ->with(['staff.chair', 'staff.unit'])
+                                    ->where('staff_id', Auth::user()->staff_id)
+                                    ->whereDate('presence_date', '>=', $period->start_date)
+                                    ->whereDate('presence_date', '<=', $period->end_date)
+                                    ->orderBy('presence_date')
+                                    ->get();
+
+                                $schedules = Schedule::with('shift')
+                                    ->where('staff_id', Auth::user()->staff_id)
+                                    ->whereDate('schedule_date', '>=', $period->start_date)
+                                    ->whereDate('schedule_date', '<=', $period->end_date)
+                                    ->get()
+                                    ->keyBy('schedule_date'); 
+
+                                if ($schedules->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Jadwal pada periode tersebut belum dibuat!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                if ($presences->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Belum ada presensi pada periode tersebut!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $role = Auth::user()->role_id;
+                                $name = Auth::user()->staff->name ?? 'Pegawai';
+                                $html = view('exports.presences', [
+                                    'data' => $presences,
+                                    'schedules' => $schedules,
+                                    'month' => $period->name,
+                                    'role' => $role
+                                ])->render();
+
+                                $fileName = 'Presensi_' . $name . '_' . $period->name . '.doc';
+
+                                return response()->streamDownload(function () use ($html) {
+                                    echo '<meta charset="UTF-8">';
+                                    echo $html;
+                                }, $fileName, [
+                                    'Content-Type' => 'application/vnd.ms-word',
+                                    'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                                ]);
+                            }),
+                    ])
+                    ->label('Export Data') 
+                    ->icon('heroicon-m-arrow-top-right-on-square')
+                    ->button() 
+                    ->visible(fn ($livewire) => $livewire->tableFilters['period_id']['value'])
+                    ->color('success')
+                    ->dropdownPlacement('bottom-end'),
                 ])
                 ->columns([
                     TextColumn::make('presence_date')
@@ -454,111 +536,190 @@ class ManagePresences extends ManageRecords implements HasTable
                         ->native(false),
                 ])
                 ->recordActions([
-                    Action::make('exportPdf')
-                        ->label('Export PDF')
-                        ->icon('heroicon-o-document-arrow-down')
-                        ->color('warning')
-                        ->visible(fn ($livewire) => $livewire->tableFilters['period_id']['value'])
-                        ->modalHeading('Preview Cuti')
-                        ->modalWidth('5xl')
-                        ->modalContent(function ($record, $livewire) {
-                            $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
+                    ActionGroup::make([
+                        Action::make('exportPdf')
+                            ->label('Export PDF')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->color('warning')
+                            ->visible(fn ($livewire) => $livewire->tableFilters['period_id']['value'])
+                            ->modalHeading('Preview Cuti')
+                            ->modalWidth('5xl')
+                            ->modalContent(function ($record, $livewire) {
+                                $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
 
-                            if ($periodId) {
-                                $period = MonthlyPeriod::find($periodId);
-                            } else {
-                                $period = MonthlyPeriod::whereDate('start_date', '<=', now())
-                                    ->whereDate('end_date', '>=', now())
-                                    ->first();
-                            }
+                                if ($periodId) {
+                                    $period = MonthlyPeriod::find($periodId);
+                                } else {
+                                    $period = MonthlyPeriod::whereDate('start_date', '<=', now())
+                                        ->whereDate('end_date', '>=', now())
+                                        ->first();
+                                }
 
-                            if (!$period) {
-                                Notification::make()
-                                    ->title('Periode presensi tidak ditemukan!')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-                            $presences = Presence::query()
-                                ->with(['staff.chair', 'staff.unit'])
-                                ->where('staff_id', $record->id) 
-                                ->whereDate('presence_date', '>=', $period->start_date)
-                                ->whereDate('presence_date', '<=', $period->end_date)
-                                ->orderBy('presence_date')
-                                ->get();
+                                if (!$period) {
+                                    Notification::make()
+                                        ->title('Periode presensi tidak ditemukan!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+                                $presences = Presence::query()
+                                    ->with(['staff.chair', 'staff.unit'])
+                                    ->where('staff_id', $record->id) 
+                                    ->whereDate('presence_date', '>=', $period->start_date)
+                                    ->whereDate('presence_date', '<=', $period->end_date)
+                                    ->orderBy('presence_date')
+                                    ->get();
 
-                            $schedules = Schedule::with('shift')
-                                ->where('staff_id', $record->id)
-                                ->whereDate('schedule_date', '>=', $period->start_date)
-                                ->whereDate('schedule_date', '<=', $period->end_date)
-                                ->get()
-                                ->keyBy('schedule_date'); 
+                                $schedules = Schedule::with('shift')
+                                    ->where('staff_id', $record->id)
+                                    ->whereDate('schedule_date', '>=', $period->start_date)
+                                    ->whereDate('schedule_date', '<=', $period->end_date)
+                                    ->get()
+                                    ->keyBy('schedule_date'); 
 
-                            if ($schedules->isEmpty()) {
-                                Notification::make()
-                                    ->title('Jadwal pada periode tersebut belum dibuat!')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
+                                if ($schedules->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Jadwal pada periode tersebut belum dibuat!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
 
-                            if ($presences->isEmpty()) {
-                                Notification::make()
-                                    ->title('Belum ada presensi pada periode tersebut!')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-                            
-                            $role = Auth::user()->role_id;
-                            $html = view('exports.presences', [
-                                'data' => $presences,
-                                'schedules' => $schedules, 
-                                'month' => $period->name,
-                                'role' => $role
-                            ])->render();
+                                if ($presences->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Belum ada presensi pada periode tersebut!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+                                
+                                $role = Auth::user()->role_id;
+                                $html = view('exports.presences', [
+                                    'data' => $presences,
+                                    'schedules' => $schedules, 
+                                    'month' => $period->name,
+                                    'role' => $role
+                                ])->render();
 
-                            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-                            $fontDirs = $defaultConfig['fontDir'];
+                                $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                                $fontDirs = $defaultConfig['fontDir'];
 
-                            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-                            $fontData = $defaultFontConfig['fontdata'];
+                                $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                                $fontData = $defaultFontConfig['fontdata'];
 
-                            $mpdf = new Mpdf([
-                                'mode' => 'utf-8', 
-                                'format' => [215.9, 342.9],
-                                'fontDir' => array_merge($fontDirs, [
-                                    public_path('fonts'), 
-                                ]),
-                                'fontdata' => $fontData + [
-                                    'tnr' => [
-                                        'R' => 'times.ttf',    
-                                        'B' => 'timesbd.ttf',  
-                                        'I' => 'timesi.ttf',   
-                                        'BI' => 'timesbi.ttf',  
-                                    ]
-                                ],
-                                'default_font' => 'tnr',
-                                'margin_top' => 15,
-                                'margin_left' => 20,
-                                'margin_right' => 20,
-                                'margin_bottom' => 15,
-                            ]);
-                            $mpdf->WriteHTML($html);
-                            
-                            $token = Str::uuid()->toString();
-                            $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
-                            file_put_contents($pdfPath, $mpdf->Output('', 'S'));
-                            $livewire->pdfToken = $token;
+                                $mpdf = new Mpdf([
+                                    'mode' => 'utf-8', 
+                                    'format' => [215.9, 342.9],
+                                    'fontDir' => array_merge($fontDirs, [
+                                        public_path('fonts'), 
+                                    ]),
+                                    'fontdata' => $fontData + [
+                                        'tnr' => [
+                                            'R' => 'times.ttf',    
+                                            'B' => 'timesbd.ttf',  
+                                            'I' => 'timesi.ttf',   
+                                            'BI' => 'timesbi.ttf',  
+                                        ]
+                                    ],
+                                    'default_font' => 'tnr',
+                                    'margin_top' => 15,
+                                    'margin_left' => 20,
+                                    'margin_right' => 20,
+                                    'margin_bottom' => 15,
+                                ]);
+                                $mpdf->WriteHTML($html);
+                                
+                                $token = Str::uuid()->toString();
+                                $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
+                                file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+                                $livewire->pdfToken = $token;
 
-                            return view('filament.components.preview-pdf', ['token' => $token]);
-                        })
-                        ->modalHeading(false)
-                        ->modalCancelAction(false)
-                        ->modalSubmitAction(false)
-                        ->modalCloseButton(false)
-                        ->closeModalByClickingAway(false)
-                        ->closeModalByEscaping(false),
+                                return view('filament.components.preview-pdf', ['token' => $token]);
+                            })
+                            ->modalHeading(false)
+                            ->modalCancelAction(false)
+                            ->modalSubmitAction(false)
+                            ->modalCloseButton(false)
+                            ->closeModalByClickingAway(false)
+                            ->closeModalByEscaping(false),
+                        Action::make('exportWord')
+                            ->label('Export Word')
+                            ->icon('heroicon-o-document-text')
+                            ->color('info')
+                            ->action(function ($record, $livewire) {
+                                $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
+
+                                if ($periodId) {
+                                    $period = MonthlyPeriod::find($periodId);
+                                } else {
+                                    $period = MonthlyPeriod::whereDate('start_date', '<=', now())
+                                        ->whereDate('end_date', '>=', now())
+                                        ->first();
+                                }
+
+                                if (!$period) {
+                                    Notification::make()
+                                        ->title('Periode presensi tidak ditemukan!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $presences = Presence::query()
+                                    ->with(['staff.chair', 'staff.unit'])
+                                    ->where('staff_id', $record->id) 
+                                    ->whereDate('presence_date', '>=', $period->start_date)
+                                    ->whereDate('presence_date', '<=', $period->end_date)
+                                    ->orderBy('presence_date')
+                                    ->get();
+
+                                $schedules = Schedule::with('shift')
+                                    ->where('staff_id', $record->id)
+                                    ->whereDate('schedule_date', '>=', $period->start_date)
+                                    ->whereDate('schedule_date', '<=', $period->end_date)
+                                    ->get()
+                                    ->keyBy('schedule_date'); 
+
+                                if ($schedules->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Jadwal pada periode tersebut belum dibuat!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                if ($presences->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Belum ada presensi pada periode tersebut!')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $role = Auth::user()->role_id;
+                                $name = $record->name ?? 'Pegawai';
+                                $html = view('exports.presences', [
+                                    'data' => $presences,
+                                    'schedules' => $schedules,
+                                    'month' => $period->name,
+                                    'role' => $role
+                                ])->render();
+
+                                $fileName = 'Presensi_' . $name . '_' . $period->name . '.doc';
+
+                                return response()->streamDownload(function () use ($html) {
+                                    echo '<meta charset="UTF-8">';
+                                    echo $html;
+                                }, $fileName, [
+                                    'Content-Type' => 'application/vnd.ms-word',
+                                    'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                                ]);
+                            }),
+                        ])
+                        ->label('Export Data')
+                        ->link() 
+                        ->icon('heroicon-m-arrow-top-right-on-square') 
+                        ->color('success'),
                 ]);
         }
     }

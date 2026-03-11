@@ -9,7 +9,7 @@ use App\Filament\Resources\Staff\Pages\ViewStaff;
 use App\Filament\Resources\Staff\Schemas\StaffForm;
 use App\Filament\Resources\Staff\Schemas\StaffInfolist;
 use App\Filament\Resources\Staff\Tables\StaffTable;
-use App\Filament\Resources\StaffResource\Pages\ManageWorkHistories;
+use App\Filament\Resources\Staff\Pages\ManageWorkHistories;
 use App\Models\Staff;
 use BackedEnum;
 use Filament\Resources\Resource;
