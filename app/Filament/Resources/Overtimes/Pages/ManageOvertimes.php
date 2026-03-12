@@ -2,13 +2,10 @@
 
 namespace App\Filament\Resources\Overtimes\Pages;
 
-use App\Filament\Pages\Signature;
 use App\Filament\Resources\Overtimes\OvertimeResource;
 use App\Filament\Resources\Overtimes\Schemas\OvertimeInfolist;
 use App\Filament\Resources\Overtimes\Tables\OvertimesTable;
 use App\Filament\Resources\Overtimes\Tables\StaffsTable;
-use App\Models\MonthlyPeriod;
-use App\Models\Overtime;
 use App\Models\Staff;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -19,9 +16,6 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Mpdf\Mpdf;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ManageOvertimes extends ManageRecords
 {
@@ -55,135 +49,6 @@ class ManageOvertimes extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('exportPdf')
-                ->label('Export PDF')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('warning')
-                ->visible(fn () => $this->activeTab == 'pengajuan' ?? false)
-                ->modalHeading('Preview Cuti')
-                ->modalWidth('5xl')
-                ->modalContent(function ($livewire) {
-                    $month = $livewire->tableFilters['period_id']['value'];
-
-                    $period = MonthlyPeriod::find($month);
-
-                    $data = Overtime::query()
-                        ->with(['staff.chair', 'staff.unit'])
-                        ->where('staff_id', Auth::user()->staff_id)
-                        ->where('period_id', $month)
-                        ->orderBy('overtime_date')
-                        ->get();
-
-                    if ($data->isEmpty()) {
-                        Notification::make()
-                            ->title('Tidak ada data lembur di bulan ini')
-                            ->warning()
-                            ->send();
-                        return; 
-                    }
-                    
-                    $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()->name;
-
-                    if (!$head) {
-                        Notification::make()
-                            ->title('Atasan user belum dipilih!')
-                            ->danger()
-                            ->send();
-                        return; 
-                    }
-                    
-                    $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
-
-                    if (!$sdm) {
-                        Notification::make()
-                            ->title('Belum ada data untuk posisi SDM!')
-                            ->danger()
-                            ->send();
-                        return; 
-                    }
-
-                    foreach ($data as $i => $p) {
-                        $this->verified = $p->is_verified ?? false;
-                        $this->known = $p->is_known == 2 ?? false;
-                    }
-
-                    $signData = [
-                        'known' => null,
-                        'verified' => null,
-                    ];
-
-                    if ($this->known) {
-                        $knownData = [
-                            'known_by' => $data[0]['known_by'],
-                            'known_at' => $data[0]['known_at']
-                        ];
-                        $known_url = Signature::getUrl($knownData);
-                        $signData['known'] = base64_encode(QrCode::format('svg')->size(100)->generate($known_url));
-                    } 
-
-                    if ($this->verified) {
-                        $verifiedData = [
-                            'verified_by' => $data[0]['verified_by'],
-                            'verified_at' => $data[0]['verified_at']
-                        ];
-                        $verified_url = Signature::getUrl($verifiedData);
-                        $signData['verified'] = base64_encode(QrCode::format('svg')->size(100)->generate($verified_url));
-                    } 
-
-                    $html = view('exports.overtimes', [
-                        'data' => $data,
-                        'month' => $period->name,
-                        'head' => $head,
-                        'sdm' => $sdm,
-                        'qrCode' => $signData
-                    ])->render();
-
-                    $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-                    $fontDirs = $defaultConfig['fontDir'];
-
-                    $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-                    $fontData = $defaultFontConfig['fontdata'];
-
-                    $mpdf = new Mpdf([
-                        'mode' => 'utf-8', 
-                        'format' => [215.9, 342.9],
-                        'fontDir' => array_merge($fontDirs, [
-                            public_path('fonts'), 
-                        ]),
-                        'fontdata' => $fontData + [
-                            'tnr' => [
-                                'R' => 'times.ttf',    
-                                'B' => 'timesbd.ttf',  
-                                'I' => 'timesi.ttf',   
-                                'BI' => 'timesbi.ttf',  
-                            ]
-                        ],
-                        'default_font' => 'tnr',
-                        'margin_top' => 15,
-                        'margin_left' => 20,
-                        'margin_right' => 20,
-                        'margin_bottom' => 15,
-                    ]);
-
-                    $mpdf->WriteHTML($html);
-
-                    $token = Str::uuid()->toString();
-                    $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
-
-                    file_put_contents($pdfPath, $mpdf->Output('', 'S'));
-
-                    $this->pdfToken = $token;
-
-                    return view('filament.components.preview-pdf', [
-                        'token' => $token,
-                    ]);
-                })
-                ->modalHeading(false)
-                ->modalCancelAction(false)
-                ->modalSubmitAction(false)
-                ->modalCloseButton(false)
-                ->closeModalByClickingAway(false)
-                ->closeModalByEscaping(false),
             CreateAction::make()
                 ->label('Ajukan Lembur')
                 ->visible(function () {

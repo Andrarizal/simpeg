@@ -9,8 +9,10 @@ use App\Models\MonthlyPeriod;
 use App\Models\Overtime;
 use App\Models\Staff;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
+use Filament\Notifications\Notification;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Resources\Pages\Page;
 use Filament\Tables\Table;
@@ -38,110 +40,242 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
 
     protected function getHeaderActions(): array {
         return [
-            Action::make('exportPdf')
-                ->label('Export PDF')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('warning')
-                ->modalHeading('Preview Cuti')
-                ->modalWidth('5xl')
-                ->modalContent(function ($livewire) {
-                    $month = $livewire->tableFilters['period_id']['value'];
+            ActionGroup::make([
+                Action::make('exportPdf')
+                    ->label('Export PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('warning')
+                    ->modalHeading('Preview Cuti')
+                    ->modalWidth('5xl')
+                    ->modalContent(function ($livewire) {
+                        $month = $livewire->tableFilters['period_id']['value'];
 
-                    $period = MonthlyPeriod::find($month);
+                        $period = MonthlyPeriod::find($month);
 
-                    $data = Overtime::query()
-                        ->with(['staff.chair', 'staff.unit'])
-                        ->where('staff_id', $this->staff->id)
-                        ->where('period_id', $month)
-                        ->orderBy('overtime_date')
-                        ->get();
+                        $data = Overtime::query()
+                            ->with(['staff.chair', 'staff.unit'])
+                            ->where('staff_id', $this->staff->id)
+                            ->where('period_id', $month)
+                            ->orderBy('overtime_date')
+                            ->get();
 
-                        
-                    $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()->name;
-                    $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+                        if ($data->isEmpty()) {
+                            return view('filament.components.alert', [
+                                'message' => 'Tidak ada data lembur untuk periode terpilih.',
+                                'color'   => 'warning',
+                            ]);
+                        }
+                            
+                        $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()?->name;
 
-                    foreach ($data as $i => $p) {
-                        $this->verified = $p->is_verified ?? false;
-                        $this->known = $p->is_known == 2 ?? false;
-                    }
+                        if (!$head) {
+                            return view('filament.components.alert', [
+                                'message' => 'Atasan user belum dipilih! Tidak dapat melanjutkan proses.',
+                                'color'   => 'danger',
+                            ]);
+                        }
 
-                    $signData = [
-                        'known' => null,
-                        'verified' => null,
-                    ];
+                        $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()?->name;
 
-                    if ($this->known) {
-                        $knownData = [
-                            'known_by' => $data[0]['known_by'],
-                            'known_at' => $data[0]['known_at']
+                        if (!$sdm) {
+                            return view('filament.components.alert', [
+                                'message' => 'Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.',
+                                'color'   => 'danger',
+                            ]);
+                        }
+
+                        foreach ($data as $i => $p) {
+                            $this->verified = $p->is_verified ?? false;
+                            $this->known = $p->is_known == 2 ?? false;
+                        }
+
+                        $signData = [
+                            'known' => null,
+                            'verified' => null,
                         ];
-                        $known_url = Signature::getUrl($knownData);
-                        $signData['known'] = base64_encode(QrCode::format('svg')->size(100)->generate($known_url));
-                    } 
 
-                    if ($this->verified) {
-                        $verifiedData = [
-                            'verified_by' => $data[0]['verified_by'],
-                            'verified_at' => $data[0]['verified_at']
+                        if ($this->known) {
+                            $knownData = [
+                                'known_by' => $data[0]['known_by'],
+                                'known_at' => $data[0]['known_at']
+                            ];
+                            $known_url = Signature::getUrl($knownData);
+                            $signData['known'] = base64_encode(QrCode::format('svg')->size(100)->generate($known_url));
+                        } 
+
+                        if ($this->verified) {
+                            $verifiedData = [
+                                'verified_by' => $data[0]['verified_by'],
+                                'verified_at' => $data[0]['verified_at']
+                            ];
+                            $verified_url = Signature::getUrl($verifiedData);
+                            $signData['verified'] = base64_encode(QrCode::format('svg')->size(100)->generate($verified_url));
+                        } 
+
+                        $html = view('exports.overtimes', [
+                            'data' => $data,
+                            'month' => $period->name,
+                            'head' => $head,
+                            'sdm' => $sdm,
+                            'qrCode' => $signData,
+                            'isWord' => false
+                        ])->render();
+
+                        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                        $fontDirs = $defaultConfig['fontDir'];
+
+                        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                        $fontData = $defaultFontConfig['fontdata'];
+
+                        $mpdf = new Mpdf([
+                            'mode' => 'utf-8', 
+                            'orientation' => 'L',
+                            'format' => [215.9, 342.9],
+                            'fontDir' => array_merge($fontDirs, [
+                                public_path('fonts'), 
+                            ]),
+                            'fontdata' => $fontData + [
+                                'tnr' => [
+                                    'R' => 'times.ttf',    
+                                    'B' => 'timesbd.ttf',  
+                                    'I' => 'timesi.ttf',   
+                                    'BI' => 'timesbi.ttf',  
+                                ]
+                            ],
+                            'default_font' => 'tnr',
+                            'margin_top' => 15,
+                            'margin_left' => 20,
+                            'margin_right' => 20,
+                            'margin_bottom' => 15,
+                        ]);
+
+                        $mpdf->WriteHTML($html);
+
+                        $token = Str::uuid()->toString();
+                        $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
+
+                        file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+
+                        $this->pdfToken = $token;
+
+                        return view('filament.components.preview-pdf', [
+                            'token' => $token,
+                        ]);
+                    })
+                    ->modalHeading(false)
+                    ->modalCancelAction(false)
+                    ->modalSubmitAction(false)
+                    ->modalCloseButton(false)
+                    ->closeModalByClickingAway(false)
+                    ->closeModalByEscaping(false)
+                    ->extraAttributes([
+                       'x-on:click.capture' => 'close()'
+                    ]),
+                Action::make('exportWord')
+                    ->label('Export Word')
+                    ->icon('heroicon-o-document-text')
+                    ->color('info')
+                    ->action(function ($livewire) {
+                        $month = $livewire->tableFilters['period_id']['value'] ?? null;
+
+                        if ($month) {
+                            $period = MonthlyPeriod::find($month);
+                        } else {
+                            $period = MonthlyPeriod::whereDate('start_date', '<=', now())
+                                ->whereDate('end_date', '>=', now())
+                                ->first();
+                        }
+
+                        $data = Overtime::query()
+                            ->with(['staff.chair', 'staff.unit'])
+                            ->where('staff_id', $this->staff->id)
+                            ->where('period_id', $month)
+                            ->orderBy('overtime_date')
+                            ->get();
+
+                        if ($data->isEmpty()) {
+                            Notification::make()
+                                ->title('Tidak ada data lembur untuk periode terpilih.')
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+                            
+                        $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()?->name;
+
+                        if (!$head) {
+                            Notification::make()
+                                ->title('Atasan user belum dipilih! Tidak dapat melanjutkan proses.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()?->name;
+
+                        if (!$sdm) {
+                            Notification::make()
+                                ->title('Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        foreach ($data as $i => $p) {
+                            $this->verified = $p->is_verified ?? false;
+                            $this->known = $p->is_known == 2 ?? false;
+                        }
+
+                        $signData = [
+                            'known' => null,
+                            'verified' => null,
                         ];
-                        $verified_url = Signature::getUrl($verifiedData);
-                        $signData['verified'] = base64_encode(QrCode::format('svg')->size(100)->generate($verified_url));
-                    } 
 
-                    $html = view('exports.overtimes', [
-                        'data' => $data,
-                        'month' => $period->name,
-                        'head' => $head,
-                        'sdm' => $sdm,
-                        'qrCode' => $signData
-                    ])->render();
+                        if ($this->known) {
+                            $knownData = [
+                                'known_by' => $data[0]['known_by'],
+                                'known_at' => $data[0]['known_at']
+                            ];
+                            $known_url = Signature::getUrl($knownData);
+                            $signData['known'] = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&format=png&data={$known_url}";
+                        } 
 
-                    $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-                    $fontDirs = $defaultConfig['fontDir'];
+                        if ($this->verified) {
+                            $verifiedData = [
+                                'verified_by' => $data[0]['verified_by'],
+                                'verified_at' => $data[0]['verified_at']
+                            ];
+                            $verified_url = Signature::getUrl($verifiedData);
+                            $signData['verified'] = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&format=png&data={$verified_url}";
+                        } 
 
-                    $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-                    $fontData = $defaultFontConfig['fontdata'];
+                        $name = Staff::find($this->staff->id)->name ?? 'Pegawai';
+                        $html = view('exports.overtimes', [
+                            'data' => $data,
+                            'month' => $period->name,
+                            'head' => $head,
+                            'sdm' => $sdm,
+                            'qrCode' => $signData,
+                            'isWord' => true
+                        ])->render();
 
-                    $mpdf = new Mpdf([
-                        'mode' => 'utf-8', 
-                        'format' => [215.9, 342.9],
-                        'fontDir' => array_merge($fontDirs, [
-                            public_path('fonts'), 
-                        ]),
-                        'fontdata' => $fontData + [
-                            'tnr' => [
-                                'R' => 'times.ttf',    
-                                'B' => 'timesbd.ttf',  
-                                'I' => 'timesi.ttf',   
-                                'BI' => 'timesbi.ttf',  
-                            ]
-                        ],
-                        'default_font' => 'tnr',
-                        'margin_top' => 15,
-                        'margin_left' => 20,
-                        'margin_right' => 20,
-                        'margin_bottom' => 15,
-                    ]);
+                        $fileName = 'Lembur_' . $name . '_' . $period->name . '.doc';
 
-                    $mpdf->WriteHTML($html);
-
-                    $token = Str::uuid()->toString();
-                    $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
-
-                    file_put_contents($pdfPath, $mpdf->Output('', 'S'));
-
-                    $this->pdfToken = $token;
-
-                    return view('filament.components.preview-pdf', [
-                        'token' => $token,
-                    ]);
-                })
-                ->modalHeading(false)
-                ->modalCancelAction(false)
-                ->modalSubmitAction(false)
-                ->modalCloseButton(false)
-                ->closeModalByClickingAway(false)
-                ->closeModalByEscaping(false),
+                        return response()->streamDownload(function () use ($html) {
+                            echo '<meta charset="UTF-8">';
+                            echo $html;
+                        }, $fileName, [
+                            'Content-Type' => 'application/vnd.ms-word',
+                            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                        ]);
+                    }),
+            ])
+            ->label('Export Data') 
+            ->icon('heroicon-m-arrow-top-right-on-square')
+            ->button() 
+            ->visible(fn ($livewire) => $livewire->tableFilters['period_id']['value'])
+            ->color('success')
+            ->dropdownPlacement('bottom-end'),
         ];
     } 
 

@@ -255,11 +255,10 @@ class ManagePresences extends ManageRecords implements HasTable
                                 }
 
                                 if (!$period) {
-                                    Notification::make()
-                                        ->title('Periode presensi tidak ditemukan!')
-                                        ->danger()
-                                        ->send();
-                                    return;
+                                    return view('filament.components.alert', [
+                                        'message' => 'Periode Presensi Tidak Ditemukan.',
+                                        'color'   => 'danger',
+                                    ]);
                                 }
                                 $presences = Presence::query()
                                     ->with(['staff.chair', 'staff.unit'])
@@ -277,19 +276,17 @@ class ManagePresences extends ManageRecords implements HasTable
                                     ->keyBy('schedule_date'); 
 
                                 if ($schedules->isEmpty()) {
-                                    Notification::make()
-                                        ->title('Jadwal pada periode tersebut belum dibuat!')
-                                        ->danger()
-                                        ->send();
-                                    return;
+                                    return view('filament.components.alert', [
+                                        'message' => 'Jadwal pada periode tersebut belum dibuat!',
+                                        'color'   => 'danger',
+                                    ]);
                                 }
 
                                 if ($presences->isEmpty()) {
-                                    Notification::make()
-                                        ->title('Belum ada presensi pada periode tersebut!')
-                                        ->danger()
-                                        ->send();
-                                    return;
+                                    return view('filament.components.alert', [
+                                        'message' => 'Belum ada presensi pada periode tersebut!',
+                                        'color'   => 'warning',
+                                    ]);
                                 }
 
                                 $role = Auth::user()->role_id;
@@ -346,7 +343,10 @@ class ManagePresences extends ManageRecords implements HasTable
                             ->modalSubmitAction(false)
                             ->modalCloseButton(false)
                             ->closeModalByClickingAway(false)
-                            ->closeModalByEscaping(false),
+                            ->closeModalByEscaping(false)
+                            ->extraAttributes([
+                                'x-on:click.capture' => 'close()'
+                            ]),
                         Action::make('exportWord')
                             ->label('Export Word')
                             ->icon('heroicon-o-document-text')
@@ -556,11 +556,10 @@ class ManagePresences extends ManageRecords implements HasTable
                                 }
 
                                 if (!$period) {
-                                    Notification::make()
-                                        ->title('Periode presensi tidak ditemukan!')
-                                        ->danger()
-                                        ->send();
-                                    return;
+                                    return view('filament.components.alert', [
+                                        'message' => 'Periode Presensi Tidak Ditemukan.',
+                                        'color'   => 'danger',
+                                    ]);
                                 }
                                 $presences = Presence::query()
                                     ->with(['staff.chair', 'staff.unit'])
@@ -578,19 +577,17 @@ class ManagePresences extends ManageRecords implements HasTable
                                     ->keyBy('schedule_date'); 
 
                                 if ($schedules->isEmpty()) {
-                                    Notification::make()
-                                        ->title('Jadwal pada periode tersebut belum dibuat!')
-                                        ->danger()
-                                        ->send();
-                                    return;
+                                    return view('filament.components.alert', [
+                                        'message' => 'Jadwal pada periode tersebut belum dibuat!',
+                                        'color'   => 'danger',
+                                    ]);
                                 }
 
                                 if ($presences->isEmpty()) {
-                                    Notification::make()
-                                        ->title('Belum ada presensi pada periode tersebut!')
-                                        ->danger()
-                                        ->send();
-                                    return;
+                                    return view('filament.components.alert', [
+                                        'message' => 'Belum ada presensi pada periode tersebut!',
+                                        'color'   => 'warning',
+                                    ]);
                                 }
                                 
                                 $role = Auth::user()->role_id;
@@ -641,7 +638,10 @@ class ManagePresences extends ManageRecords implements HasTable
                             ->modalSubmitAction(false)
                             ->modalCloseButton(false)
                             ->closeModalByClickingAway(false)
-                            ->closeModalByEscaping(false),
+                            ->closeModalByEscaping(false)
+                            ->extraAttributes([
+                                'x-on:click.capture' => 'close()'
+                            ]),
                         Action::make('exportWord')
                             ->label('Export Word')
                             ->icon('heroicon-o-document-text')

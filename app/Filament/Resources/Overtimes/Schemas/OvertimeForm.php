@@ -118,12 +118,11 @@ class OvertimeForm
                                         TimePicker::make('start_time')
                                             ->label('Waktu Mulai')
                                             ->prefixIcon('heroicon-m-play')
-                                            ->native(false)
                                             ->displayFormat('H:i')
                                             ->required()
                                             ->seconds(false)
-                                            ->disabled()
-                                            ->dehydrated(true),
+                                            ->readOnly()
+                                            ->dehydrated(),
 
                                         TimePicker::make('end_time')
                                             ->label('Waktu Selesai')
