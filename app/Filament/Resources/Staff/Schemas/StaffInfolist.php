@@ -318,15 +318,14 @@ class StaffInfolist
                                         ->label('Cuti Terpakai')
                                         ->state(function ($record) {
                                             return $record->leave()
-                                                ->where('staff_id', $record->staff_id)
+                                                ->where('staff_id', $record->id)
                                                 ->where('type', 'Cuti')
                                                 ->where('subtype', 'Tahunan')
                                                 ->whereYear('start_date', now()->year)
                                                 ->where(function ($query) {
-                                                        $query->where('status', '!=', 'Ditolak')
-                                                            ->orWhere('is_verified', '!=', 0)
-                                                            ->orWhere('is_replaced', '!=', 0);
-                                                    })
+                                                    $query->where('status', '!=', 'Ditolak')
+                                                        ->orWhere('is_verified', '!=', 0);
+                                                })
                                                 ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
                                         })
                                         ->extraAttributes([
@@ -340,14 +339,13 @@ class StaffInfolist
                                             $quota = setting('max_leave_days'); 
                                             
                                             $taken = $record->leave()
-                                                ->where('staff_id', $record->staff_id)
+                                                ->where('staff_id', $record->id)
                                                 ->where('type', 'Cuti')
                                                 ->where('subtype', 'Tahunan')
                                                 ->whereYear('start_date', now()->year)
                                                 ->where(function ($query) {
                                                         $query->where('status', '!=', 'Ditolak')
-                                                            ->orWhere('is_verified', '!=', 0)
-                                                            ->orWhere('is_replaced', '!=', 0);
+                                                            ->orWhere('is_verified', '!=', 0);
                                                     })
                                                 ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1'));
                                                 
@@ -362,14 +360,13 @@ class StaffInfolist
                                         ->label('Izin Terpakai')
                                         ->state(function ($record) {
                                             return $record->leave()
-                                                ->where('staff_id', $record->staff_id)
+                                                ->where('staff_id', $record->id)
                                                 ->where('type', 'Izin')
                                                 ->where('subtype', 'Non-Sakit')
                                                 ->whereYear('start_date', now()->year)
                                                 ->where(function ($query) {
                                                         $query->where('status', '!=', 'Ditolak')
-                                                            ->orWhere('is_verified', '!=', 0)
-                                                            ->orWhere('is_replaced', '!=', 0);
+                                                            ->orWhere('is_verified', '!=', 0);
                                                     })
                                                 ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1')) . ' Hari';
                                         })
@@ -384,14 +381,13 @@ class StaffInfolist
                                             $quota = setting('max_permission_days'); 
                                             
                                             $taken = $record->leave()
-                                                ->where('staff_id', $record->staff_id)
+                                                ->where('staff_id', $record->id)
                                                 ->where('type', 'Izin')
                                                 ->where('subtype', 'Non-Sakit')
                                                 ->whereYear('start_date', now()->year)
                                                 ->where(function ($query) {
                                                         $query->where('status', '!=', 'Ditolak')
-                                                            ->orWhere('is_verified', '!=', 0)
-                                                            ->orWhere('is_replaced', '!=', 0);
+                                                            ->orWhere('is_verified', '!=', 0);
                                                     })
                                                 ->sum(DB::raw('DATEDIFF(end_date, start_date) + 1'));
                                                 

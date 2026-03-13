@@ -6,16 +6,14 @@ if (!function_exists('shouldShowApprovalButton')) {
     {
         $user = Auth::user();
 
-        if (!$user->staff || !$user->staff->chair) {
+        if (!$user->staff || !$user->staff->chair || $record->status == 'Ditolak') {
             return false; 
         }
 
-        if ($record->status == 'Ditolak' || $record->is_replaced == 0) {
-            return false;
-        }
-
-        if ($record->replacement_id == $user->staff_id && $user->staff->chair_id != $record->staff->unit->leader_id) {
-            return false;
+        if ($record->staff->unit->work_system == 'Shift'){
+            if ($record->is_replaced == 0 || ($record->replacement_id == $user->staff_id && $user->staff->chair_id != $record->staff->unit->leader_id)) {
+                return false;
+            }
         }
 
         $userLevel = $user->staff->chair->level;
@@ -26,12 +24,13 @@ if (!function_exists('shouldShowApprovalButton')) {
                     $record->staff->unit->leader_id == $user->staff->chair_id &&
                     $user->role_id != 1;
             case 3:
-                $isWaitingLevel4 = $record->status == 'Menunggu' &&
-                                $record->staff->chair->level == 4 &&
+                $isShift = $record->staff->unit->work_system == 'Shift';
+                $isLeaderWait = $record->status == 'Menunggu' &&
                                 $record->staff->unit->leader_id == $record->staff->chair_id;
-                $isEscalated = $record->status == 'Diketahui Kepala Unit' || 
-                            !$record->staff->unit->leader_id;
-                return $isWaitingLevel4 || $isEscalated;
+                $isNotLeaderWait = $record->status == 'Diketahui Kepala Unit' &&
+                                $record->staff->unit->leader_id != $record->staff->chair_id;
+                $isNoShiftWait = $record->status == 'Menunggu';
+                return (($isShift && ($isLeaderWait || $isNotLeaderWait)) || (!$isShift && $isNoShiftWait)) && $record->staff->chair->level == 4;
             case 2:
                 $isWaitingLevel3 = $record->status == 'Menunggu' && 
                                 $record->staff->chair->level == 3;

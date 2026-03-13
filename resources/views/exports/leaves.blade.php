@@ -13,186 +13,229 @@
             vertical-align: middle;
             color: black;
         }
+        p, td, th {
+            margin-top: 0pt;
+            margin-bottom: 0pt;
+        }
+        .MsoNormal {
+            margin: 0pt;
+        }
     </style>
+    @if (isset($isWord) && $isWord)
+    <style>
+        @page Section1 {
+            size: 21cm 33cm; 
+            
+            margin: 2cm 2cm 2cm 2cm; 
+        }
+
+        div.Section1 {
+            page: Section1;
+        }
+    </style>
+    @endif
 </head>
 
 <body>
-    <table style="width: 100%; border-bottom: 3px double #000000; padding-bottom: 10px;">
-        <tr>
-            <td style="width: 18%; text-align: left; border: 0; vertical-align: center;">
-                <img src="{{ public_path('img/rsumpyk.png') }}" alt="Logo RS" style="width: 90px; height: 90px;">
-            </td>
-
-            <td style="width: 64%; text-align: center; border: 0; vertical-align: top;">
-                <h3 style="margin: 0; font-size: 16px; font-weight: normal;">YAYASAN RSU MITRA PARAMEDIKA</h3>
-                <h2 style="margin: 0; font-size: 30px; font-weight: bold;"> RSU MITRA PARAMEDIKA</h2>
-                <p style="margin: 0; font-size: 14px;">
-                    Jl. Raya Ngemplak, Area Sawah, Widodomartani, Kec. Ngemplak,
-                </p>
-                <p style="margin: 0; font-size: 14px;">
-                    Sleman, Yogyakarta Telp. (0274) 4461098
-                </p>
-                <p style="margin: 0; font-size: 12px;">
-                    <b>Web:</b> rsumipayk.co.id <b>Email:</b> rsumitraparamedika@yahoo.com
-                </p>
-            </td>
-            <td style="width: 18%; text-align: right; border: 0; vertical-align: center;">
-                <img src="{{ public_path('img/KARS.jpg') }}" alt="Logo RS" style="width: 100px; height: 90px;">
-            </td>
-        </tr>
-    </table>
-    <br>
-    <h3 style="text-align:center; margin:0">Permohonan {{ $record->type }}</h3>
-    <br>
-
-    <table>
-        <tbody>
+    <div class="Section1">
+        <table style="width: 100%; padding-bottom: 10px;">
             <tr>
-                <th style="width: 25%">Tanggal Pengajuan</th>
-                <td colspan="2">{{  \Carbon\Carbon::parse($record->created_at)->translatedFormat('l, d F Y') }}</td>
-            </tr>
-            <tr>
-                <th style="width: 25%">Nama</th>
-                <td colspan="2">{{ $record->staff->name }}</td>
-            </tr>
-            <tr>
-                <th style="width: 25%">Unit/ Bagian</th>
-                <td colspan="2">{{ $record->staff->unit->name }}</td>
-            </tr>
-            <tr>
-                <th style="width: 25%">Jabatan</th>
-                <td colspan="2">{{ $record->staff->chair->name }}</td>
-            </tr>
-            <tr>
-                <th style="width: 25%">NIK</th>
-                <td colspan="2">{{ $record->staff->nik }}</td>
-            </tr>
-            <tr>
-                <td colspan="3"><b>Mengajukan Untuk Keperluan: </b><br>{{ $record->reason }}</td>
-            </tr>
-            <tr>
-                <td style="width: 25%"><b>Jumlah Hari {{ $record->type }}:</b><br>{{ \Carbon\Carbon::parse($record->start_date)->diffInDays($record->end_date) }} Hari</td>
-                <td colspan="2"><b>Rincian Tanggal:</b><br>{{ \Carbon\Carbon::parse($record->start_date)->translatedFormat('d F Y') }} - {{ \Carbon\Carbon::parse($record->end_date)->translatedFormat('d F Y') }}</td>
-            </tr>
-            <tr>
-                <th style="width: 25%">Sisa {{ $record->type }} Saat ini</th>
-                <td colspan="2">{{ $record->remaining }}</td>
-            </tr>
-            <tr>
-                <th style="width: 25%">Sisa {{ $record->type }} Jika Disetujui</th>
-                <td colspan="2">{{ ($record->remaining - \Carbon\Carbon::parse($record->start_date)->diffInDays($record->end_date)) }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <table>
-        <tbody>
-            <tr>
-                <th>Nama Pengganti</th>
-                <th>TTD Pengganti</th>
-                <th>No Telp Pengganti</th>
-            </tr>
-            <tr>
-                <td style="width: 40%; text-align: center">{{ $record->replacement->name }}</td>
-                <td align="center" style="width: 25%">
-                    <?php
-                    $replace = $record->is_replaced === 1 ? true : false;
-                    if ($replace){ ?>
-                        <img src="data:image/svg+xml;base64,{{ $qrCode['replace'] }}" style="width: 72px">
-                    <?php } ?>
+                <td style="width: 18%; text-align: left; border: 0; vertical-align: center;">
+                    <img src="{{ public_path('img/rsumpyk.png') }}" alt="Logo RS" width="90" height="90" />
                 </td>
-                <td style="width: 35%; text-align: center">{{ $record->replacement->phone }}</td>
-            </tr>
-        </tbody>
-    </table>
 
-    <table>
-        <tbody>
-            <tr>
-                <th rowspan="2" colspan="2">Pengajuan {{ $record->type }}</th>
-                <th style="width: 66%">Dengan Catatan</th>
+                <td style="width: 64%; text-align: center; border: 0; vertical-align: top;">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: normal;">YAYASAN RSU MITRA PARAMEDIKA</h3>
+                    <h2 style="margin: 0; font-size: 30px; font-weight: bold;">RSU MITRA PARAMEDIKA</h2>
+                    <p style="margin: 0; font-size: 14px;">
+                        Jl. Raya Ngemplak, Area Sawah, Widodomartani, Kec. Ngemplak,
+                    </p>
+                    <p style="margin: 0; font-size: 14px;">
+                        Sleman, Yogyakarta Telp. (0274) 4461098
+                    </p>
+                    <p style="margin: 0; font-size: 12px;">
+                        <b>Web:</b> rsumipayk.co.id <b>Email:</b> rsumitraparamedika@yahoo.com
+                    </p>
+                </td>
+                <td style="width: 18%; text-align: right; border: 0; vertical-align: center;">
+                    <img src="{{ public_path('img/KARS.jpg') }}" alt="Logo RS" width="100" height="90" />
+                </td>
             </tr>
             <tr>
-                <td rowspan="3" style="width: 66%">{{ $record->adverb }}</td>
+                <td colspan="3" style="border-top: 3px solid black; border-bottom: 1px solid black; padding: 0; font-size: 2px; line-height: 2px;">&nbsp;</td>
             </tr>
-            <tr>
-                <th>Disetujui</th>
-                <th>Ditolak</th>
-            </tr>
-            <tr>
-                <?php if (str_contains($record->status, 'Disetujui')) { ?>
-                    <td class="symbol-check" style="text-align: center; font-weight: bold; font-size: 30px;">✓</td>
-                <?php } else if (str_contains($record->status, 'Ditolak')) { ?>
-                    <td></td>
-                <?php } else { ?>
-                    <td style="text-align: center; color: #ccc">(Menunggu)</td>
-                <?php } ?>
+        </table>
+        <br />
+        <h2 style="text-align:center; margin:0; text-transform: uppercase">Permohonan Cuti / Izin</h1>
 
-                <?php if (str_contains($record->status, 'Ditolak')) { ?>
-                    <td class="symbol-check" style="text-align: center;font-weight: bold; font-size: 30px;">✓</td>
-                <?php } else if (str_contains($record->status, 'Disetujui')) { ?>
-                    <td></td>
-                <?php } else { ?>
-                    <td style="text-align: center; color: #ccc">(Menunggu)</td>
-                <?php } ?>
-            </tr>
-        </tbody>
-    </table>
+        <table>
+            <tbody>
+                <tr>
+                    <td style="width: 25%; text-align:center">Tanggal Permohonan diajukan</td>
+                    <td colspan="2">{{  \Carbon\Carbon::parse($record->created_at)->translatedFormat('l, d F Y') }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>1. Nama</b></th>
+                    <td colspan="2">{{ $record->staff->name }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>2. Unit/ Bagian</b></th>
+                    <td colspan="2">{{ $record->staff->unit->name }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>3. Jabatan</b></th>
+                    <td colspan="2">{{ $record->staff->chair->name }}</td>
+                </tr>
+                <tr>
+                    <td colspan="3"><b>4. Keperluan Cuti / Izin: </b><br>{{ $record->reason }}</td>
+                </tr>
+                <tr>
+                    <td style="width: 25%; text-align: left"><b>5. Jumlah Hari Yang Diajukan:</b><br>{{ \Carbon\Carbon::parse($record->start_date)->diffInDays($record->end_date) }} Hari</td>
+                    <td colspan="2"><b>Rincian Tanggal Cuti / Izin:</b><br>{{ \Carbon\Carbon::parse($record->start_date)->translatedFormat('d F Y') }} - {{ \Carbon\Carbon::parse($record->end_date)->translatedFormat('d F Y') }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>6. Jumlah {{ $record->type }} yang sudah dipakai</b></th>
+                    <td colspan="2">
+                        @php
+                            $usedDays = \App\Models\Leave::where('staff_id', $record->staff_id)
+                                ->where('id', '!=', $record->id)
+                                ->where('type', $record->type)
+                                ->where('subtype', $record->subtype)
+                                ->whereYear('start_date', now()->year)
+                                ->where(function ($query) {
+                                    $query->where('status', '!=', 'Ditolak')
+                                        ->orWhere('is_verified', 1);
+                                })
+                                ->sum(\Illuminate\Support\Facades\DB::raw('DATEDIFF(end_date, start_date) + 1'));
+                        @endphp
+                        {{ $usedDays }}
+                    </td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>7. Sisa {{ $record->type }} yang belum dipakai</b></th>
+                    <td colspan="2">{{ $record->remaining }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>8. Nama pengganti</b></th>
+                    <td colspan="2">{{ $record->replacement->name ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>9. No HP pengganti</b></th>
+                    <td colspan="2">{{ $record->replacement->phone ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align: left"><b>10. Mengetahui pengganti</b></th>
+                    <td colspan="2"><?php
+                        $replace = $record->is_replaced === 1 ? true : false;
+                        if ($replace){ ?>
+                            @if (isset($isWord) && $isWord)
+                                <p style="margin: 0;"><img src="{{ $qrCode['replace'] }}" width="72" height="72" /></p>
+                            @else
+                                <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['replace'] }}" width="72" height="72" /></p>
+                            @endif
+                        <?php } ?></td>
+                </tr>
+            </tbody>
+        </table>
 
-    <table>
-        <tbody>
-            <tr>
-                <th><b>Mengetahui</b></th>
-                <th><b>Verifikasi</b></th>
-                <th><b>Menyetujui</b></th>
-            </tr>
-            <tr>
-                <td style="text-align: center">Atasan Langsung</td>
-                <td style="text-align: center">Wadir SDM</td>
-                <td style="text-align: center">{{ $record->staff->chair->level === 4 ? 'Kepala Seksi' : 'Direktur'}}</td>
-            </tr>
-            <tr>
-                <td style="text-align: center; vertical-align: bottom">
-                    <?php
-                    $known = str_contains($record->status, 'Disetujui') || str_contains($record->status, 'Diketahui') ? true : false;
-                    if ($known){ ?>
-                        <img src="data:image/svg+xml;base64,{{ $qrCode['known'] }}" style="width: 84px">
+        <table>
+            <tbody>
+                <tr>
+                    <th><b>Mengetahui</b></th>
+                    <th><b>Verifikasi</b></th>
+                    <th><b>Menyetujui</b></th>
+                </tr>
+                <tr>
+                    <td style="text-align: center">TTD Atasan Langsung</td>
+                    <td style="text-align: center">Wadir SDM</td>
+                    <td style="text-align: center">{{ $record->staff->chair->level === 4 ? 'Kepala Seksi' : 'Direktur'}}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center; vertical-align: bottom">
+                        <?php
+                        $known = str_contains($record->status, 'Disetujui') || str_contains($record->status, 'Diketahui') ? true : false;
+                        if ($known){ ?>
+                            @if (isset($isWord) && $isWord)
+                                <p style="margin: 0;"><img src="{{ $qrCode['known'] }}" width="84" height="84" /></p>
+                            @else
+                                <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['known'] }}" width="84" height="84" /></p>
+                            @endif
+                        <?php } else { ?>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                        <?php } ?>
+                        <p style="margin: 0; font-size: 14px;">{{ $head->name }}</p>
+                    </td>
+                    <td style="text-align: center; vertical-align: bottom">
+                        <?php
+                        $verified = $record->is_verified === 1 ? true : false;
+                        if ($verified){ ?>
+                            @if (isset($isWord) && $isWord)
+                                <p style="margin: 0;"><img src="{{ $qrCode['verified'] }}" width="84" height="84" /></p>
+                            @else
+                                <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['verified'] }}" width="84" height="84" /></p>
+                            @endif
+                        <?php } else { ?>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                        <?php } ?>
+                        <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
+                    </td>
+                    <td style="text-align: center; vertical-align: bottom">
+                        <?php
+                        $approve = str_contains($record->status, 'Disetujui') ? true : false;
+                        if ($approve){ ?>
+                            @if (isset($isWord) && $isWord)
+                                <p style="margin: 0;"><img src="{{ $qrCode['approve'] }}" width="84" height="84" /></p>
+                            @else
+                                <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['approve'] }}" width="84" height="84" /></p>
+                            @endif
+                        <?php } else { ?>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                        <?php } ?>
+                        <p style="margin: 0; font-size: 14px;">{{ $approver }}</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table>
+            <tbody>
+                <tr>
+                    <th style="width: 25%; text-align:center"><b>Dengan Catatan/Verifikasi SDM</b></th>
+                    <td colspan="2">{{ $record->adverb }}</td>
+                </tr>
+                <tr>
+                    <th style="width: 25%; text-align:center" rowspan="2"><b>Dengan ini cuti/izin</b></th>
+                    <th>Disetujui</th>
+                    <th>Ditolak</th>
+                </tr>
+                <tr>
+                    <?php if (str_contains($record->status, 'Disetujui')) { ?>
+                        <td class="symbol-check" style="text-align: center; font-weight: bold; font-size: 30px;">✓</td>
+                    <?php } else if (str_contains($record->status, 'Ditolak')) { ?>
+                        <td></td>
                     <?php } else { ?>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
+                        <td style="text-align: center; color: #ccc">(Menunggu)</td>
                     <?php } ?>
-                    <p style="margin: 0; font-size: 14px;">{{ $head->name }}</p>
-                </td>
-                <td style="text-align: center; vertical-align: bottom">
-                    <?php
-                    $verified = $record->is_verified === 1 ? true : false;
-                    if ($verified){ ?>
-                        <img src="data:image/svg+xml;base64,{{ $qrCode['verified'] }}" style="width: 84px">
+
+                    <?php if (str_contains($record->status, 'Ditolak')) { ?>
+                        <td class="symbol-check" style="text-align: center;font-weight: bold; font-size: 30px;">✓</td>
+                    <?php } else if (str_contains($record->status, 'Disetujui')) { ?>
+                        <td></td>
                     <?php } else { ?>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
+                        <td style="text-align: center; color: #ccc">(Menunggu)</td>
                     <?php } ?>
-                    <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
-                </td>
-                <td style="text-align: center; vertical-align: bottom">
-                    <?php
-                    $approve = str_contains($record->status, 'Disetujui') ? true : false;
-                    if ($approve){ ?>
-                        <img src="data:image/svg+xml;base64,{{ $qrCode['approve'] }}" style="width: 84px">
-                    <?php } else { ?>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
-                    <?php } ?>
-                    <p style="margin: 0; font-size: 14px;">{{ $approver }}</p>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
