@@ -32,12 +32,15 @@ const localIp = getLocalIp();
 export default defineConfig({
     plugins: [
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.js"],
+            input: [
+                "resources/css/app.css",
+                "resources/js/app.js",
+                "resources/css/filament/admin/theme.css",
+            ],
             refresh: true,
         }),
         tailwindcss(),
     ],
-    input: ["resources/css/filament/admin/theme.css"],
     server: {
         host: true, // atau '0.0.0.0'
         port: 5173, // sesuaikan kalau mau port lain

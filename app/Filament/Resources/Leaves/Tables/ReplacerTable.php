@@ -197,6 +197,7 @@ class ReplacerTable
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(LeaveResource::getUrl('index'))
                                     ->markAsRead()
@@ -248,6 +249,7 @@ class ReplacerTable
                             ->warning()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(LeaveResource::getUrl('index'))
                                     ->markAsRead()

@@ -47,7 +47,7 @@ class PerformancePeriodManager extends Component implements HasForms, HasTable, 
                 ->displayFormat('d F Y')
                 ->live()
                 ->disabledDates(fn () => $this->getOccupiedDates($this->editingId))
-                ->minDate(now()->startOfMonth()) 
+                ->minDate(fn () => Carbon::today()->startOfMonth()) 
                 ->afterStateUpdated(function ($state, Set $set) {
                     if ($state) {
                         $set('start_date', Carbon::parse($state)->startOfMonth()->toDateString());

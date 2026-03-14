@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Staff\Pages;
 
+use App\Filament\Resources\Profiles\ProfileResource;
 use App\Filament\Resources\Staff\StaffResource;
 use App\Models\Chair;
 use App\Models\Group;
@@ -16,6 +17,7 @@ use App\Models\Unit;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\HtmlString;
 
@@ -240,6 +242,19 @@ class EditStaff extends EditRecord
                 'admission' => $data['workExperience']['admission'] ?? null,
             ]);
         }
+
+        Notification::make()
+            ->title('Pembaruan Data Diri')
+            ->body('Data Diri Anda telah mendapat pembaruan dari SDM!')
+            ->success()
+            ->actions([
+                Action::make('read')
+                    ->label('Lihat')
+                    ->button()
+                    ->url(ProfileResource::getUrl('index'))
+                    ->markAsRead()
+            ])
+            ->sendToDatabase($this->record->user);
     }
 
 }

@@ -32,6 +32,8 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Illuminate\Http\UploadedFile;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ReRegistration extends Page implements HasSchemas
 {
@@ -191,7 +193,7 @@ class ReRegistration extends Page implements HasSchemas
                                                 ->dehydrated(),
                                             DatePicker::make('entry_date')
                                                 ->label('Terhitung Mulai Tanggal')
-                                                ->maxDate(today())
+                                                ->maxDate(fn () => Carbon::today())
                                                 ->disabled()
                                                 ->dehydrated(),
                                             DatePicker::make('retirement_date')
@@ -312,7 +314,7 @@ class ReRegistration extends Page implements HasSchemas
                                                         ->label('Sertifikat')
                                                         ->disk('public')
                                                         ->visibility('public')
-                                                        ->directory('ijazah')
+                                                        ->directory('sertifikat')
                                                         ->acceptedFileTypes(['application/pdf'])
                                                         ->maxSize(2048) 
                                                         ->helperText('Unggah sertifikat dalam format PDF'),
@@ -373,19 +375,29 @@ class ReRegistration extends Page implements HasSchemas
         ]);
 
         if (!empty($validated['entryEducation']['level'])) {
+            $certificate = collect($validated['entryEducation']['certificate'])->first() ?? null;
+            if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
+                $data['entryEducation']['certificate'] = $certificate->store('ijazah-awal', 'public');
+            }
+            
             StaffEntryEducation::create([
                 'staff_id' => $staff->id,
                 'level' => $validated['entryEducation']['level'],
                 'institution' => $validated['entryEducation']['institution'] ?? null,
                 'certificate_number' => $validated['entryEducation']['certificate_number'] ?? null,
                 'certificate_date' => $validated['entryEducation']['certificate_date'] ?? null,
-                'certificate' => collect($validated['entryEducation']['certificate'])->first() ?? null,
+                'certificate' => $certificate,
                 'nonformal_education' => $validated['entryEducation']['nonformal_education'] ?? null,
                 'adverb' => $validated['entryEducation']['adverb']?? null,
             ]);
         }
 
         if (!empty($validated['workEducation']['level'])) {
+            $certificate = collect($validated['workEducation']['certificate'])->first() ?? null;
+            if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
+                $data['workEducation']['certificate'] = $certificate->store('ijazah-bekerja', 'public');
+            }
+
             StaffWorkEducation::create([
                 'staff_id' => $staff->id,
                 'level' => $validated['workEducation']['level'],
@@ -393,16 +405,20 @@ class ReRegistration extends Page implements HasSchemas
                 'institution' => $validated['workEducation']['institution'] ?? null,
                 'certificate_number' => $validated['workEducation']['certificate_number'] ?? null,
                 'certificate_date' => $validated['workEducation']['certificate_date'] ?? null,
-                'certificate' => collect($validated['workEducation']['certificate'])->first() ?? null,
+                'certificate' => $certificate,
             ]);
         }
 
         if (!empty($validated['workExperience']['institution'])) {
+            $certificate = collect($validated['workExperience']['certificate'])->first() ?? null;
+            if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
+                $data['workExperience']['certificate'] = $certificate->store('sertifikat', 'public');
+            }
             StaffWorkExperience::create([
                 'staff_id' => $staff->id,
                 'institution' => $validated['workExperience']['institution'],
                 'work_length' => $validated['workExperience']['work_length'] ?? null,
-                'certificate' => collect($validated['workExperience']['certificate'])->first() ?? null,
+                'certificate' => $certificate,
                 'admission' => $validated['workExperience']['admission'] ?? null,
             ]);
         }

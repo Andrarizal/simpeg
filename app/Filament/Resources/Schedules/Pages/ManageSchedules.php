@@ -254,6 +254,113 @@ class ManageSchedules extends Page implements HasForms, HasTable
                         ->success()
                         ->send();
                 }),
+            Action::make('randomizing_schedule')
+                ->label('Generate')
+                ->icon('heroicon-m-bolt')
+                ->color('warning')
+                ->visible(function() {
+                    $isLeader = Auth::user()->staff->chair_id == Auth::user()->staff->unit?->leader_id;
+                    return $isLeader && $this->record->work_system == 'Shift';
+                })
+                ->modalHeading('Generate Jadwal Otomatis')
+                ->modalWidth('sm')
+                ->modalDescription('Fitur ini akan mengisi jadwal seluruh pegawai di unit ini secara otomatis (Satu hari Libur untuk setiap pegawai dalam satu pekan dengan total jam kerja merata).')
+                ->modalSubmitActionLabel('Generate Jadwal')
+                ->modalFooterActionsAlignment('center')
+                ->schema([
+                    Select::make('month')
+                        ->label('Bulan')
+                        ->options([
+                            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                        ])
+                        ->default(now()->month)
+                        ->required(),
+                    
+                    TextInput::make('year')
+                        ->label('Tahun')
+                        ->numeric()
+                        ->default(now()->year)
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $workingShifts = Shift::where('unit_id', $this->record->id)->where('is_off', false)->get();
+                    $shiftLibur    = Shift::where('unit_id', $this->record->id)->where('is_off', true)->first();
+
+                    if ($workingShifts->isEmpty() || !$shiftLibur) {
+                        Notification::make()->title('Gagal: Belum ada Shift Masuk di unit ini!')->danger()->send();
+                        return;
+                    }
+
+                    $staffs = Staff::where('unit_id', $this->record->id)->get();
+                    if ($staffs->isEmpty()) {
+                        Notification::make()->title('Unit ini belum punya pegawai.')->warning()->send();
+                        return;
+                    }
+
+                    $month = $data['month'];
+                    $year  = $data['year'];
+                    $totalDays = Carbon::create($year, $month)->daysInMonth;
+                    
+                    $dataToInsert = [];
+                    $now = now();
+
+                    foreach ($staffs as $staffIndex => $staff) {
+                        // Buat array hari dari 1 sampai akhir bulan (misal: [1, 2, 3 ... 31])
+                        $daysArray = range(1, $totalDays);
+                        
+                        // Pecah array hari tersebut menjadi per minggu (7 hari)
+                        $weeks = array_chunk($daysArray, 7);
+                        
+                        // Pointer untuk rotasi shift (Staf A mulai dari Shift Pagi, Staf B mulai dari Shift Siang, dst)
+                        $shiftPointer = $staffIndex % $workingShifts->count();
+
+                        // 3. Looping per Minggu untuk pegawai tersebut
+                        foreach ($weeks as $weekDays) {
+                            // Pilih 1 hari secara acak dari minggu ini untuk dijadikan hari libur
+                            $dayOff = $weekDays[array_rand($weekDays)];
+
+                            // 4. Looping per Hari dalam minggu tersebut
+                            foreach ($weekDays as $day) {
+                                $date = Carbon::create($year, $month, $day);
+                                
+                                if ($day === $dayOff) {
+                                    // Berikan shift libur
+                                    $shiftToAssign = $shiftLibur->id;
+                                } else {
+                                    // Berikan shift kerja berdasarkan urutan (Round-Robin)
+                                    $shiftToAssign = $workingShifts[$shiftPointer]->id;
+                                    
+                                    // Putar pointer shift ke selanjutnya (Pagi -> Siang -> Malam -> Pagi lagi)
+                                    $shiftPointer = ($shiftPointer + 1) % $workingShifts->count();
+                                }
+
+                                $dataToInsert[] = [
+                                    'staff_id'      => $staff->id,
+                                    'schedule_date' => $date->toDateString(),
+                                    'shift_id'      => $shiftToAssign,
+                                    'created_at'    => $now,
+                                    'updated_at'    => $now,
+                                ];
+                            }
+                        }
+                    }
+
+                    // 5. Simpan ke Database
+                    foreach (array_chunk($dataToInsert, 500) as $chunk) {
+                        Schedule::upsert(
+                            $chunk, 
+                            ['staff_id', 'schedule_date'], 
+                            ['shift_id', 'updated_at']
+                        );
+                    }
+
+                    Notification::make()
+                        ->title("Berhasil generate jadwal Shift untuk {$staffs->count()} pegawai.")
+                        ->success()
+                        ->send();
+                }),
             Action::make('exchange')
                 ->label('Tukar Jadwal')
                 ->color('info')
@@ -261,7 +368,7 @@ class ManageSchedules extends Page implements HasForms, HasTable
                 ->visible(fn () => $this->record->work_system == 'Shift' && Auth::user()->staff->chair_id != Auth::user()->staff->unit->leader_id)
                 ->modalHeading('Tukar Jadwal')
                 ->modalWidth('xl')
-                ->modalDescription('Fitur ini akan mengajukan penukaran jadwal Anda pada tanggal yang telah Anda tentukan dengan rekan kerja Anda.')
+                ->modalDescription('PERHATIAN: Fitur ini akan mengajukan penukaran jadwal Anda pada tanggal yang telah Anda tentukan dengan rekan kerja Anda. Jika hendak menukar libur, maka lakukan pada kedua tanggal yang akan ditukar')
                 ->modalSubmitActionLabel('Tukar Jadwal')
                 ->modalFooterActionsAlignment('center')
                 ->schema([
@@ -270,7 +377,7 @@ class ManageSchedules extends Page implements HasForms, HasTable
                         DatePicker::make('exchange_date')
                             ->label('Tanggal Tukar')
                             ->required()
-                            ->minDate(now())
+                            ->minDate(fn () => Carbon::today())
                             ->columnSpan(fn (Get $get) => !$get('staff_schedule_id') ? 2 : 1)
                             ->live()
                             ->afterStateUpdated(function ($state, Set $set) {
@@ -411,6 +518,7 @@ class ManageSchedules extends Page implements HasForms, HasTable
                             ->warning()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(ShiftExchangeResource::getUrl('index'))
                                     ->markAsRead()

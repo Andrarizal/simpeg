@@ -299,6 +299,7 @@ class ApproveTable
                                 ->status($notifColor)
                                 ->actions([
                                     Action::make('read')
+                                        ->label('Lihat')
                                         ->button()
                                         ->url(LeaveResource::getUrl('index'))
                                         ->markAsRead(),
@@ -376,6 +377,7 @@ class ApproveTable
                             ->danger()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(LeaveResource::getUrl('index'))
                                     ->markAsRead()
@@ -411,6 +413,7 @@ class ApproveTable
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(LeaveResource::getUrl('index'))
                                     ->markAsRead()
@@ -451,6 +454,7 @@ class ApproveTable
                             ->danger()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(LeaveResource::getUrl('index'))
                                     ->markAsRead()

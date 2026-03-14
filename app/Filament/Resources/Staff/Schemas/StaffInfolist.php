@@ -143,7 +143,7 @@ class StaffInfolist
                             ->columns(2)
                             ->schema([
                                 TextEntry::make('nik')
-                                    ->label('Nomor Induk Kepegawaian')
+                                    ->label('Nomor Induk Kependudukan')
                                     ->columnSpanFull()
                                     ->extraAttributes([
                                         'class' => 'font-bold text-4xl -mt-2 font-mono',
@@ -320,7 +320,7 @@ class StaffInfolist
                                             return $record->leave()
                                                 ->where('staff_id', $record->id)
                                                 ->where('type', 'Cuti')
-                                                ->where('subtype', 'Tahunan')
+                                                ->whereIn('subtype', ['Tahunan', 'Darurat'])
                                                 ->whereYear('start_date', now()->year)
                                                 ->where(function ($query) {
                                                     $query->where('status', '!=', 'Ditolak')
@@ -341,7 +341,7 @@ class StaffInfolist
                                             $taken = $record->leave()
                                                 ->where('staff_id', $record->id)
                                                 ->where('type', 'Cuti')
-                                                ->where('subtype', 'Tahunan')
+                                                ->whereIn('subtype', ['Tahunan', 'Darurat'])
                                                 ->whereYear('start_date', now()->year)
                                                 ->where(function ($query) {
                                                         $query->where('status', '!=', 'Ditolak')

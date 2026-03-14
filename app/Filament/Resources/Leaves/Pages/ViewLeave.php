@@ -40,6 +40,7 @@ class ViewLeave extends ViewRecord
                         ->success()
                         ->actions([
                             Action::make('read')
+                                ->label('Lihat')
                                 ->button()
                                 ->url(LeaveResource::getUrl('index'))
                                 ->markAsRead()
@@ -92,6 +93,7 @@ class ViewLeave extends ViewRecord
                         ->warning()
                         ->actions([
                             Action::make('read')
+                                ->label('Lihat')
                                 ->button()
                                 ->url(LeaveResource::getUrl('index'))
                                 ->markAsRead()
@@ -172,6 +174,7 @@ class ViewLeave extends ViewRecord
                             ->status($notifColor)
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(LeaveResource::getUrl('index'))
                                     ->markAsRead(),
@@ -249,6 +252,7 @@ class ViewLeave extends ViewRecord
                         ->danger()
                         ->actions([
                             Action::make('read')
+                                ->label('Lihat')
                                 ->button()
                                 ->url(LeaveResource::getUrl('index'))
                                 ->markAsRead()
@@ -285,6 +289,7 @@ class ViewLeave extends ViewRecord
                         ->success()
                         ->actions([
                             Action::make('read')
+                                ->label('Lihat')
                                 ->button()
                                 ->url(LeaveResource::getUrl('index'))
                                 ->markAsRead()
@@ -326,6 +331,7 @@ class ViewLeave extends ViewRecord
                         ->danger()
                         ->actions([
                             Action::make('read')
+                                ->label('Lihat')
                                 ->button()
                                 ->url(LeaveResource::getUrl('index'))
                                 ->markAsRead()

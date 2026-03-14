@@ -540,6 +540,7 @@ class OnCallResource extends Resource
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OnCallResource::getUrl('index'))
                                     ->markAsRead()
@@ -584,6 +585,7 @@ class OnCallResource extends Resource
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OnCallResource::getUrl('index'))
                                     ->markAsRead()
@@ -618,6 +620,7 @@ class OnCallResource extends Resource
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OnCallResource::getUrl('index'))
                                     ->markAsRead()
@@ -659,6 +662,7 @@ class OnCallResource extends Resource
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OvertimeResource::getUrl('index'))
                                     ->markAsRead()

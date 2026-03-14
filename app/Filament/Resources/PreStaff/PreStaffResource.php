@@ -10,6 +10,7 @@ use App\Models\PreStaff;
 use App\Models\StaffStatus;
 use App\Models\Unit;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -106,7 +107,7 @@ class PreStaffResource extends Resource
                                     ->dehydrated(),
                                 DatePicker::make('entry_date')
                                     ->label('Terhitung Mulai Tanggal')
-                                    ->maxDate(now())
+                                    ->maxDate(fn () => Carbon::today())
                                     ->required()
                                     ->native(false),
                                 Select::make('staff_status_id')

@@ -45,7 +45,7 @@ class LeavesOverview extends StatsOverviewWidget
                     ->get(['type', 'subtype', 'start_date', 'end_date']);
 
         $usedLeave = $leaves->where('type', 'Cuti')
-            ->where('subtype', 'Tahunan')
+            ->whereIn('subtype', ['Tahunan', 'Darurat'])
             ->sum(fn ($l) => Carbon::parse($l->start_date)->diffInDays(Carbon::parse($l->end_date)) + 1);
 
         $usedPermission = $leaves->where('type', 'Izin')

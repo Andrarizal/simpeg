@@ -264,7 +264,7 @@ class LeaveInfolist
                                                 return $record
                                                     ->where('staff_id', $record->staff_id)
                                                     ->where('type', 'Cuti')
-                                                    ->where('subtype', 'Tahunan')
+                                                    ->whereIn('subtype', ['Tahunan', 'Darurat'])
                                                     ->whereYear('start_date', now()->year)
                                                     ->where(function ($query) {
                                                         $query->where('status', '!=', 'Ditolak')
@@ -287,7 +287,7 @@ class LeaveInfolist
                                                 $taken = $record
                                                     ->where('staff_id', $record->staff_id)
                                                     ->where('type', 'Cuti')
-                                                    ->where('subtype', 'Tahunan')
+                                                    ->whereIn('subtype', ['Tahunan', 'Darurat'])
                                                     ->whereYear('start_date', now()->year)
                                                     ->where(function ($query) {
                                                         $query->where('status', '!=', 'Ditolak')

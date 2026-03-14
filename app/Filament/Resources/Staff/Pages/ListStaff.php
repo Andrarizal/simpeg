@@ -43,7 +43,7 @@ class ListStaff extends ListRecords
             Action::make('import')
                 ->label('Impor Pegawai')
                 ->color('warning')
-                ->icon('heroicon-o-arrow-up-tray')
+                ->icon('heroicon-o-arrow-down-on-square')
                 ->modalHeading('Impor Data Pegawai')
                 ->modalDescription('Unggah file Excel atau CSV berisi data pegawai. Sistem akan memperbarui data yang sudah ada (berdasarkan NIK).')
                 ->schema([
@@ -210,7 +210,8 @@ class ListStaff extends ListRecords
                     ->success()
                     ->send();
                 }),
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Daftarkan Pegawai'),
         ];
     }
 

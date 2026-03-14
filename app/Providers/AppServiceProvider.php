@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Livewire\FloatingNotification;
 use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -389,6 +390,11 @@ class AppServiceProvider extends ServiceProvider
         FilamentView::registerRenderHook(
             'panels::body.end',
             fn () => \Livewire\Livewire::mount(FloatingNotification::class)
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::TOPBAR_END,
+            fn (): string => Blade::render('<div class="md:hidden">@livewire(\App\Livewire\NotificationBadge::class)</div>')
         );
     }
 }

@@ -267,12 +267,12 @@ class StaffForm
                             ->required(),
                         DatePicker::make('contract.start_date')
                             ->label('Tanggal Mulai')
-                            ->maxDate(now())
+                            ->maxDate(fn () => Carbon::today())
                             ->required()
                             ->native(false),
                         DatePicker::make('contract.end_date')
                             ->label('Tanggal Berakhir')
-                            ->minDate(now())
+                            ->minDate(fn () => Carbon::today())
                             ->required()
                             ->native(false),
                         FileUpload::make('contract.decree')
@@ -428,7 +428,7 @@ class StaffForm
                                     ->label('Sertifikat')
                                     ->disk('public')
                                     ->visibility('public')
-                                    ->directory('ijazah')
+                                    ->directory('sertifikat')
                                     ->acceptedFileTypes(['application/pdf'])
                                     ->maxSize(2048)
                                     ->helperText('Unggah sertifikat dalam format PDF'),

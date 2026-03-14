@@ -382,6 +382,7 @@ class ApproveTable
                           ->success()
                           ->actions([
                               Action::make('read')
+                                  ->label('Lihat')
                                   ->button()
                                   ->url(DutyResource::getUrl('index'))
                                   ->markAsRead()

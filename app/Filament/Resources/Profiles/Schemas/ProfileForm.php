@@ -136,7 +136,7 @@ class ProfileForm
                                                         ->native(false),
                                                     DatePicker::make('entry_date')
                                                         ->label('Terhitung Mulai Tanggal')
-                                                        ->maxDate(now())
+                                                        ->maxDate(fn () => Carbon::today())
                                                         ->required()
                                                         ->disabled()
                                                         ->dehydrated()
@@ -258,7 +258,7 @@ class ProfileForm
                                                         ->label('Sertifikat')
                                                         ->disk('public')
                                                         ->visibility('public')
-                                                        ->directory('ijazah')
+                                                        ->directory('sertifikat')
                                                         ->acceptedFileTypes(['application/pdf'])
                                                         ->maxSize(2048) // maksimal 2MB
                                                         ->helperText('Unggah sertifikat dalam format PDF'),
@@ -334,7 +334,7 @@ class ProfileForm
                                                                 ->required(),
                                                             DatePicker::make('training_date')
                                                                 ->label('Tanggal Pelatihan')
-                                                                ->maxDate(now())
+                                                                ->maxDate(fn () => Carbon::today())
                                                                 ->required()
                                                                 ->native(false),
                                                             Textarea::make('description')
@@ -402,13 +402,13 @@ class ProfileForm
                                                         ->dehydrated(),
                                                     DatePicker::make('contract.start_date')
                                                         ->label('Tanggal Mulai')
-                                                        ->maxDate(now())
+                                                        ->maxDate(fn () => Carbon::today())
                                                         ->disabled()
                                                         ->dehydrated()
                                                         ->native(false),
                                                     DatePicker::make('contract.end_date')
                                                         ->label('Tanggal Berakhir')
-                                                        ->minDate(now())
+                                                        ->minDate(fn () => Carbon::today())
                                                         ->disabled()
                                                         ->dehydrated()
                                                         ->native(false),

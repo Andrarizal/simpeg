@@ -181,6 +181,7 @@ class ApproveTable
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OvertimeResource::getUrl('index'))
                                     ->markAsRead()
@@ -240,6 +241,7 @@ class ApproveTable
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OvertimeResource::getUrl('index'))
                                     ->markAsRead()
@@ -275,6 +277,7 @@ class ApproveTable
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OvertimeResource::getUrl('index'))
                                     ->markAsRead()
@@ -317,6 +320,7 @@ class ApproveTable
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(OvertimeResource::getUrl('index'))
                                     ->markAsRead()

@@ -216,6 +216,7 @@ class StaffAdministrationsTable
                             ->success()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(StaffAdministrationResource::getUrl('view', [$record->staff_id]))
                                     ->markAsRead()
@@ -253,9 +254,10 @@ class StaffAdministrationsTable
                         Notification::make()
                             ->title('Administrasi Ditolak')
                             ->body('Alasan SDM: ' . $data['note'])
-                            ->success()
+                            ->danger()
                             ->actions([
                                 Action::make('read')
+                                    ->label('Lihat')
                                     ->button()
                                     ->url(StaffAdministrationResource::getUrl('view', [$record->staff_id]))
                                     ->markAsRead()
@@ -294,6 +296,7 @@ class StaffAdministrationsTable
                                     ->success()
                                     ->actions([
                                         Action::make('read')
+                                            ->label('Lihat')
                                             ->button()
                                             ->url(StaffAdministrationResource::getUrl('view', [$record->staff_id]))
                                             ->markAsRead()
@@ -303,6 +306,37 @@ class StaffAdministrationsTable
 
                             Notification::make()
                                 ->title(count($records) . ' Administrasi diverifikasi')
+                                ->success()
+                                ->send();
+                        }),
+                    BulkAction::make('reject')
+                        ->label('Tolak')
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'is_verified' => 0,
+                                ]);
+
+                                Notification::make()
+                                    ->title('Administrasi Ditolak')
+                                    ->body('Administrasi Anda telah ditolak SDM')
+                                    ->danger()
+                                    ->actions([
+                                        Action::make('read')
+                                            ->label('Lihat')
+                                            ->button()
+                                            ->url(StaffAdministrationResource::getUrl('view', [$record->staff_id]))
+                                            ->markAsRead()
+                                    ])
+                                    ->sendToDatabase($record->staff->user);
+                            }
+
+                            Notification::make()
+                                ->title(count($records) . ' Administrasi ditolak')
                                 ->success()
                                 ->send();
                         }),

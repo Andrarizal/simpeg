@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Leaves\Schemas;
 
 use App\Models\Leave;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -81,24 +82,13 @@ class LeaveForm
                                         })
                                         ->columnSpan(1),
 
-                                    TextInput::make('remaining')
-                                        ->label(fn (callable $get) => 'Sisa Jatah ' . ($get('type') ?? 'Cuti'))
-                                        ->numeric()
-                                        ->disabled()
-                                        ->dehydrated(true)
-                                        ->inlineLabel()
-                                        ->prefixIcon('heroicon-m-chart-pie')
-                                        ->visible(fn(callable $get) => in_array($get('subtype'), ['Tahunan', 'Non-Sakit']))
-                                        ->default(fn() => static::calculateRemaining('Cuti', $staff))
-                                        ->extraInputAttributes(['class' => 'font-bold text-primary-600'])
-                                        ->columnSpan(1),
-
                                     Select::make('subtype')
                                         ->label('Kategori')
                                         ->options(function (callable $get) {
                                             if ($get('type') == 'Cuti'){
                                                 return [
                                                     'Tahunan' => 'Tahunan',
+                                                    'Darurat' => 'Darurat',
                                                     'Melahirkan' => 'Melahirkan',
                                                     'Duka' => 'Duka',
                                                     'Menikah' => 'Menikah',
@@ -122,6 +112,18 @@ class LeaveForm
                                         })
                                         ->inlineLabel()
                                         ->native(false),
+
+                                    TextInput::make('remaining')
+                                        ->label(fn (callable $get) => 'Sisa Jatah ' . ($get('type') ?? 'Cuti'))
+                                        ->numeric()
+                                        ->disabled()
+                                        ->dehydrated(true)
+                                        ->inlineLabel()
+                                        ->prefixIcon('heroicon-m-chart-pie')
+                                        ->visible(fn(callable $get) => in_array($get('subtype'), ['Tahunan', 'Darurat', 'Non-Sakit']))
+                                        ->default(fn() => static::calculateRemaining('Cuti', $staff))
+                                        ->extraInputAttributes(['class' => 'font-bold text-primary-600'])
+                                        ->columnSpan(1),
                                     
                                     Textarea::make('reason')
                                         ->label('Keperluan / Alasan')
@@ -140,7 +142,7 @@ class LeaveForm
                                 ->default(fn() => $chair > 1 ? $staff->id : null)
                                 ->required(),
                                 
-                            Section::make('Personil')
+                            Section::make('Detail Pemohon dan Pengganti')
                                 ->icon('heroicon-m-user-group')
                                 ->visible(function () {
                                     $user = Auth::user();
@@ -149,7 +151,7 @@ class LeaveForm
                                 ->schema([
                                     Grid::make(2)->schema([
                                         Select::make('staff_id')
-                                            ->label('Nama Pegawai')
+                                            ->label('Nama Pemohon')
                                             ->relationship('staff', 'name')
                                             ->searchable()
                                             ->preload()
@@ -215,12 +217,31 @@ class LeaveForm
                                         ->prefixIcon('heroicon-m-calendar')
                                         ->minDate(function (callable $get) {
                                             $type = $get('subtype'); 
-                                            if (in_array($type, ['Tahunan', 'Melahirkan'])) {
-                                                return Carbon::now()->addMonth()->addDay(); 
+                                            if (in_array($type, ['Tahunan'])) {
+                                                return Carbon::today()->addDay(14); 
                                             }
                                             return Carbon::tomorrow(); 
                                         })
                                         ->maxDate(date('Y-12-31'))
+                                        ->disabledDates(function () {
+                                            $staffId = Auth::user()->staff_id; 
+                                            
+                                            $existingLeaves = Leave::where('staff_id', $staffId)
+                                                ->where('status', '!=', 'Ditolak')
+                                                ->get(['start_date', 'end_date']);
+
+                                            $disabledDates = [];
+
+                                            foreach ($existingLeaves as $leave) {
+                                                $period = CarbonPeriod::create($leave->start_date, $leave->end_date);
+                                                
+                                                foreach ($period as $date) {
+                                                    $disabledDates[] = $date->format('Y-m-d');
+                                                }
+                                            }
+
+                                            return $disabledDates;
+                                        })
                                         ->disabled(fn (callable $get) => blank($get('subtype')))
                                         ->required()
                                         ->reactive()
@@ -237,6 +258,7 @@ class LeaveForm
                                             $subtype = $get('subtype');
                                             $limit = match ($subtype) {
                                                 'Tahunan' => 6,
+                                                'Darurat' => 1,
                                                 'Melahirkan' => 90,
                                                 'Duka' => 2,
                                                 'Menikah' => 3,
@@ -248,6 +270,25 @@ class LeaveForm
                                                 default => 30
                                             };
                                             return $start ? Carbon::parse($start)->addDays($limit) : null;
+                                        })
+                                        ->disabledDates(function () {
+                                            $staffId = Auth::user()->staff_id; 
+                                            
+                                            $existingLeaves = Leave::where('staff_id', $staffId)
+                                                ->where('status', '!=', 'Ditolak')
+                                                ->get(['start_date', 'end_date']);
+
+                                            $disabledDates = [];
+
+                                            foreach ($existingLeaves as $leave) {
+                                                $period = CarbonPeriod::create($leave->start_date, $leave->end_date);
+                                                
+                                                foreach ($period as $date) {
+                                                    $disabledDates[] = $date->format('Y-m-d');
+                                                }
+                                            }
+
+                                            return $disabledDates;
                                         })
                                         ->reactive()
                                         ->disabled(fn (callable $get) => blank($get('start_date')))
@@ -310,7 +351,7 @@ class LeaveForm
 
             // cek jumlah cuti yang pernah diambil dalam setahun
             $usedLeave = Leave::where('type', 'Cuti')
-                ->where('subtype', 'Tahunan')
+                ->whereIn('subtype', ['Tahunan', 'Darurat'])
                 ->where('staff_id', $staff->id)
                 ->where('status', '!=', 'Ditolak')
                 ->whereYear('start_date', now()->year)

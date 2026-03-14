@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
             $table->enum('type', ['Cuti', 'Izin']);
-            $table->enum('subtype', ['Tahunan', 'Melahirkan', 'Duka', 'Menikah', 'Ibadah Haji', 'Khitan Anak', 'Baptis Anak', 'Non-Sakit', 'Sakit']);
+            $table->enum('subtype', ['Tahunan', 'Darurat', 'Melahirkan', 'Duka', 'Menikah', 'Ibadah Haji', 'Khitan Anak', 'Baptis Anak', 'Non-Sakit', 'Sakit']);
             $table->foreignId('staff_id')->constrained(
                 table: 'staff',
                 indexName: 'leaves_staff_id'

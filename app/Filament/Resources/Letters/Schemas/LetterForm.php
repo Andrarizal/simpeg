@@ -205,7 +205,7 @@ class LetterForm
 
                                 DatePicker::make('letter_date')
                                     ->label('Tanggal Surat')
-                                    ->maxDate(today())
+                                    ->maxDate(fn () => Carbon::today())
                                     ->readOnly(fn (Get $get) => $get('classification') === 'Undangan')
                                     ->dehydrated()
                                     ->required(),
