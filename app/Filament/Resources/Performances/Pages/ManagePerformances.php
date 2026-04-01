@@ -41,7 +41,7 @@ class ManagePerformances extends ManageRecords
 
         if ($requestedTab === 'penilaian') {
             $user = Auth::user();
-            $isBoss = $user->staff->chair->level != 4 || $user->staff->unit->leader_id == $user->staff->chair_id;
+            $isBoss = $user->staff->chair->level != 4 || $user->staff->unit->leader_id == $user->staff->chair_id || $user->role_id == 1;
 
             if (! $isBoss) {
                 $this->redirect($this->getResource()::getUrl('index'));
@@ -347,7 +347,7 @@ class ManagePerformances extends ManageRecords
                         ->label('Setujui Nilai')
                         ->icon('heroicon-o-check')
                         ->color('success')
-                        ->visible(fn ($record) => $record->appraisal->appraiser->chair->level > Auth::user()->staff->chair->level)
+                        ->visible(fn ($record) => $record->appraisal?->appraiser->chair->level > Auth::user()->staff->chair->level)
                         ->requiresConfirmation()
                         ->action(function ($record) {
                             $user = Auth::user();

@@ -21,6 +21,12 @@ class StaffContract extends Model
 
     protected static function booted(): void
     {
+        static::created(function ($contract) {
+            StaffContractEvaluation::create([
+                'contract_id' => $contract->id,
+            ]);
+        });
+
         static::deleted(function ($model) {
             if ($model->decree && Storage::disk('public')->exists($model->decree)) {
                 Storage::disk('public')->delete($model->decree);

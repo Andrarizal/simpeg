@@ -38,13 +38,12 @@ class PreRegistration extends Page implements HasSchemas
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('Nama')
+                    ->label('Nama Lengkap')
                     ->columnSpanFull()
-                    ->placeholder('ex. Tamam Muhammad')
+                    ->inlineLabel()
                     ->required(),
                 TextInput::make('nik')
                     ->label('Nomor Induk Kependudukan')
-                    ->placeholder('ex. 3321029920192099')
                     ->maxLength(16)
                     ->numeric()
                     ->unique('staff', 'nik')
@@ -59,13 +58,11 @@ class PreRegistration extends Page implements HasSchemas
                     ->email()
                     ->unique('staff', 'email')
                     ->unique('pre_staff', 'email')
-                    ->placeholder('ex. tamam@gmail.com')
                     ->required(),
                 TextInput::make('phone')
                     ->label('No. Telepon')
                     ->tel()
                     ->mask('9999-9999-9999')
-                    ->placeholder('ex. 0812-3456-7890')
                     ->required(),
             ])
             ->columns(2)

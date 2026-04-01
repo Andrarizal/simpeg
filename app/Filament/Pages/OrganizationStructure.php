@@ -22,10 +22,10 @@ class OrganizationStructure extends Page
 
     public static function getNavigationGroup(): ?string
     {
-        if (Auth::user()->staff->chair->level == 4 && Auth::user()->staff->chair_id != Auth::user()->staff->unit->leader_id) {
-            return null;
+        if (Auth::user()->staff->chair->level == 3 && Auth::user()->role_id == 1) {
+            return 'Perusahaan'; 
         }
-        return 'Perusahaan'; 
+        return null;
     }
 
     protected function getHeaderActions(): array

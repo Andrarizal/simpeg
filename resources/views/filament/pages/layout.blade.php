@@ -14,9 +14,28 @@
           src: url('/fonts/SF-Pro.ttf');
       }
 
-      :root {
-          --font-family: 'SF-Pro', sans-serif !important;
+      @font-face {
+          font-family: 'SF-Pro';
+          src: url('/fonts/SF-Pro.ttf');
       }
+
+      @font-face {
+          font-family: 'SF-Pro-Rounded';
+          src: url('/fonts/SF-Pro-Rounded.otf');
+      }
+
+      :root {
+          --font-family: 'SF-Pro-Rounded', sans-serif !important;
+      }
+
+      body {
+            letter-spacing: 0.04em;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-bold {
+            font-family: 'SF-Pro', sans-serif !important;
+            letter-spacing: 0.02em!important;
+        }
 
       body {
         background-color: #f8fafc; 

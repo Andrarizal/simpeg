@@ -5,16 +5,20 @@ namespace App\Filament\Pages;
 use App\Livewire\DeviceCaptureWidget;
 use App\Models\Presence;
 use App\Models\Schedule;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
 class Dashboard extends BaseDashboard
 {
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Home;
+    
     public function getTitle(): string
     {
         $user = Auth::user();

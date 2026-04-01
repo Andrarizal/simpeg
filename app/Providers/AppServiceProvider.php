@@ -35,15 +35,30 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     @font-face {
+                        font-family: 'SF-Pro-Rounded';
+                        src: url('/fonts/SF-Pro-Rounded.otf');
+                    }
+
+                    @font-face {
                         font-family: 'SF-Mono';
                         src: url('/fonts/SF-Mono.otf');
                     }
 
                     :root {
-                        --font-family: 'SF-Pro', sans-serif !important;
+                        --font-family: 'SF-Pro-Rounded', sans-serif !important;
                         --mono-font-family: 'SF-Mono', monospace!important;
                         --sidebar-width: 18rem!important;
                     }
+
+                    body {
+                        letter-spacing: 0.04em;
+                    }
+
+                    h1, h2, h3, h4, h5, h6, .font-bold {
+                        font-family: 'SF-Pro', sans-serif !important;
+                        letter-spacing: 0.02em!important;
+                    }
+
 
                     .fi-card,
 

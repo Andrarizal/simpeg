@@ -603,6 +603,7 @@ class OnCallResource extends Resource
                     ->color('info')
                     ->visible(fn ($record, $livewire) => 
                         is_null($record->is_verified) && 
+                        isset($livewire->tableFilters['role_view']) && 
                         $livewire->tableFilters['role_view']['value'] == 'as_verifier')
                     ->requiresConfirmation()
                     ->action(function ($record) {
@@ -638,6 +639,7 @@ class OnCallResource extends Resource
                     ->color('danger')
                     ->visible(fn ($record, $livewire) => 
                         is_null($record->is_verified) && 
+                        isset($livewire->tableFilters['role_view']) && 
                         $livewire->tableFilters['role_view']['value'] == 'as_verifier')
                     ->schema([
                         Textarea::make('note')

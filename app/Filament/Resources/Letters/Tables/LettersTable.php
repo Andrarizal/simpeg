@@ -78,7 +78,7 @@ class LettersTable
                             ->unique() 
                             ->mapWithKeys(function ($dateString) {
                                 return [
-                                    $dateString => Carbon::createFromFormat('Y-m', $dateString)->translatedFormat('F Y')
+                                    $dateString => Carbon::createFromFormat('!Y-m', $dateString)->translatedFormat('F Y')
                                 ];
                             })
                             ->toArray();

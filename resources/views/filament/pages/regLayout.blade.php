@@ -14,9 +14,23 @@
           src: url('/fonts/SF-Pro.ttf');
       }
 
-      :root {
-          --font-family: 'SF-Pro', sans-serif !important;
+      @font-face {
+          font-family: 'SF-Pro-Rounded';
+          src: url('/fonts/SF-Pro-Rounded.otf');
       }
+
+      :root {
+          --font-family: 'SF-Pro-Rounded', sans-serif !important;
+      }
+
+      body {
+            letter-spacing: 0.04em;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-bold {
+            font-family: 'SF-Pro', sans-serif !important;
+            letter-spacing: 0.01em!important;
+        }
 
       body {
         background-color: #f8fafc; 
@@ -92,10 +106,12 @@
           class="w-6 h-6 text-gray-100"
       />
     </button>
-    <div class="flex justify-center lg:justify-start items-center gap-4">
-      <img src="{{ asset('img/rsumpyk.png') }}" class="w-14 h-14">
-      <h1 class="font-bold leading-tight lg:text-xl hidden lg:block">Sistem Informasi Manajemen dan Tenaga Pegawai</h1>
-      <h1 class="font-bold leading-tight text-2xl lg:hidden">SIMANTAP</h1>
+    <div class="flex justify-center lg:justify-start items-center gap-4 p-4 border border-gray-50/20 bg-gray-50/5 dark:bg-gray-800/50 rounded-2xl overflow-hidden shadow-2xl">
+        <img src="{{ asset('img/rsumpyk.png') }}" class="w-14 h-14 hidden lg:block">
+        <div class="-mt-1">
+            <h1 class="font-bold text-center lg:text-start text-4xl lg:text-5xl">SIMANTAP</h1>
+            <h2 class="font-light text-center lg:text-start text-xs lg:-mt-1">Sistem Informasi Manajemen dan <br class="lg:hidden">Tenaga Pegawai</h2>
+        </div>
     </div>
     <div class="h-full my-8 p-0 lg:mt-0 lg:p-10 w-6/7 lg:w-full border border-transparent bg-transparent rounded-4xl">
       {{-- Kanan: form login --}}
