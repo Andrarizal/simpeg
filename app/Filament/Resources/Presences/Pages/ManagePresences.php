@@ -67,13 +67,13 @@ class ManagePresences extends ManageRecords implements HasTable
     protected function getHeaderActions(): array
     {
         return [
-            // Action::make('ip-status')
-            //     ->label('IP Info')
-            //     ->color('gray')
-            //     ->icon('heroicon-o-signal')
-            //     ->modalHeading('Status Jaringan')
-            //     ->modalWidth('md')
-            //     ->modalContent(view('filament.components.current-ip')),
+            Action::make('ip-status')
+                ->label('IP Info')
+                ->color('gray')
+                ->icon('heroicon-o-signal')
+                ->modalHeading('Status Jaringan')
+                ->modalWidth('md')
+                ->modalContent(view('filament.components.current-ip')),
             Action::make('check_in')
                 ->label('Check In')
                 ->icon('heroicon-o-finger-print')

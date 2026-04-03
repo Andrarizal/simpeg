@@ -133,11 +133,11 @@
                         @else
                             <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['known'] }}" width="96" height="96" /></p>
                         @endif
+                        <p style="margin: 0; font-size: 14px;">{{ $head }}</p>
                     @else
                         <p style="margin: 0; line-height: 96px;">&nbsp;</p>
                     @endif
                     
-                    <p style="margin: 0; font-size: 14px;">{{ $head }}</p>
                 </td>
 
                 <td style="width: 50%; text-align: center; vertical-align: top; border: 0;">
@@ -156,11 +156,11 @@
                         @else
                             <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['verified'] }}" width="96" height="96" /></p>
                         @endif
+                        <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
                     @else
                         <p style="margin: 0; line-height: 96px;">&nbsp;</p>
                     @endif
                     
-                    <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
                 </td>
             </tr>
         </table>

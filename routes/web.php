@@ -11,6 +11,7 @@ use App\Models\StaffWorkEducation;
 use App\Models\StaffWorkExperience;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -190,3 +191,20 @@ Route::middleware('auth')->get('/latest-notification', function (Request $reques
 
     return response()->json(['status' => 'empty']);
 });
+
+Route::get('/clear-config', function () {
+    Artisan::call('optimize:clear');
+
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+    }
+
+    Notification::make()
+        ->title('Sistem Diperbarui')
+        ->body('Seluruh cache dan konfigurasi berhasil dibersihkan.')
+        ->success()
+        ->send();
+
+    return redirect()->back();
+    
+})->middleware(['web', 'auth']);

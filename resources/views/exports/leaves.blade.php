@@ -151,7 +151,7 @@
                     <td style="text-align: center">{{ $record->staff->chair->level === 4 ? 'Kepala Seksi' : 'Direktur'}}</td>
                 </tr>
                 <tr>
-                    <td style="text-align: center; vertical-align: bottom">
+                    <td style="text-align: center; vertical-align: bottom" width="33%">
                         <?php
                         $known = str_contains($record->status, 'Disetujui') || str_contains($record->status, 'Diketahui') ? true : false;
                         if ($known){ ?>
@@ -160,15 +160,15 @@
                             @else
                                 <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['known'] }}" width="84" height="84" /></p>
                             @endif
+                            <p style="margin: 0; font-size: 14px;">{{ $head->name }}</p>
                         <?php } else { ?>
                             <br>
                             <br>
                             <br>
                             <br>
                         <?php } ?>
-                        <p style="margin: 0; font-size: 14px;">{{ $head->name }}</p>
                     </td>
-                    <td style="text-align: center; vertical-align: bottom">
+                    <td style="text-align: center; vertical-align: bottom" width="33%">
                         <?php
                         $verified = $record->is_verified === 1 ? true : false;
                         if ($verified){ ?>
@@ -177,15 +177,15 @@
                             @else
                                 <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['verified'] }}" width="84" height="84" /></p>
                             @endif
+                            <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
                         <?php } else { ?>
                             <br>
                             <br>
                             <br>
                             <br>
                         <?php } ?>
-                        <p style="margin: 0; font-size: 14px;">{{ $sdm }}</p>
                     </td>
-                    <td style="text-align: center; vertical-align: bottom">
+                    <td style="text-align: center; vertical-align: bottom" width="33%">
                         <?php
                         $approve = str_contains($record->status, 'Disetujui') ? true : false;
                         if ($approve){ ?>
@@ -194,13 +194,13 @@
                             @else
                                 <p style="margin: 0;"><img src="data:image/svg+xml;base64,{{ $qrCode['approve'] }}" width="84" height="84" /></p>
                             @endif
+                            <p style="margin: 0; font-size: 14px;">{{ $approver }}</p>
                         <?php } else { ?>
                             <br>
                             <br>
                             <br>
                             <br>
                         <?php } ?>
-                        <p style="margin: 0; font-size: 14px;">{{ $approver }}</p>
                     </td>
                 </tr>
             </tbody>

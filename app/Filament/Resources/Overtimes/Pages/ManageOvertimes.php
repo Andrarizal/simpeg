@@ -86,7 +86,9 @@ class ManageOvertimes extends ManageRecords
                         }
                     }
 
-                    $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()->user ?? null;
+                    $sdms = Staff::with('user')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->get();
+                    $usersToNotify = $sdms->pluck('user')->filter(); 
+
                     Notification::make()
                         ->title('Pengajuan Lembur Baru')
                         ->body("{$senderStaff->name} mengajukan lembur pada tanggal " . Carbon::parse($record->overtime_date)->format('d F Y'))
@@ -97,7 +99,7 @@ class ManageOvertimes extends ManageRecords
                                 ->button()
                                 ->url(OvertimeResource::getUrl('approve', ['record' => $record])),
                         ])
-                        ->sendToDatabase($sdm);
+                        ->sendToDatabase($usersToNotify);
                 }),
             Action::make('periods')
                 ->label('Kelola Periode')

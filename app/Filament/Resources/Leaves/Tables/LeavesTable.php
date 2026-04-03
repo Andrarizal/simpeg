@@ -187,7 +187,7 @@ class LeavesTable
                         ->modalWidth('5xl')
                         ->modalContent(function ($record, $livewire) {
                             $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+                            $sdm = $record->verifier ?? null;
 
                             if (!$head) {
                                 return view('filament.components.alert', [
@@ -196,13 +196,6 @@ class LeavesTable
                                 ]);
                             }
                             
-                            if (!$sdm) {
-                                return view('filament.components.alert', [
-                                    'message' => 'Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.',
-                                    'color'   => 'danger',
-                                ]);
-                            }
-
                             $approver = '';
                             if ($record->staff->chair->level == 4){
                                 $approver = Staff::where('chair_id', $head->chair->head_id)->first()->name;
@@ -317,7 +310,7 @@ class LeavesTable
                         ->color('info')
                         ->action(function ($record, $livewire) {
                             $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+                            $sdm = $record->verifier ?? null;
 
                             if (!$head) {
                                 return Notification::make()
@@ -326,13 +319,6 @@ class LeavesTable
                                     ->send();
                             }
                             
-                            if (!$sdm) {
-                                return Notification::make()
-                                    ->title('Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.')
-                                    ->danger()
-                                    ->send();
-                            }
-
                             $approver = '';
                             if ($record->staff->chair->level == 4){
                                 $approver = Staff::where('chair_id', $head->chair->head_id)->first()->name;

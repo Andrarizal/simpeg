@@ -75,14 +75,7 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                             ]);
                         }
 
-                        $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()?->name;
-
-                        if (!$sdm) {
-                            return view('filament.components.alert', [
-                                'message' => 'Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.',
-                                'color'   => 'danger',
-                            ]);
-                        }
+                        $sdm = $record->verifier ?? null;
 
                         foreach ($data as $i => $p) {
                             $this->verified = $p->is_verified ?? false;
@@ -211,15 +204,7 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                             return;
                         }
 
-                        $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()?->name;
-
-                        if (!$sdm) {
-                            Notification::make()
-                                ->title('Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.')
-                                ->danger()
-                                ->send();
-                            return;
-                        }
+                        $sdm = $record->verifier ?? null;
 
                         foreach ($data as $i => $p) {
                             $this->verified = $p->is_verified ?? false;

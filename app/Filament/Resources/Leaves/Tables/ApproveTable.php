@@ -306,21 +306,33 @@ class ApproveTable
                                 ])
                                 ->sendToDatabase($record->staff->user);
 
-                            $head = ($level == 1 || ($record->staff->chair->level == 4 && $level == 2)) 
-                                ? Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()
-                                : $staff->chair->parent->staff->first();
+                            $isSdmRoute = ($level == 1 || ($record->staff->chair->level == 4 && $level == 2));
 
-                            Notification::make()
-                                ->title("{$record->type} menunggu " . str_contains($head->chair->name, 'SDM') ? 'Verifikasi' : 'Persetujuan')
-                                ->body("{$record->staff->name} telah mengajukan {$record->type} pada tanggal " . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
-                                ->warning()
-                                ->actions([
-                                    Action::make('review')
-                                        ->label('Tinjau')
-                                        ->url(LeaveResource::getUrl('view', ['record' => $record]))
-                                        ->markAsRead(),
-                                ])
-                                ->sendToDatabase($head->user);
+                            if ($isSdmRoute) {
+                                $staffs = Staff::with('user')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->get();
+                                
+                                $usersToNotify = $staffs->pluck('user')->filter(); 
+                                $actionType = 'Verifikasi';
+                            } else {
+                                $head = $record->staff->chair->parent->staff->first();
+                                
+                                $usersToNotify = collect([$head?->user])->filter(); 
+                                $actionType = 'Persetujuan';
+                            }
+
+                            if ($usersToNotify->isNotEmpty()) {
+                                Notification::make()
+                                    ->title("{$record->type} menunggu {$actionType}")
+                                    ->body("{$record->staff->name} telah mengajukan {$record->type} pada tanggal " . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                                    ->warning()
+                                    ->actions([
+                                        Action::make('review')
+                                            ->label('Tinjau')
+                                            ->url(LeaveResource::getUrl('view', ['record' => $record]))
+                                            ->markAsRead(),
+                                    ])
+                                    ->sendToDatabase($usersToNotify);
+                            }
 
                             Notification::make()
                                 ->title($record->type . ' ' . ucfirst($verb))
@@ -475,7 +487,7 @@ class ApproveTable
                         ->modalWidth('5xl')
                         ->modalContent(function ($record, $livewire) {
                             $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+                            $sdm = $record->verifier ?? null;
 
                             if (!$head) {
                                 return view('filament.components.alert', [
@@ -484,13 +496,6 @@ class ApproveTable
                                 ]);
                             }
                             
-                            if (!$sdm) {
-                                return view('filament.components.alert', [
-                                    'message' => 'Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.',
-                                    'color'   => 'danger',
-                                ]);
-                            }
-
                             $approver = '';
                             if ($record->staff->chair->level == 4){
                                 $approver = Staff::where('chair_id', $head->chair->head_id)->first()->name;
@@ -605,7 +610,7 @@ class ApproveTable
                         ->color('info')
                         ->action(function ($record) {
                             $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = Staff::whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->select('name')->with('chair')->first()->name;
+                            $sdm = $record->verifier ?? null;
 
                             if (!$head) {
                                 return Notification::make()
@@ -614,13 +619,6 @@ class ApproveTable
                                     ->send();
                             }
                             
-                            if (!$sdm) {
-                                return Notification::make()
-                                    ->title('Posisi SDM belum terdaftar di sistem! Tidak dapat melanjutkan proses.')
-                                    ->danger()
-                                    ->send();
-                            }
-
                             $approver = '';
                             if ($record->staff->chair->level == 4){
                                 $approver = Staff::where('chair_id', $head->chair->head_id)->first()->name;
