@@ -94,7 +94,7 @@
                     <td>{{ $p->command }}</td>
                     <td style="width: 10%;text-align: center;">{{ $p->start_time }}</td>
                     <td style="width: 10%;text-align: center;">{{ $p->end_time ?? '-' }}</td>
-                    <td style="width: 10%;text-align: center;">{{ $p->hours }} Jam</td>
+                    <td style="width: 10%;text-align: center;">{{ $p->hours ? $p->hours . ' Jam' : '-' }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -119,14 +119,6 @@
             <tr>
                 <td style="width: 50%; text-align: center; vertical-align: top; border: 0;">
                     <p style="margin: 0; font-size: 14px;">Mengetahui Atasan</p>
-                    
-                    @php
-                        $known = true;
-                        foreach ($data as $i => $p) {
-                            $known = ($p->is_known === 2) ?? false;
-                        }
-                    @endphp
-                    
                     @if ($known)
                         @if (isset($isWord) && $isWord)
                             <p style="margin: 0;"><img src="{{ $qrCode['known'] }}" width="96" height="96" /></p>
@@ -142,13 +134,6 @@
 
                 <td style="width: 50%; text-align: center; vertical-align: top; border: 0;">
                     <p style="margin: 0; font-size: 14px;">Verifikasi SDM</p>
-                    
-                    @php
-                        $verified = true;
-                        foreach ($data as $i => $p) {
-                            $verified = $p->is_verified ?? false;
-                        }
-                    @endphp
                     
                     @if ($verified)
                         @if (isset($isWord) && $isWord)

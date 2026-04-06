@@ -109,9 +109,15 @@ class ApproveTable
                             ->mapWithKeys(fn ($period) => [$period->id => "{$period->name}"]);
                     })
                     ->default(function () {
-                        return MonthlyPeriod::where('start_date', '<=', now())
+                        $period_now = MonthlyPeriod::where('start_date', '<=', now())
                             ->where('end_date', '>=', now())
                             ->value('id');
+
+                        if (!$period_now) {
+                            $period_now = MonthlyPeriod::orderBy('start_date', 'desc')->value('id');
+                        }
+
+                        return $period_now;
                     })
                     ->query(function (Builder $query, $data) {
                         $query->where('period_id', $data['value']);
@@ -340,84 +346,6 @@ class ApproveTable
             ->recordAction('view')
             ->toolbarActions([
                 BulkActionGroup::make([
-                    // BulkAction::make('ketahui')
-                    //     ->label('Ketahui')
-                    //     ->color('success')
-                    //     ->requiresConfirmation()
-                    //     ->visible(fn () => Auth::user()->staff->chair->level == 3 || (Auth::user()->staff->chair->level == 4 && Auth::user()->staff->unit->leader_id == Auth::user()->staff->chair_id))
-                    //     ->disabled(fn (Collection $records) => !$records->doesntContain('is_known', 1) || !$records->doesntContain('is_known', 2))
-                    //     ->action(function ($records) {
-                    //         $user = Auth::user();
-        
-                    //         foreach ($records as $record) {
-                    //             $user->staff_id = $user->staff_id ?? 1;
-
-                    //             if ($user->staff->chair->level == 4){
-                    //                 $record->update([
-                    //                     'is_known' => 1,
-                    //                 ]);
-                    //             } else {
-                    //                 $record->update([
-                    //                     'is_known' => 2,
-                    //                 ]);
-                    //             }
-
-                    //             $record->update([
-                    //                 'known_by' => $user->staff_id,
-                    //                 'known_at' => Carbon::now()
-                    //             ]);
-
-                    //             Notification::make()
-                    //                 ->title('Pengajuan Lembur Diketahui')
-                    //                 ->body('Lembur Anda untuk tanggal ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diketahui oleh ' . $user->staff->chair->level == 4 ? 'Kepala Unit' : 'Koordinator')
-                    //                 ->success()
-                    //                 ->actions([
-                    //                     Action::make('read')
-                    //                         ->button()
-                    //                         ->url(OvertimeResource::getUrl('index'))
-                    //                         ->markAsRead()
-                    //                 ])
-                    //                 ->sendToDatabase($record->staff->user);
-                    //         }
-
-                    //         Notification::make()
-                    //             ->title('Data lembur diketahui.')
-                    //             ->success()
-                    //             ->send();
-                    //     }),
-
-                    // BulkAction::make('verifikasi')
-                    //     ->label('Verifikasi ')
-                    //     ->color('info')
-                    //     ->requiresConfirmation()
-                    //     ->visible(fn () => Auth::user()->role_id == 1 && Auth::user()->staff->chair->level == 4)
-                    //     ->disabled(fn (Collection $records) => !$records->doesntContain('is_verified', 1))
-                    //     ->action(function ($records) {
-                    //         foreach ($records as $record) {
-                    //             $record->update([
-                    //                 'is_verified' => 1,
-                    //                 'verified_by' => Auth::user()->staff_id,
-                    //                 'verified_at' => Carbon::now()
-                    //             ]);
-
-                    //             Notification::make()
-                    //                 ->title('Pengajuan Lembur Diverifikasi')
-                    //                 ->body('Lembur Anda untuk tanggal ' . Carbon::parse($records[0]->overtime_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
-                    //                 ->success()
-                    //                 ->actions([
-                    //                     Action::make('read')
-                    //                         ->button()
-                    //                         ->url(OvertimeResource::getUrl('index'))
-                    //                         ->markAsRead()
-                    //                 ])
-                    //                 ->sendToDatabase($record->staff->user);
-                    //         }
-
-                    //         Notification::make()
-                    //             ->title(count($records) . ' Data lembur diverifikasi.')
-                    //             ->success()
-                    //             ->send();
-                    //     }),
                 ]),
             ]);
     }

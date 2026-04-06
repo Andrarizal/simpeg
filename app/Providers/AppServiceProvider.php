@@ -51,12 +51,12 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     body {
-                        letter-spacing: 0.04em;
+                        letter-spacing: 0.05em;
                     }
 
                     h1, h2, h3, h4, h5, h6, .font-bold {
                         font-family: 'SF-Pro', sans-serif !important;
-                        letter-spacing: 0.02em!important;
+                        letter-spacing: 0.015em!important;
                     }
 
 
@@ -405,6 +405,24 @@ class AppServiceProvider extends ServiceProvider
         FilamentView::registerRenderHook(
             'panels::body.end',
             fn () => \Livewire\Livewire::mount(FloatingNotification::class)
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_END,
+            fn (): string => Blade::render('
+                <script>
+                    document.addEventListener("livewire:init", () => {
+                        Livewire.hook("request", ({ fail }) => {
+                            fail(({ status, preventDefault }) => {
+                                if (status === 419) {
+                                    preventDefault(); // Mematikan popup confirm() bawaan Livewire
+                                    window.location.href = "{{ route("filament.admin.auth.login") }}"; // Lempar ke halaman login
+                                }
+                            });
+                        });
+                    });
+                </script>
+            ')
         );
 
         FilamentView::registerRenderHook(

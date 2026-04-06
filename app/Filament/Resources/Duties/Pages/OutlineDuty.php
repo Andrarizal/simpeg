@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Duties\Pages;
 
 use App\Filament\Resources\Duties\DutyResource;
+use App\Models\Presence;
+use App\Models\Schedule;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -226,11 +228,25 @@ class OutlineDuty extends Page implements HasForms
                 ]),
             ])
             
-            ->action(function (array $data) {
+            ->action(function (array $data, $record) {
                 $staff = Auth::user()->staff;
                 $mainData = $this->form->getState();
-                $receiver = $this->record->receivers()->where('staff_id', $staff->id)->first();
-                $oldPivot = $receiver?->pivot;
+
+                $schedule = Schedule::where('staff_id', $staff->id)
+                    ->whereDate('schedule_date', $record->duty_date)
+                    ->with(['shift' => function($q) {
+                        $q->select(['id', 'start_time', 'end_time']); 
+                    }])
+                    ->first();
+
+                if (!$schedule) {
+                    Notification::make()
+                        ->danger()
+                        ->title('Gagal Menyimpan Laporan Notulensi')
+                        ->body('Anda masih belum memiliki jadwal kerja di tanggal tugas tersebut')
+                        ->send();
+                    return;
+                }
 
                 $updateData = [
                     'outline'      => $mainData['outline'],
@@ -242,12 +258,22 @@ class OutlineDuty extends Page implements HasForms
                     'letter_verified'  => null,
                     'is_workhour'  => $data['is_workhour'],
                 ];
-
+                
+                $presence_data = [
+                    'staff_id' => $staff->id,
+                    'presence_date' => $record->duty_date,
+                    'check_in' => $schedule->shift->start_time,
+                    'check_out' => $schedule->shift->end_time,
+                    'method' => 'network',
+                ];
+                
                 $this->record->receivers()->where('staff_id', $staff->id)->update($updateData);
+
+                Presence::create($presence_data);
 
                 Notification::make()
                     ->success()
-                    ->title('Notulensi dan Konfirmasi Berhasil Disimpan')
+                    ->title('Notulensi, Presensi, dan Konfirmasi Berhasil Disimpan')
                     ->send();
 
                 $this->redirect(DutyResource::getUrl('index'));

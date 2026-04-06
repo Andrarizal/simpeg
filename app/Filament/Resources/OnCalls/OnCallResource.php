@@ -443,9 +443,15 @@ class OnCallResource extends Resource
                             ->mapWithKeys(fn ($period) => [$period->id => "{$period->name}"]);
                     })
                     ->default(function () {
-                        return MonthlyPeriod::where('start_date', '<=', now())
+                        $period_now = MonthlyPeriod::where('start_date', '<=', now())
                             ->where('end_date', '>=', now())
                             ->value('id');
+
+                        if (!$period_now) {
+                            $period_now = MonthlyPeriod::orderBy('start_date', 'desc')->value('id');
+                        }
+
+                        return $period_now;
                     })
                     ->query(function (Builder $query, $data) {
                         $query->where('period_id', $data['value']);

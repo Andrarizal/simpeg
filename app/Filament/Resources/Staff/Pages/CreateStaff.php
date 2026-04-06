@@ -90,8 +90,8 @@ class CreateStaff extends CreateRecord
             ]);
         }
 
-        $level = Chair::where('id', $row->chair_id)->first();
-        $role = $level->level == 4 ? 2 : 1;
+        $chair = Chair::where('id', $row->chair_id)->first();
+        $role = str_contains($chair->name, 'SDM') ? 1 : 2;
 
         // Buatkan User dengan Record
         $confirmation = $this->data['confirmation'] ?? false;

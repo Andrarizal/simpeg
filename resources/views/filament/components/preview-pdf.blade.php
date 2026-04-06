@@ -19,10 +19,11 @@
         </button>
     </div>
     <div class="w-full">
-        <iframe 
-            src="{{ route('preview.pdf', $token) }}"
+        <object 
+            data="{{ route('preview.pdf', $token) }}"
+            type="application/pdf" 
             class="w-full h-[80vh]"
             wire:key="pdf-frame-{{ $token }}-{{ now()->timestamp }}"
-        ></iframe>
+        ></object>
     </div>
 </div>

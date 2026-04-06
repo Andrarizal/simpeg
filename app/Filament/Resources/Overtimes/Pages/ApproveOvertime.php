@@ -67,6 +67,7 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                         }
                             
                         $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()?->name;
+                        $sdm = Staff::select('name')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()?->name;
 
                         if (!$head) {
                             return view('filament.components.alert', [
@@ -75,11 +76,18 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                             ]);
                         }
 
-                        $sdm = $record->verifier ?? null;
+                        foreach ($data as $i => $p) {
+                            if (!$p->is_verified) {
+                                $this->verified = false;
+                                break;
+                            }
+                        }
 
                         foreach ($data as $i => $p) {
-                            $this->verified = $p->is_verified ?? false;
-                            $this->known = $p->is_known == 2 ?? false;
+                            if ($p->is_known != 2) {
+                                $this->known = false;
+                                break;
+                            }
                         }
 
                         $signData = [
@@ -111,6 +119,8 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                             'head' => $head,
                             'sdm' => $sdm,
                             'qrCode' => $signData,
+                            'known' => $this->known,
+                            'verified' => $this->verified,
                             'isWord' => false
                         ])->render();
 
@@ -204,11 +214,20 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                             return;
                         }
 
-                        $sdm = $record->verifier ?? null;
+                        $sdm = Staff::select('name')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()?->name;
 
                         foreach ($data as $i => $p) {
-                            $this->verified = $p->is_verified ?? false;
-                            $this->known = $p->is_known == 2 ?? false;
+                            if (!$p->is_verified) {
+                                $this->verified = false;
+                                break;
+                            }
+                        }
+
+                        foreach ($data as $i => $p) {
+                            if ($p->is_known != 2) {
+                                $this->known = false;
+                                break;
+                            }
                         }
 
                         $signData = [
@@ -241,6 +260,8 @@ class ApproveOvertime extends Page implements HasTable, HasInfolists
                             'head' => $head,
                             'sdm' => $sdm,
                             'qrCode' => $signData,
+                            'known' => $this->known,
+                            'verified' => $this->verified,
                             'isWord' => true
                         ])->render();
 

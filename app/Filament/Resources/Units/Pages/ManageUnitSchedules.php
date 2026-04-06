@@ -29,6 +29,8 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
+use Mpdf\Mpdf;
 
 class ManageUnitSchedules extends Page implements HasForms, HasTable
 {
@@ -44,6 +46,7 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
     public $year;
     public $schedules = [];
     public $daysInMonth = [];
+    public ?string $pdfToken = null;
     
     public function mount(Unit $record): void
     {
@@ -60,6 +63,107 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('exportPDF')
+                ->label('Cetak Jadwal')
+                ->icon('heroicon-o-printer')
+                ->color('success')
+                ->modalHeading('Preview Jadwal')
+                ->modalWidth('7xl') 
+                ->modalContent(function ($livewire) {
+                    $month = $livewire->tableFilters['month']['value'] ?? now()->month;
+                    $year = $livewire->tableFilters['year']['value'] ?? now()->year;
+
+                    $unit = Unit::find($this->record->id);
+
+                    $startDate = Carbon::create($year, $month, 1); 
+                    $daysInMonth = $startDate->daysInMonth;
+                    
+                    $periodName = $startDate->locale('id')->translatedFormat('F Y');
+                    
+                    $dates = [];
+                    for ($i = 1; $i <= $daysInMonth; $i++) {
+                        $currentDate = $startDate->copy()->addDays($i - 1);
+                        $dates[] = [
+                            'tanggal' => $currentDate->format('d'),
+                            'hari' => $currentDate->translatedFormat('D'), 
+                            'full_date' => $currentDate->format('Y-m-d')
+                        ];
+                    }
+
+                    $staffs = Staff::where('unit_id', $unit->id)->get();
+                    
+                    if ($staffs->isEmpty()) {
+                        return view('filament.components.alert', [
+                            'message' => 'Tidak ada pegawai di unit terpilih.',
+                            'color'   => 'warning',
+                        ]);
+                    }
+
+                    $schedules = Schedule::with('shift')
+                        ->whereIn('staff_id', $staffs->pluck('id'))
+                        ->whereMonth('schedule_date', $month)
+                        ->whereYear('schedule_date', $year)
+                        ->get()
+                        ->groupBy('staff_id');
+
+                    $shifts = Shift::where('unit_id', $unit->id)->get()->keyBy('id');
+
+                    $html = view('exports.schedules', [
+                        'unit' => $unit,
+                        'periodName' => $periodName,
+                        'dates' => $dates,
+                        'staffs' => $staffs,
+                        'schedules' => $schedules,
+                        'shifts' => $shifts
+                    ])->render();
+
+                    $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                    $fontDirs = $defaultConfig['fontDir'];
+                    $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                    $fontData = $defaultFontConfig['fontdata'];
+
+                    $mpdf = new Mpdf([
+                        'mode' => 'utf-8', 
+                        'orientation' => 'L', 
+                        'format' => [215.9, 342.9],
+                        'fontDir' => array_merge($fontDirs, [
+                            public_path('fonts'), 
+                        ]),
+                        'fontdata' => $fontData + [
+                            'tnr' => [
+                                'R' => 'times.ttf',    
+                                'B' => 'timesbd.ttf',  
+                                'I' => 'timesi.ttf',   
+                                'BI' => 'timesbi.ttf',  
+                            ]
+                        ],
+                        'default_font' => 'tnr',
+                        'margin_top' => 15,
+                        'margin_left' => 10, 
+                        'margin_right' => 10,
+                        'margin_bottom' => 15,
+                    ]);
+
+                    $mpdf->WriteHTML($html);
+
+                    $token = Str::uuid()->toString();
+                    $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
+                    file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+                    $livewire->pdfToken = $token;
+
+                    return view('filament.components.preview-pdf', [
+                        'token' => $token,
+                    ]);
+                })
+                ->modalHeading(false)
+                ->modalCancelAction(false)
+                ->modalSubmitAction(false)
+                ->modalCloseButton(false)
+                ->closeModalByClickingAway(false)
+                ->closeModalByEscaping(false)
+                ->extraAttributes([
+                    'x-on:click.capture' => 'close()'
+                ]),
             Action::make('manage_shifts')
                 ->label(fn() => $this->record->work_system == 'Shift' ? 'Kelola Shift' : 'Kelola Jam Kerja')
                 ->icon('heroicon-m-cog-6-tooth')
@@ -588,5 +692,17 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
         
         // Opsional: Notifikasi kecil
         Notification::make()->title('Saved')->success()->send();
+    }
+
+    public function closePreviewAndCleanup() {
+        if ($this->pdfToken) {
+            $path = storage_path("app/private/livewire-tmp/{$this->pdfToken}.pdf");
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+            $this->pdfToken = null;
+        }
+
+        $this->unmountAction();
     }
 }

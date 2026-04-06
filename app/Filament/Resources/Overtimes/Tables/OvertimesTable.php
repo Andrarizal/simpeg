@@ -68,11 +68,20 @@ class OvertimesTable
                                 ]);
                             }
                             
-                            $sdm = $record->verifier ?? null;
+                            $sdm = Staff::select('name')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()?->name;
 
                             foreach ($data as $i => $p) {
-                                $livewire->verified = $p->is_verified ?? false;
-                                $livewire->known = $p->is_known == 2 ?? false;
+                                if (!$p->is_verified) {
+                                    $livewire->verified = false;
+                                    break;
+                                }
+                            }
+
+                            foreach ($data as $i => $p) {
+                                if ($p->is_known != 2) {
+                                    $livewire->known = false;
+                                    break;
+                                }
                             }
 
                             $signData = [
@@ -104,6 +113,8 @@ class OvertimesTable
                                 'head' => $head,
                                 'sdm' => $sdm,
                                 'qrCode' => $signData,
+                                'known' => $livewire->known,
+                                'verified' => $livewire->verified,
                                 'isWord' => false
                             ])->render();
 
@@ -198,11 +209,20 @@ class OvertimesTable
                                 return;
                             }
                             
-                            $sdm = $record->verifier ?? null;
+                            $sdm = Staff::select('name')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()?->name;
 
                             foreach ($data as $i => $p) {
-                                $livewire->verified = $p->is_verified ?? false;
-                                $livewire->known = $p->is_known == 2 ?? false;
+                                if (!$p->is_verified) {
+                                    $livewire->verified = false;
+                                    break;
+                                }
+                            }
+
+                            foreach ($data as $i => $p) {
+                                if ($p->is_known != 2) {
+                                    $livewire->known = false;
+                                    break;
+                                }
                             }
 
                             $signData = [
@@ -235,6 +255,8 @@ class OvertimesTable
                                 'head' => $head,
                                 'sdm' => $sdm,
                                 'qrCode' => $signData,
+                                'known' => $livewire->known,
+                                'verified' => $livewire->verified,
                                 'isWord' => true
                             ])->render();
 
@@ -345,9 +367,15 @@ class OvertimesTable
                             ->mapWithKeys(fn ($period) => [$period->id => "{$period->name}"]);
                     })
                     ->default(function () {
-                        return MonthlyPeriod::where('start_date', '<=', now())
+                        $period_now = MonthlyPeriod::where('start_date', '<=', now())
                             ->where('end_date', '>=', now())
                             ->value('id');
+
+                        if (!$period_now) {
+                            $period_now = MonthlyPeriod::orderBy('start_date', 'desc')->value('id');
+                        }
+                        
+                        return $period_now;
                     })
                     ->query(function (Builder $query, $data) {
                         $query->where('period_id', $data['value']);
