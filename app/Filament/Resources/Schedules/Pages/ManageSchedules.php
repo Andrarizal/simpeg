@@ -83,7 +83,7 @@ class ManageSchedules extends Page implements HasForms, HasTable
             Action::make('exportPDF')
                 ->label('Cetak Jadwal')
                 ->icon('heroicon-o-printer')
-                ->color('success')
+                ->color('primary')
                 ->modalHeading('Preview Jadwal')
                 ->modalWidth('7xl') 
                 ->modalContent(function ($livewire) {

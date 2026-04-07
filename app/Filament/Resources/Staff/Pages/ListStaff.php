@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Staff\Pages;
 
+use App\Exports\StaffExport;
 use App\Filament\Resources\Staff\StaffResource;
 use App\Models\Chair;
 use App\Models\Group;
@@ -40,6 +41,14 @@ class ListStaff extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('export_excel')
+                ->label('Expor Pegawai')
+                ->icon('heroicon-o-arrow-up-on-square')
+                ->color('info')
+                ->action(function () {
+                    $namaFile = 'Data Kepegawaian_' . date('Y-m-d') . '.xlsx';
+                    return Excel::download(new StaffExport(), $namaFile);
+                }),
             Action::make('import')
                 ->label('Impor Pegawai')
                 ->color('warning')

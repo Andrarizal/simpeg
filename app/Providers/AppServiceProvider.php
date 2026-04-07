@@ -51,12 +51,12 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     body {
-                        letter-spacing: 0.05em;
+                        letter-spacing: 0.06em;
                     }
 
                     h1, h2, h3, h4, h5, h6, .font-bold {
                         font-family: 'SF-Pro', sans-serif !important;
-                        letter-spacing: 0.015em!important;
+                        letter-spacing: 0.01em!important;
                     }
 
 

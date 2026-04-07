@@ -10,10 +10,12 @@ use App\Models\StaffEntryEducation;
 use App\Models\StaffWorkEducation;
 use App\Models\StaffWorkExperience;
 use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class EditProfile extends EditRecord
 {
@@ -23,6 +25,58 @@ class EditProfile extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('changePassword')
+                ->label('Ganti Password')
+                ->icon('heroicon-o-key')
+                ->color('warning')
+                ->modalHeading('Ganti Password')
+                ->modalDescription('Silakan masukkan password lama dan password baru Anda.')
+                ->modalSubmitActionLabel('Simpan Password Baru')
+                ->modalWidth('md')
+                ->schema([
+                    TextInput::make('current_password')
+                        ->label('Password Lama')
+                        ->password()
+                        ->required()
+                        ->revealable()
+                        ->currentPassword()
+                        ->validationMessages([
+                            'current_password' => 'Password lama yang Anda masukkan tidak benar.',
+                        ]),
+
+                    TextInput::make('new_password')
+                        ->label('Password Baru')
+                        ->password()
+                        ->required()
+                        ->revealable()
+                        ->minLength(6) 
+                        ->different('current_password')
+                        ->same('new_password_confirmation')
+                        ->validationMessages([
+                            'different' => 'Password baru tidak boleh sama dengan password lama.',
+                            'same' => 'Password baru dan konfirmasi tidak cocok.',
+                            'min' => 'Password minimal harus 6 karakter.'
+                        ]),
+
+                    TextInput::make('new_password_confirmation')
+                        ->label('Konfirmasi Password Baru')
+                        ->password()
+                        ->revealable()
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $user = Auth::user()->staff->user;
+
+                    $user->update([
+                        'password' => Hash::make($data['new_password']),
+                    ]);
+
+                    Notification::make()
+                        ->title('Berhasil!')
+                        ->body('Password Anda telah berhasil diubah.')
+                        ->success()
+                        ->send();
+                }),
             Action::make('my_history')
                 ->label('Riwayat Jabatan Saya')
                 ->color('info')
