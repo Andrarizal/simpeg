@@ -37,7 +37,7 @@ class OvertimesTable
                         ->label('Export PDF')
                         ->icon('heroicon-o-document-arrow-down')
                         ->color('warning')
-                        ->modalHeading('Preview Cuti')
+                        ->modalHeading('Preview Lembur')
                         ->modalWidth('5xl')
                         ->modalContent(function ($livewire) {
                             $month = $livewire->tableFilters['period_id']['value'];

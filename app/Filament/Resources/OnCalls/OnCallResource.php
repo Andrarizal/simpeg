@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources\OnCalls;
 
+use App\Exports\OnCallExport;
+use App\Filament\Pages\Signature;
 use App\Filament\Resources\OnCalls\Pages\ManageOnCalls;
-use App\Filament\Resources\Overtimes\OvertimeResource;
 use App\Models\MonthlyPeriod;
 use App\Models\OnCall;
+use App\Models\Staff;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -35,6 +38,10 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use Mpdf\Mpdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use UnitEnum;
 
 class OnCallResource extends Resource
@@ -337,6 +344,287 @@ class OnCallResource extends Resource
     {
         return $table
             ->recordTitleAttribute('OnCall')
+            ->headerActions([
+                ActionGroup::make([
+                    Action::make('exportPdf')
+                        ->label('Export PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('warning')
+                        ->modalHeading('Preview On Call')
+                        ->modalWidth('5xl')
+                        ->modalContent(function ($livewire) {
+                            $month = $livewire->tableFilters['period_id']['value'];
+
+                            $period = MonthlyPeriod::find($month);
+
+                            $data = OnCall::query()
+                                ->with(['staff.chair', 'staff.unit'])
+                                ->where('staff_id', Auth::user()->staff_id)
+                                ->where('period_id', $month)
+                                ->orderBy('oncall_date')
+                                ->get();
+
+                                
+                            if ($data->isEmpty()) {
+                                return view('filament.components.alert', [
+                                    'message' => 'Tidak ada data tugas on call untuk periode terpilih.',
+                                    'color'   => 'warning',
+                                ]);
+                            }
+                                
+                            $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()?->name;
+                                    
+                            if (!$head) {
+                                return view('filament.components.alert', [
+                                    'message' => 'Atasan user belum dipilih! Tidak dapat melanjutkan proses.',
+                                    'color'   => 'danger',
+                                ]);
+                            }
+                            
+                            $sdm = Staff::select('name')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()?->name;
+
+                            foreach ($data as $i => $p) {
+                                if (!$p->is_verified) {
+                                    $livewire->verified = false;
+                                    break;
+                                }
+                            }
+
+                            foreach ($data as $i => $p) {
+                                if ($p->is_known != 2) {
+                                    $livewire->known = false;
+                                    break;
+                                }
+                            }
+
+                            $signData = [
+                                'known' => null,
+                                'verified' => null,
+                            ];
+
+                            if ($livewire->known) {
+                                $knownData = [
+                                    'known_by' => $data[0]['known_by'],
+                                    'known_at' => $data[0]['known_at']
+                                ];
+                                $known_url = Signature::getUrl($knownData);
+                                $signData['known'] = base64_encode(QrCode::format('svg')->size(100)->generate($known_url));
+                            } 
+
+                            if ($livewire->verified) {
+                                $verifiedData = [
+                                    'verified_by' => $data[0]['verified_by'],
+                                    'verified_at' => $data[0]['verified_at']
+                                ];
+                                $verified_url = Signature::getUrl($verifiedData);
+                                $signData['verified'] = base64_encode(QrCode::format('svg')->size(100)->generate($verified_url));
+                            } 
+
+                            $html = view('exports.oncall', [
+                                'data' => $data,
+                                'month' => $period->name,
+                                'head' => $head,
+                                'sdm' => $sdm,
+                                'qrCode' => $signData,
+                                'known' => $livewire->known,
+                                'verified' => $livewire->verified,
+                                'isWord' => false
+                            ])->render();
+
+                            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                            $fontDirs = $defaultConfig['fontDir'];
+
+                            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                            $fontData = $defaultFontConfig['fontdata'];
+
+                            $mpdf = new Mpdf([
+                                'mode' => 'utf-8', 
+                                'orientation' => 'L',
+                                'format' => [215.9, 342.9],
+                                'fontDir' => array_merge($fontDirs, [
+                                    public_path('fonts'), 
+                                ]),
+                                'fontdata' => $fontData + [
+                                    'tnr' => [
+                                        'R' => 'times.ttf',    
+                                        'B' => 'timesbd.ttf',  
+                                        'I' => 'timesi.ttf',   
+                                        'BI' => 'timesbi.ttf',  
+                                    ]
+                                ],
+                                'default_font' => 'tnr',
+                                'margin_top' => 15,
+                                'margin_left' => 20,
+                                'margin_right' => 20,
+                                'margin_bottom' => 15,
+                            ]);
+
+                            $mpdf->WriteHTML($html);
+
+                            $token = Str::uuid()->toString();
+                            $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
+
+                            file_put_contents($pdfPath, $mpdf->Output('', 'S'));
+
+                            $livewire->pdfToken = $token;
+
+                            return view('filament.components.preview-pdf', [
+                                'token' => $token,
+                            ]);
+                        })
+                        ->modalHeading(false)
+                        ->modalCancelAction(false)
+                        ->modalSubmitAction(false)
+                        ->modalCloseButton(false)
+                        ->closeModalByClickingAway(false)
+                        ->closeModalByEscaping(false)
+                        ->extraAttributes([
+                            'x-on:click.capture' => 'close()'
+                        ]),
+                    Action::make('exportWord')
+                        ->label('Export Word')
+                        ->icon('heroicon-o-document-text')
+                        ->color('info')
+                        ->action(function ($livewire) {
+                            $month = $livewire->tableFilters['period_id']['value'] ?? null;
+
+                            if ($month) {
+                                $period = MonthlyPeriod::find($month);
+                            } else {
+                                $period = MonthlyPeriod::whereDate('start_date', '<=', now())
+                                    ->whereDate('end_date', '>=', now())
+                                    ->first();
+                            }
+
+                            $data = OnCall::query()
+                                ->with(['staff.chair', 'staff.unit'])
+                                ->where('staff_id', Auth::user()->staff_id)
+                                ->where('period_id', $month)
+                                ->orderBy('oncall_date')
+                                ->get();
+
+                                
+                            if ($data->isEmpty()) {
+                                Notification::make()
+                                    ->title('Tidak ada data tugas on call untuk periode terpilih.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+                                
+                            $head = Staff::select('name')->where('chair_id', $data[0]->staff->chair->head_id)->first()?->name;
+                                    
+                            if (!$head) {
+                                Notification::make()
+                                    ->title('Atasan user belum dipilih! Tidak dapat melanjutkan proses.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                            
+                            $sdm = Staff::select('name')->whereHas('chair', fn ($q) => $q->where('name', 'like', '%SDM%'))->first()?->name;
+
+                            foreach ($data as $i => $p) {
+                                if (!$p->is_verified) {
+                                    $livewire->verified = false;
+                                    break;
+                                }
+                            }
+
+                            foreach ($data as $i => $p) {
+                                if ($p->is_known != 2) {
+                                    $livewire->known = false;
+                                    break;
+                                }
+                            }
+
+                            $signData = [
+                                'known' => null,
+                                'verified' => null,
+                            ];
+
+                            if ($livewire->known) {
+                                $knownData = [
+                                    'known_by' => $data[0]['known_by'],
+                                    'known_at' => $data[0]['known_at']
+                                ];
+                                $known_url = Signature::getUrl($knownData);
+                                $signData['known'] = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&format=png&data={$known_url}";
+                            } 
+
+                            if ($livewire->verified) {
+                                $verifiedData = [
+                                    'verified_by' => $data[0]['verified_by'],
+                                    'verified_at' => $data[0]['verified_at']
+                                ];
+                                $verified_url = Signature::getUrl($verifiedData);
+                                $signData['verified'] = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&format=png&data={$verified_url}";
+                            } 
+
+                            $name = Auth::user()->staff->name ?? 'Pegawai';
+                            $html = view('exports.oncall', [
+                                'data' => $data,
+                                'month' => $period->name,
+                                'head' => $head,
+                                'sdm' => $sdm,
+                                'qrCode' => $signData,
+                                'known' => $livewire->known,
+                                'verified' => $livewire->verified,
+                                'isWord' => true
+                            ])->render();
+
+                            $fileName = 'On Call_' . $name . '_' . $period->name . '.doc';
+
+                            return response()->streamDownload(function () use ($html) {
+                                echo '<meta charset="UTF-8">';
+                                echo $html;
+                            }, $fileName, [
+                                'Content-Type' => 'application/vnd.ms-word',
+                                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                            ]);
+                        }),
+                ])
+                ->label('Export Data') 
+                ->icon('heroicon-m-arrow-top-right-on-square')
+                ->button() 
+                ->visible(function ($livewire) {
+                    $periodFilter = $livewire->tableFilters['period_id']['value'];
+                    if (! $periodFilter) return false;
+                    
+                    if (isset($livewire->tableFilters['role_view'])) {
+                        $roleFilter = $livewire->tableFilters['role_view']['value'];
+
+                        return ($roleFilter === 'as_receiver' ? true : false);
+                    }
+                    return true;
+                })
+                ->color('success')
+                ->dropdownPlacement('bottom-end'),
+            Action::make('export_excel')
+                ->label('Expor On Call')
+                ->icon('heroicon-o-arrow-up-on-square')
+                ->color('primary')
+                ->visible(function ($livewire) {
+                    $periodFilter = $livewire->tableFilters['period_id']['value'];
+                    if (! $periodFilter) return false;
+                    
+                    if (isset($livewire->tableFilters['role_view'])) {
+                        $roleFilter = $livewire->tableFilters['role_view']['value'];
+
+                        return ($roleFilter === 'as_verifier' ? true : false);
+                    }
+                    return true;
+                })
+                ->action(function ($livewire) {
+                    $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
+                    $period = MonthlyPeriod::find($periodId);
+
+                    return Excel::download(
+                        new OnCallExport($period->id, $period->name), 
+                        'Rekap_On Call_' . $period->name . '.xlsx'
+                    );
+                }),
+            ])
             ->columns([
                 TextColumn::make('staff.name')
                     ->label('Penerima Perintah')
@@ -542,7 +830,7 @@ class OnCallResource extends Resource
 
                         Notification::make()
                             ->title('Pengajuan On Call Diketahui')
-                            ->body('Pekerjaan On Call Anda pada ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diketahui oleh Atasan')
+                            ->body('Pekerjaan On Call Anda pada ' . Carbon::parse($record->oncall_date)->translatedFormat('d F Y') . ' telah diketahui oleh Atasan')
                             ->success()
                             ->actions([
                                 Action::make('read')
@@ -587,7 +875,7 @@ class OnCallResource extends Resource
 
                         Notification::make()
                             ->title('On Call Anda ditolak oleh Atasan')
-                            ->body('Pekerjaan On Call Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah ditolak dengan alasan: ' . $data['note'])
+                            ->body('Pekerjaan On Call Anda untuk ' . Carbon::parse($record->oncall_date)->translatedFormat('d F Y') . ' telah ditolak dengan alasan: ' . $data['note'])
                             ->success()
                             ->actions([
                                 Action::make('read')
@@ -623,7 +911,7 @@ class OnCallResource extends Resource
 
                         Notification::make()
                             ->title('Pekerjaan On Call Diverifikasi')
-                            ->body('Pekerjaan On Call Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
+                            ->body('Pekerjaan On Call Anda untuk ' . Carbon::parse($record->oncall_date)->translatedFormat('d F Y') . ' telah diverifikasi SDM')
                             ->success()
                             ->actions([
                                 Action::make('read')
@@ -666,13 +954,13 @@ class OnCallResource extends Resource
 
                         Notification::make()
                             ->title('Pekerjaan On Call Ditolak SDM')
-                            ->body('Pekerjaan On Call Anda untuk ' . Carbon::parse($record->overtime_date)->translatedFormat('d F Y') . ' telah ditolak SDM dengan alasan: ' . $data['note'])
+                            ->body('Pekerjaan On Call Anda untuk ' . Carbon::parse($record->oncall_date)->translatedFormat('d F Y') . ' telah ditolak SDM dengan alasan: ' . $data['note'])
                             ->success()
                             ->actions([
                                 Action::make('read')
                                     ->label('Lihat')
                                     ->button()
-                                    ->url(OvertimeResource::getUrl('index'))
+                                    ->url(OnCallResource::getUrl('index'))
                                     ->markAsRead()
                             ])
                             ->sendToDatabase($recipient);

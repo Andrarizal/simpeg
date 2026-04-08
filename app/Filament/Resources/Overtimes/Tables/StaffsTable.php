@@ -2,14 +2,19 @@
 
 namespace App\Filament\Resources\Overtimes\Tables;
 
+use App\Exports\OvertimeExport;
 use App\Filament\Resources\Overtimes\OvertimeResource;
+use App\Models\MonthlyPeriod;
 use App\Models\Staff;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Indicator;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StaffsTable
 {
@@ -72,9 +77,23 @@ class StaffsTable
                         ->groupBy('staff.id', 'staff.name', 'chairs.name');
                 }
                 
-                // dd($query->get());
                 return $query;
             })
+            ->headerActions([
+                Action::make('export_excel')
+                    ->label('Expor Lembur')
+                    ->icon('heroicon-o-arrow-up-on-square')
+                    ->color('primary')
+                    ->action(function ($livewire) {
+                        $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
+                        $period = MonthlyPeriod::find($periodId);
+
+                        return Excel::download(
+                            new OvertimeExport($period->id, $period->name), 
+                            'Rekap_Lembur_' . $period->name . '.xlsx'
+                        );
+                    }),
+            ])
             ->columns([
                 TextColumn::make('no')
                     ->label('#')
@@ -95,6 +114,37 @@ class StaffsTable
                     ->alignCenter(),
             ])
             ->filters([
+                SelectFilter::make('period_id')
+                    ->label('Ekspor Periode Lembur')
+                    ->options(function () {
+                        return MonthlyPeriod::orderBy('start_date', 'desc')
+                            ->get()
+                            ->mapWithKeys(fn ($period) => [$period->id => "{$period->name}"]);
+                    })
+                    ->default(function () {
+                        $period_now = MonthlyPeriod::where('start_date', '<=', now())
+                            ->where('end_date', '>=', now())
+                            ->value('id');
+
+                        if (!$period_now) {
+                            $period_now = MonthlyPeriod::orderBy('start_date', 'desc')->value('id');
+                        }
+                        
+                        return $period_now;
+                    })
+                    ->indicateUsing(function ($data) {
+                        if (! $data['value']) {
+                            return null;
+                        }
+                        
+                        $periodName = MonthlyPeriod::find($data['value'])?->name;
+                        return [
+                            Indicator::make('Periode: ' . $periodName)
+                                ->removable(false),
+                        ];
+                    })
+                    ->selectablePlaceholder(false)
+                    ->native(false),
             ])
             ->recordActions([
                 Action::make('lihatLembur')
