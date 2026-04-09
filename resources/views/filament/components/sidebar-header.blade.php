@@ -8,7 +8,7 @@
         x-show="$store.sidebar.isOpen"
         x-transition:enter="delay-100"
     >
-        <img src="{{ asset('img/rsumpyk.png') }}" alt="Logo" class="w-8 h-8 rounded-xl shadow-sm">
+        <img src="{{ asset('img/rsumpyk.png') }}" alt="Logo" class="w-8 h-8 rounded-xl shadow-lg border border-gray-700/20 dark:border-0 dark:bg-white p-1">
         
         <div class="flex flex-col">
             <span class="text-lg font-bold tracking-tight text-gray-950 dark:text-white">
@@ -43,7 +43,7 @@
             <img 
                 src="{{ asset('img/rsumpyk.png') }}" 
                 alt="Logo" 
-                class="h-8 rounded-xl shadow-sm transition-all duration-300 group-hover:opacity-40 group-hover:scale-90"
+                class="w-10 h-10 p-1 rounded-xl shadow-sm transition-all duration-300 group-hover:opacity-40 group-hover:scale-90"
             >
 
             <div 

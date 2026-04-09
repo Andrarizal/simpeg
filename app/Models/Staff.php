@@ -255,6 +255,11 @@ class Staff extends Model
         return $this->hasMany(Leave::class);
     }
 
+    public function replacer(): HasMany
+    {
+        return $this->hasMany(Leave::class, 'replacement_id');
+    }
+
     public function performance(): HasMany
     {
         return $this->hasMany(StaffPerformance::class);

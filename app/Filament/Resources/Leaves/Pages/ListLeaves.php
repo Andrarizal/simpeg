@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leaves\Pages;
 
+use App\Exports\LeaveExport;
 use App\Filament\Resources\Leaves\LeaveResource;
 use App\Filament\Resources\Leaves\Tables\ApproveTable;
 use App\Filament\Resources\Leaves\Tables\LeavesTable;
@@ -16,6 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ListLeaves extends ListRecords
 {
@@ -121,9 +123,20 @@ class ListLeaves extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('export_excel')
+                ->label('Expor Cuti/Izin')
+                ->icon('heroicon-o-arrow-up-on-square')
+                ->color('primary')
+                ->visible(fn () => $this->activeTab == 'persetujuan' && Auth::user()->role_id == 1)
+                ->action(function () {
+                    return Excel::download(
+                        new LeaveExport(Carbon::today()->format('Y')), 
+                        'Rekap_Cuti_Izin - ' . Carbon::today()->format('Y-m-d') . '.xlsx'
+                    );
+                }),
             CreateAction::make()
                 ->label('Ajukan Cuti / Izin')
-                ->hidden(fn () => Auth::user()->staff->chair->level == 1),
+                ->hidden(fn () => Auth::user()->staff->chair->level == 1 || $this->activeTab == 'persetujuan'),
         ];
     }
  

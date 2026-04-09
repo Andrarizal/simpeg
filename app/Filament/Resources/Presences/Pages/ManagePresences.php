@@ -81,6 +81,8 @@ class ManagePresences extends ManageRecords implements HasTable
                 ->action(function () {
                     $device = session('device_info');
                     $today = now()->toDateString();
+                    $settingIP = setting('ip');
+                    $allowedIPs = array_map('trim', explode(';', $settingIP));
 
                     if (!$device) {
                         Notification::make()
@@ -90,7 +92,7 @@ class ManagePresences extends ManageRecords implements HasTable
                         return;
                     }
 
-                    if (substr($device['ip'], 0, 6) !== setting('ip')) {
+                    if (!Str::startsWith($device['ip'], $allowedIPs)) {
                         Notification::make()
                             ->title('Hubungkan dengan jaringan kantor!')
                             ->danger()
@@ -488,7 +490,7 @@ class ManagePresences extends ManageRecords implements HasTable
             
             return $table
                 ->recordTitleAttribute('name')
-                ->query(Staff::query())
+                ->query(Staff::query()->orderBy('unit_id'))
                 ->columns([
                     TextColumn::make('no')
                     ->label('#')

@@ -226,6 +226,7 @@ class TrainingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            
             ->filters([
                 SelectFilter::make('filter_year')
                     ->label('Tahun')
@@ -259,7 +260,8 @@ class TrainingResource extends Resource
                         $q->where('is_verified', 1)
                         ->whereYear('training_date', $selectedYear);
                     }
-                ], 'duration');
+                ], 'duration')
+                ->orderBy('unit_id');
             })
             ->columns([
                 TextColumn::make('name')

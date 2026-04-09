@@ -15,6 +15,9 @@ class StaffTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                $query->orderBy('unit_id');
+            })
             ->columns([
                 TextColumn::make('no')
                     ->label('#')

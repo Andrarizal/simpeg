@@ -1,12 +1,12 @@
 <div class="flex w-full px-6 lg:px-18">
     <form wire:submit="preRegist" class="space-y-4 w-full self-center">
-        <div class="flex justify-center lg:justify-start items-center gap-4 pb-4">
-            <img src="{{ asset('img/rsumpyk.png') }}" class="w-12 h-12 hidden lg:block">
-            <div class="-mt-1">
-                <h1 class="font-bold text-center lg:text-start text-4xl lg:text-4xl">SIMANTAP</h1>
-                <h2 class="font-light text-center lg:text-start text-xs lg:-mt-1">Sistem Informasi Manajemen dan <br class="lg:hidden">Tenaga Pegawai</h2>
+        <div class="flex flex-col md:flex-row justify-center lg:justify-start items-center gap-4 pb-4">
+            <img src="{{ asset('img/rsumpyk.png') }}" class="w-12 h-12 border border-gray-700/20 dark:border-0 bg-white p-1 rounded-lg block shadow-lg">
+            <div class="-mt-2 md:-mt-1">
+              <h1 class="font-bold text-center md:text-start text-3xl lg:text-4xl">SIMANTAP</h1>
+              <h2 class="font-light text-center md:text-start text-[10px] lg:text-xs md:-mt-1">Sistem Informasi Manajemen dan <br class="md:hidden">Tenaga Pegawai</h2>
             </div>
-        </div>
+          </div>
             {{ $this->form }}
 
             <div class="mt-4 space-y-4">

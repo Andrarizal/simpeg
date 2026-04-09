@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\StaffAdministrations\Tables;
 
 use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
+use App\Models\Staff;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -21,6 +22,14 @@ class StaffAdministrationsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                $query->with(['staff'])
+                    ->orderBy(
+                        Staff::select('unit_id')
+                            ->whereColumn('staff.id', 'staff_administrations.staff_id')
+                            ->limit(1)
+                    );
+            })
             ->columns([
                 TextColumn::make('staff.name')
                     ->label('Nama Lengkap')

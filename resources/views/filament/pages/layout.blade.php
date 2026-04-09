@@ -77,7 +77,7 @@
     </style>
 </head>
 
-<body class="lg:h-screen box-border lg:flex lg:items-center lg:justify-center md:p-10 bg-gray-100 dark:bg-gray-900">
+<body class="min-h-screen lg:h-screen box-border lg:flex lg:items-center lg:justify-center md:p-10 bg-gray-100 dark:bg-gray-900">
   <div 
     x-data="{
         dark: localStorage.getItem('theme') === 'dark',
@@ -87,7 +87,7 @@
             document.documentElement.classList.toggle('dark', this.dark);
         }
     }"
-    x-init="document.documentElement.classList.toggle('dark', dark)" class="lg:h-screen mt-20 md:mt-0 overflow-hidden box-border flex items-center justify-center w-full">
+    x-init="document.documentElement.classList.toggle('dark', dark)" class="min-h-screen lg:h-screen overflow-hidden box-border flex items-center justify-center w-full">
     <button 
       @click="toggleTheme"
       class="absolute top-6 right-6 md:top-4 md:right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition shadow-lg">
@@ -103,15 +103,15 @@
           class="w-6 h-6 text-gray-100"
       />
     </button>
-    <div class="h-fit lg:h-[calc(100vh-90px)] mb-16 lg:my-5 md:my-10 md:mx-24 w-6/7 lg:w-auto flex gap-6">
+    <div class="h-fit lg:h-[calc(100vh-90px)] my-auto lg:my-5 md:my-10 md:mx-24 w-6/7 lg:w-auto flex flex-col lg:flex-row gap-6">
       {{-- Kiri: gambar full --}}
-      <div class="w-2/5 hidden lg:block">
+      <div class="lg:w-2/5 hidden lg:block">
         <img src="{{ asset('img/rsu.jpg') }}" class="w-full h-full object-cover rounded-3xl shadow-2xl">
       </div>
       
       {{-- Kanan: form login --}}
-      <div class="w-full h-full lg:w-3/5 py-10 lg:py-0 flex items-center justify-center border border-gray-50/20 bg-gray-50/5 dark:bg-gray-800/50 rounded-4xl overflow-hidden shadow-2xl">
-      {{ $slot }}
+      <div class="w-full h-full lg:w-3/5 py-10 lg:py-0 flex items-center justify-center border-2 border-gray-500/20 bg-gray-50/5 dark:bg-gray-800/50 rounded-4xl overflow-hidden shadow-2xl">
+        {{ $slot }}
       </div>
     </div>
   </div>

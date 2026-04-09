@@ -612,8 +612,8 @@ class OnCallResource extends Resource
                         $roleFilter = $livewire->tableFilters['role_view']['value'];
 
                         return ($roleFilter === 'as_verifier' ? true : false);
-                    }
-                    return true;
+                    } 
+                    return false;
                 })
                 ->action(function ($livewire) {
                     $periodId = $livewire->tableFilters['period_id']['value'] ?? null;

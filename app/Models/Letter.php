@@ -27,7 +27,8 @@ class Letter extends Model
     {
         return $this->belongsToMany(Staff::class, 'letter_receivers', 'letter_id', 'staff_id')
           ->withPivot(['is_attend', 'outline', 'content_path'])
-          ->withTimestamps();
+          ->withTimestamps()
+          ->orderBy('unit_id');
     }
 
     protected $casts = [

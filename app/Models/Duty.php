@@ -27,6 +27,7 @@ class Duty extends Model
     {
         return $this->belongsToMany(Staff::class, 'duty_receivers', 'duty_id', 'staff_id')
           ->withPivot(['outline', 'is_workhour', 'image_path', 'image_verified', 'content_path', 'content_verified', 'letter_path', 'letter_verified'])
-          ->withTimestamps();
+          ->withTimestamps()
+          ->orderBy('unit_id');
     }
 }
