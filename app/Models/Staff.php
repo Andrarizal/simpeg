@@ -269,4 +269,9 @@ class Staff extends Model
     {
         return $this->hasMany(Overtime::class);
     }
+
+    public function presences(): HasMany
+    {
+        return $this->hasMany(Presence::class);
+    }
 }

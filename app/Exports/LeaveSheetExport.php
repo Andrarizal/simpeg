@@ -40,18 +40,18 @@ class LeaveSheetExport implements FromArray, ShouldAutoSize, WithEvents, WithTit
         // ---------------------------------------------------------
         // 1. BARIS HEADER
         // ---------------------------------------------------------
-        $data[] = [$this->sheetTitle . ' TAHUN ' . strtoupper($this->year), '', '', '', '', '', '', '', '', '', '', '', '', '', '', '' ];
+        $data[] = [$this->sheetTitle . ' TAHUN ' . strtoupper($this->year), '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '' ];
 
         $data[] = [
             'No', 'Nama', 'Jenis', 'Bulan', 
             '', '', '', '', '', '', '', '', '', '', '', 
-            'Total' 
+            'Total', 'Sisa'
         ];
 
         $data[] = [
             '', '', '', 
             'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-            '' 
+            '', ''
         ];
 
         // ---------------------------------------------------------
@@ -101,6 +101,7 @@ class LeaveSheetExport implements FromArray, ShouldAutoSize, WithEvents, WithTit
                 $rowCuti[] = $leave[$i] ?: '0';
             }
             $rowCuti[] = array_sum($leave) ?: '0';
+            $rowCuti[] = setting('max_leave_days') - array_sum($leave) ?: '0';
 
             // --- B. Baris Kedua (Izin) ---
             $rowIzin = [ '', '', 'Izin' ]; 
@@ -108,6 +109,7 @@ class LeaveSheetExport implements FromArray, ShouldAutoSize, WithEvents, WithTit
                 $rowIzin[] = $permission[$i] ?: '0';
             }
             $rowIzin[] = array_sum($permission) ?: '0';
+            $rowIzin[] = setting('max_permission_days') - array_sum($permission) ?: '0';
 
             $data[] = $rowCuti;
             $data[] = $rowIzin;
@@ -120,12 +122,14 @@ class LeaveSheetExport implements FromArray, ShouldAutoSize, WithEvents, WithTit
             $rowTotalLeave[] = $leaveTotal[$i] ?: '0'; 
         }
         $rowTotalLeave[] = array_sum($leaveTotal) ?: '0';
+        $rowTotalLeave[] = (count($staffs) * setting('max_leave_days')) - array_sum($leaveTotal) ?: '0';
 
         $rowTotalPermission = ['', '', 'Izin']; 
         for ($i = 1; $i <= 12; $i++) {
             $rowTotalPermission[] = $permissionTotal[$i] ?: '0'; 
         }
         $rowTotalPermission[] = array_sum($permissionTotal) ?: '0';
+        $rowTotalPermission[] = (count($staffs) * setting('max_permission_days')) - array_sum($permissionTotal) ?: '0';
 
         $data[] = $rowTotalLeave;
         $data[] = $rowTotalPermission;
@@ -140,12 +144,13 @@ class LeaveSheetExport implements FromArray, ShouldAutoSize, WithEvents, WithTit
                 $sheet = $event->sheet->getDelegate();
                 $highestRow = $sheet->getHighestRow();
 
-                $sheet->mergeCells('A1:P1'); 
+                $sheet->mergeCells('A1:Q1'); 
                 $sheet->mergeCells('A2:A3'); 
                 $sheet->mergeCells('B2:B3'); 
                 $sheet->mergeCells('C2:C3'); 
                 $sheet->mergeCells('D2:O2'); 
                 $sheet->mergeCells('P2:P3'); 
+                $sheet->mergeCells('Q2:Q3'); 
 
                 for ($row = 4; $row <= $highestRow - 2; $row += 2) {
                     $sheet->mergeCells("A{$row}:A" . ($row + 1)); 
@@ -155,20 +160,20 @@ class LeaveSheetExport implements FromArray, ShouldAutoSize, WithEvents, WithTit
                 $startTotalRow = $highestRow - 1;
                 $sheet->mergeCells("A{$startTotalRow}:B{$highestRow}");
 
-                $sheet->getStyle("A1:P{$highestRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->getStyle("A1:Q{$highestRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
-                $sheet->getStyle('A1:P3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('A1:P3')->getFont()->setBold(true); 
+                $sheet->getStyle('A1:Q3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('A1:Q3')->getFont()->setBold(true); 
 
                 $sheet->getStyle("A4:A{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); 
-                $sheet->getStyle("C4:P{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); 
+                $sheet->getStyle("C4:Q{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); 
 
-                $sheet->getStyle("A{$startTotalRow}:P{$highestRow}")->getFont()->setBold(true);
-                $sheet->getStyle("A{$startTotalRow}:P{$highestRow}")->getFill()
+                $sheet->getStyle("A{$startTotalRow}:Q{$highestRow}")->getFont()->setBold(true);
+                $sheet->getStyle("A{$startTotalRow}:Q{$highestRow}")->getFill()
                       ->setFillType(Fill::FILL_SOLID)
                       ->getStartColor()->setARGB('FFF3F4F6');
 
-                $sheet->getStyle("A2:P{$highestRow}")->applyFromArray([
+                $sheet->getStyle("A2:Q{$highestRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,

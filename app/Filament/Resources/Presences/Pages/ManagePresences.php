@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Presences\Pages;
 
+use App\Exports\PresenceExport;
 use App\Filament\Resources\Presences\PresenceResource;
 use App\Livewire\DeviceCaptureWidget;
 use App\Models\MonthlyPeriod;
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use Mpdf\Mpdf;
 
 class ManagePresences extends ManageRecords implements HasTable
@@ -489,6 +491,20 @@ class ManagePresences extends ManageRecords implements HasTable
             $unit = $unit == 0 ? 1 : $unit;
             
             return $table
+                ->headerActions([
+                    Action::make('exportExcel')
+                        ->label('Export Excel')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->visible(fn ($livewire) => $livewire->tableFilters['period_id']['value'])
+                        ->color('primary')
+                        ->action(function ($livewire) {
+                            $periodId = $livewire->tableFilters['period_id']['value'] ?? null;
+                            $period = MonthlyPeriod::find($periodId);
+
+                            $export = new PresenceExport($period->start_date, $period->end_date);
+                            return Excel::download($export, 'Rekap_Presensi_Periode_' . $period->name . '.xlsx');
+                        }),
+                ])
                 ->recordTitleAttribute('name')
                 ->query(Staff::query()->orderBy('unit_id'))
                 ->columns([

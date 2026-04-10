@@ -2,13 +2,14 @@
 
 namespace App\Filament\Resources\StaffAdministrations\Pages;
 
+use App\Exports\AdministrationExport;
 use App\Filament\Resources\StaffAdministrations\StaffAdministrationResource;
-use App\Models\Staff;
 use App\Models\StaffAdministration;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ListStaffAdministrations extends ListRecords
 {
@@ -37,6 +38,13 @@ class ListStaffAdministrations extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('exportExcel')
+                ->label('Export Administrasi')
+                ->icon('heroicon-o-document-arrow-up')
+                ->color('primary')
+                ->action(function () {
+                    return Excel::download(new AdministrationExport(), 'Rekap_Administrasi_Pegawai.xlsx');
+                }),
             Action::make('mine')
                 ->label('Administrasi Saya')
                 ->icon('heroicon-m-wallet')
