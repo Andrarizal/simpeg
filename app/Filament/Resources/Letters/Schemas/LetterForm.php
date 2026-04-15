@@ -56,7 +56,7 @@ class LetterForm
             }
         }
 
-        $number = "{$newSequence}/RSU-MP/{$romanMonth}/{$year}";
+        $number = "{$newSequence}B/RSU-MP/{$romanMonth}/{$year}";
 
         $set('reference_number', $number);
     }

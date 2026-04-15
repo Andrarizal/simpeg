@@ -15,6 +15,7 @@ use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Livewire\WithFileUploads;
@@ -52,10 +53,18 @@ class LeaveForm
                                 ->schema([
                                     ToggleButtons::make('type')
                                         ->label('Jenis Pengajuan')
-                                        ->options([
-                                            'Cuti' => 'Cuti', 
-                                            'Izin' => 'Izin'
-                                        ])
+                                        ->options(function () {
+                                            $staff = Auth::user()->staff;
+                                            $status = $staff->staffStatus;
+                                            
+                                            if ($status->name  == 'Tetap' || ($status->name == 'Kontrak' && Carbon::parse($staff->entry_date)->diffInMonths(now()) >= 12)){
+                                                return [
+                                                    'Cuti' => 'Cuti', 
+                                                    'Izin' => 'Izin'
+                                                ];
+                                            }
+                                            return ['Izin' => 'Izin'];
+                                        })
                                         ->icons([
                                             'Cuti' => 'heroicon-o-briefcase', 
                                             'Izin' => 'heroicon-o-arrow-right-start-on-rectangle'
@@ -308,7 +317,13 @@ class LeaveForm
                                         ->required(fn (callable $get) => !in_array($get('subtype'), ['Melahirkan', 'Duka', 'Sakit']))
                                         ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
                                         ->maxSize(2048)
-                                        ->columnSpanFull(),
+                                        ->columnSpanFull()
+                                        ->helperText(fn (Get $get) => match ($get('subtype')) {
+                                            'Melahirkan' => 'Mohon lampirkan Surat Keterangan HPL dengan maksimal 2 MB',
+                                            'Duka'       => 'Mohon lampirkan Surat Lelayu/Duka dengan maksimal 2 MB',
+                                            'Sakit'      => 'Mohon lampirkan Surat Sakit dengan maksimal 2 MB',
+                                            default      => 'Silakan unggah dokumen bukti terkait dengan maksimal 2 MB (opsional/wajib)',
+                                        }),
                                 ])
                                 ->compact(),
 
@@ -340,16 +355,12 @@ class LeaveForm
         if (!$staff) return null;
 
         if ($type == 'Cuti') {
-            // ambil max cuti dari table master dengan helper setting
             $maxLeave = setting('max_leave_days');
 
-            // cocokkan tahun masuk dengan tahun sekarang
-            if (date('Y', strtotime($staff->entry_date)) == strval(now()->year)) {
-                // kurangi sisa cuti dengan bulan yang sudah lewat
+            if (date('Y', strtotime($staff->entry_date)) == strval(now()->year + 1)) {
                 $maxLeave -= date('m', strtotime($staff->entry_date));
             }
 
-            // cek jumlah cuti yang pernah diambil dalam setahun
             $usedLeave = Leave::where('type', 'Cuti')
                 ->whereIn('subtype', ['Tahunan', 'Darurat'])
                 ->where('staff_id', $staff->id)
@@ -359,37 +370,27 @@ class LeaveForm
                 ->sum(function ($leave) {
                     $start = Carbon::parse($leave->start_date);
                     $end = Carbon::parse($leave->end_date);
-                    return $start->diffInDays($end) + 1; // +1 agar termasuk hari pertama
+                    return $start->diffInDays($end) + 1;
                 });
 
-            // kurangi jumlah cuti dengan yang cuti sudah diambil
             return max($maxLeave - $usedLeave, 0);
         }
 
         if ($type == 'Izin') {
-            // ambil max izin dari table master dengan helper setting
             $maxLeave = setting('max_permission_days');
 
-            // cocokkan tahun masuk dengan tahun sekarang
-            if (date('Y', strtotime($staff->entry_date)) == strval(now()->year)) {
-                // kurangi sisa cuti dengan bulan yang sudah lewat
-                $maxLeave -= ceil(date('m', strtotime($staff->entry_date)) / 2);
-            }
-
-            // ambil izin yang pernah disetujui
             $usedLeave = Leave::where('type', 'Izin')
-            ->where('subtype', 'Non-Sakit')
-            ->where('staff_id', $staff->id)
-            ->where('status', '!=', 'Ditolak')
-            ->whereYear('start_date', now()->year)
-            ->get()
-            ->sum(function ($leave) {
-                $start = Carbon::parse($leave->start_date);
-                $end = Carbon::parse($leave->end_date);
-                return $start->diffInDays($end); // +1 agar termasuk hari pertama
-            });
+                ->where('subtype', 'Non-Sakit')
+                ->where('staff_id', $staff->id)
+                ->where('status', '!=', 'Ditolak')
+                ->whereYear('start_date', now()->year)
+                ->get()
+                ->sum(function ($leave) {
+                    $start = Carbon::parse($leave->start_date);
+                    $end = Carbon::parse($leave->end_date);
+                    return $start->diffInDays($end);
+                });
             
-            // kurangi dengan izin yang pernah diambil
             return max($maxLeave - $usedLeave, 0);
         }
 

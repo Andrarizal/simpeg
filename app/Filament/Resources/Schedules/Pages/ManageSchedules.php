@@ -520,8 +520,10 @@ class ManageSchedules extends Page implements HasForms, HasTable
                                 $time = Carbon::parse($schedule->shift->start_time)->format('H:i') . ' - ' . Carbon::parse($schedule->shift->end_time)->format('H:i');
                                 
                                 return new HtmlString("
+                                <div class='p-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700'>
                                     <span class='font-bold text-primary-600'>{$shiftName}</span> <br> 
                                     <span class='text-sm text-gray-500'>($time)</span>
+                                </div>
                                 ");
                             }),
 
@@ -573,7 +575,8 @@ class ManageSchedules extends Page implements HasForms, HasTable
 
                                 return new HtmlString("
                                     <div class='p-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700'>
-                                        <span class='font-bold text-warning-600'>{$shiftName}</span> ($time)
+                                        <span class='font-bold text-warning-600'>{$shiftName}</span><br>
+                                        <span class='text-sm text-gray-500'>($time)</span>
                                     </div>
                                 ");
                             }),

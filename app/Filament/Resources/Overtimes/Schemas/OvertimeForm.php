@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Overtimes\Schemas;
 
+use App\Models\MonthlyPeriod;
 use App\Models\Schedule;
 use Carbon\Carbon;
+use Closure;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -56,6 +58,17 @@ class OvertimeForm
                                             ->required()
                                             ->native(false)
                                             ->live()
+                                            ->rule(static function () {
+                                                return function (string $attribute, $value, Closure $fail) {
+                                                    $periodExists = MonthlyPeriod::where('start_date', '<=', $value)
+                                                        ->where('end_date', '>=', $value)
+                                                        ->exists(); 
+
+                                                    if (! $periodExists) {
+                                                        $fail('Periode bulanan tidak ditemukan untuk tanggal lembur yang dipilih.');
+                                                    }
+                                                };
+                                            })
                                             ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
                                                 $staffId = $get('staff_id');
                                                 if (! $state || ! $staffId) {

@@ -80,8 +80,10 @@ class ListLeaves extends ListRecords
                     <p>Berikut adalah panduan lengkap mengenai jenjang persetujuan dan verifikasi dokumen cuti/izin:</p>
                     
                     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-2">A. Syarat Pra-Persetujuan (Khusus Shift)</h4>
+                        <h4 class="font-bold text-primary-600 dark:text-primary-400 mb-2">A. Syarat Pra-Persetujuan</h4>
                         <ul class="list-disc pl-5 space-y-1">
+                            <li>Cuti Hanya bisa dilakukan oleh Karyawan Tetap & Kontrak, Sementara Izin untuk seluruh status kepegawaian.</li>
+                            <li>Cuti Pegawai Kontrak baru bisa diambil setelah terhitung 12 Bulan dari TMT Kontrak dengan jatah cuti asli dikurangi urutan bulan pegawai terdaftar pada tahun pertama</li>
                             <li>Bagi pegawai dengan sistem kerja <strong>Shift</strong>, dokumen permohonan baru bisa diproses oleh atasan jika sudah ada Pegawai Pengganti yang dikonfirmasi.</li>
                         </ul>
                     </div>

@@ -336,7 +336,7 @@ class ManagePresences extends ManageRecords implements HasTable
 
                                 file_put_contents($pdfPath, $mpdf->Output('', 'S'));
 
-                                $livewire->pdfToken = $token;
+                                $this->pdfToken = $token;
 
                                 return view('filament.components.preview-pdf', [
                                     'token' => $token,
@@ -559,7 +559,6 @@ class ManagePresences extends ManageRecords implements HasTable
                             ->label('Export PDF')
                             ->icon('heroicon-o-document-arrow-down')
                             ->color('warning')
-                            ->visible(fn ($livewire) => $livewire->tableFilters['period_id']['value'])
                             ->modalHeading('Preview Cuti')
                             ->modalWidth('5xl')
                             ->modalContent(function ($record, $livewire) {
@@ -647,7 +646,7 @@ class ManagePresences extends ManageRecords implements HasTable
                                 $token = Str::uuid()->toString();
                                 $pdfPath = storage_path("app/private/livewire-tmp/$token.pdf");
                                 file_put_contents($pdfPath, $mpdf->Output('', 'S'));
-                                $livewire->pdfToken = $token;
+                                $this->pdfToken = $token;
 
                                 return view('filament.components.preview-pdf', ['token' => $token]);
                             })
@@ -736,6 +735,7 @@ class ManagePresences extends ManageRecords implements HasTable
                         ])
                         ->label('Export Data')
                         ->link() 
+                        ->visible(fn ($livewire) => $livewire->tableFilters['period_id']['value'])
                         ->icon('heroicon-m-arrow-top-right-on-square') 
                         ->color('success'),
                 ]);

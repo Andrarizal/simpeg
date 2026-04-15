@@ -136,7 +136,14 @@ class Dashboard extends BaseDashboard
             ->label('Presensi')
             ->color('primary')
             ->icon('heroicon-o-finger-print')
-            ->button(),
+            ->button()
+            ->dropdownPlacement(function () {
+                $userAgent = request()->userAgent();
+                
+                $isMobile = preg_match('/Mobile|Android|BlackBerry|iPhone|Windows Phone|iPod/i', $userAgent);
+
+                return $isMobile ? 'bottom-start' : 'bottom-end';
+            }),
         ];
     }
 

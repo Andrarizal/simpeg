@@ -12,6 +12,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StaffInfolist
@@ -317,6 +318,17 @@ class StaffInfolist
                                     TextEntry::make('leaves_taken')
                                         ->label('Cuti Terpakai')
                                         ->state(function ($record) {
+                                            $staff = Auth::user()->staff;
+                                            $isPermanent = $staff->staffStatus->name == 'Tetap';
+
+                                            $isContract = $staff->staffStatus->name == 'Kontrak' 
+                                                && $staff->entry_date 
+                                                && Carbon::parse($staff->entry_date)->diffInMonths(now()) >= 12;
+
+                                            if (!$isPermanent && !$isContract) {
+                                                return 'N/A';
+                                            }
+
                                             return $record->leave()
                                                 ->where('staff_id', $record->id)
                                                 ->where('type', 'Cuti')
@@ -336,7 +348,23 @@ class StaffInfolist
                                     TextEntry::make('leaves_remaining')
                                         ->label('Sisa Cuti')
                                         ->state(function ($record) {
+                                            $staff = Auth::user()->staff;
+                                            $isPermanent = $staff->staffStatus->name == 'Tetap';
+
+                                            $isContract = $staff->staffStatus->name == 'Kontrak' 
+                                                && $staff->entry_date 
+                                                && Carbon::parse($staff->entry_date)->diffInMonths(now()) >= 12;
+
+                                            if (!$isPermanent && !$isContract) {
+                                                return 'N/A';
+                                            }
+
                                             $quota = setting('max_leave_days'); 
+
+                                            if (Carbon::parse($record->entry_date)->year == now()->year + 1) {
+                                                $monthJoin = Carbon::parse($staff->entry_date)->month;
+                                                $quota -= $monthJoin;
+                                            }
                                             
                                             $taken = $record->leave()
                                                 ->where('staff_id', $record->id)

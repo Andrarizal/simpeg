@@ -192,7 +192,7 @@ class ReRegistration extends Page implements HasSchemas
                                                 ->disabled()
                                                 ->dehydrated(),
                                             DatePicker::make('entry_date')
-                                                ->label('Terhitung Mulai Tanggal')
+                                                ->label('Terhitung Mulai Tanggal Kontrak')
                                                 ->maxDate(fn () => Carbon::today())
                                                 ->disabled()
                                                 ->dehydrated(),

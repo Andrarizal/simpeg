@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\TextSize;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
@@ -125,9 +126,30 @@ class LeaveInfolist
                                                 })
                                                 ->hiddenLabel(fn ($record) => !$record->approver_id)
                                                 ->default('Belum ada respon')
-                                                ->weight(FontWeight::Bold)
+                                                ->weight(FontWeight::Black)
+                                                ->size(TextSize::Medium)
                                                 ->extraAttributes([
                                                     'class' => '-mt-2'
+                                                ]),
+
+                                            TextEntry::make('known_at')
+                                                ->hiddenLabel()
+                                                ->icon('heroicon-m-clock')
+                                                ->date('d M Y, H:i')
+                                                ->size(TextSize::ExtraSmall)
+                                                ->visible(fn ($record) => !$record->approve_at)
+                                                ->extraAttributes([
+                                                    'class' => '-mt-6'
+                                                ]),
+
+                                            TextEntry::make('approve_at')
+                                                ->hiddenLabel()
+                                                ->date('d M Y, H:i')
+                                                ->icon('heroicon-m-clock')
+                                                ->size(TextSize::ExtraSmall)
+                                                ->visible(fn ($record) => $record->approve_at)
+                                                ->extraAttributes([
+                                                    'class' => '-mt-6'
                                                 ]),
                                             
                                             TextEntry::make('adverb')
@@ -282,7 +304,23 @@ class LeaveInfolist
                                             ->label('Sisa Cuti')
                                             ->visible(fn ($record) => $record->type == 'Cuti')
                                             ->state(function ($record) {
+                                                $staff = Auth::user()->staff;
+                                                $isPermanent = $staff->staffStatus->name == 'Tetap';
+
+                                                $isContract = $staff->staffStatus->name == 'Kontrak' 
+                                                    && $staff->entry_date 
+                                                    && Carbon::parse($staff->entry_date)->diffInMonths(now()) >= 12;
+
+                                                if (!$isPermanent && !$isContract) {
+                                                    return 'N/A';
+                                                }
+
                                                 $quota = setting('max_leave_days'); 
+
+                                                if (Carbon::parse($record->entry_date)->year == now()->year + 1) {
+                                                    $monthJoin = Carbon::parse($staff->entry_date)->month;
+                                                    $quota -= $monthJoin;
+                                                } 
                                                 
                                                 $taken = $record
                                                     ->where('staff_id', $record->staff_id)

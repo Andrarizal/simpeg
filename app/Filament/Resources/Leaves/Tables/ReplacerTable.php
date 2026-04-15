@@ -12,6 +12,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -237,15 +238,22 @@ class ReplacerTable
                         $record->status !== 'Ditolak' &&
                         is_null($record->is_verified))
                     ->requiresConfirmation()
-                    ->action(function ($record) {
+                    ->schema([
+                        Textarea::make('adverb')
+                            ->label('Alasan')
+                            ->required()
+                            ->rows(3),
+                    ])
+                    ->action(function (array $data, $record) {
                         $record->update([
                             'is_replaced' => 0,
-                            'replacement_at' => Carbon::now()
+                            'replacement_at' => Carbon::now(),
+                            'adverb' => $data['adverb']
                         ]);
 
                         Notification::make()
                             ->title('Pengganti ' . $record->type . ' Anda tidak bersedia')
-                            ->body('Pengganti Anda telah menyatakan ketidaksediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                            ->body('Pengganti Anda menyatakan ketidaksediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ". \nAlasan: " . $data['adverb'])
                             ->warning()
                             ->actions([
                                 Action::make('read')

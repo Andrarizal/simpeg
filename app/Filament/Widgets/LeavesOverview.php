@@ -24,15 +24,13 @@ class LeavesOverview extends StatsOverviewWidget
         $staff = Auth::user()->staff;
         if (!$staff) return [];
 
-        $year = now()->year;
+        $year = now()->year + 1;
         $maxLeave = setting('max_leave_days');
         $maxPermission = setting('max_permission_days');
 
-        // Pro-rate jika pegawai baru masuk tahun ini
         if (Carbon::parse($staff->entry_date)->year == $year) {
             $monthJoin = Carbon::parse($staff->entry_date)->month;
-            $maxLeave -= $monthJoin; // Asumsi: berkurang 1 hari per bulan yang lewat
-            $maxPermission -= ceil($monthJoin / 2);
+            $maxLeave -= $monthJoin;
         }
 
         $leaves = Leave::where('staff_id', $staff->id)
@@ -52,9 +50,25 @@ class LeavesOverview extends StatsOverviewWidget
             ->where('subtype', 'Non-Sakit')
             ->sum(fn ($l) => Carbon::parse($l->start_date)->diffInDays(Carbon::parse($l->end_date)) + 1);
 
+        $isPermanent = $staff->staffStatus->name == 'Tetap';
+
+        $isContract = $staff->staffStatus->name == 'Kontrak' 
+            && $staff->entry_date 
+            && Carbon::parse($staff->entry_date)->diffInMonths(now()) >= 12;
+
         return [
-            Stat::make('Sisa Cuti Tahunan', max($maxLeave - $usedLeave, 0))
-                ->description("Terpakai: {$usedLeave} dari {$maxLeave}")
+            Stat::make('Sisa Cuti Tahunan', function () use ($maxLeave, $usedLeave, $isPermanent, $isContract) {
+                if ($isPermanent || $isContract) {
+                    return max($maxLeave - $usedLeave, 0);
+                }
+                return 'N/A';
+                })
+                ->description(function () use ($maxLeave, $usedLeave, $isPermanent, $isContract) {
+                if ($isPermanent || $isContract) {
+                    return "Terpakai: {$usedLeave} dari {$maxLeave}";
+                }
+                return 'N/A';
+                })
                 ->color($usedLeave > $maxLeave ? 'danger' : 'success'),
 
             Stat::make('Sisa Izin', max($maxPermission - $usedPermission, 0))

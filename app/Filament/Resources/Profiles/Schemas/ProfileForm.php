@@ -120,7 +120,7 @@ class ProfileForm
                                                         ->reactive()
                                                         ->native(false),
                                                     Textarea::make('origin')
-                                                        ->label('Alamat Asli')
+                                                        ->label('Alamat KTP')
                                                         ->rows(3)
                                                         ->placeholder('Jalan Chelsea, RT 20/RW 82, Kecamatan Liverpool, Kabupaten Manchester')
                                                         ->required(),
@@ -135,7 +135,7 @@ class ProfileForm
                                                         ->required()
                                                         ->native(false),
                                                     DatePicker::make('entry_date')
-                                                        ->label('Terhitung Mulai Tanggal')
+                                                        ->label('Terhitung Mulai Tanggal Kontrak')
                                                         ->maxDate(fn () => Carbon::today())
                                                         ->required()
                                                         ->disabled()

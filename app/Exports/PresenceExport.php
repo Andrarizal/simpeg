@@ -63,6 +63,8 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
             }
         }
         $header1[] = 'Rata-Rata & Total';
+        $header1[] = 'Jam Kerja Kontraktual';
+        $header1[] = 'Jam Kerja Aktual';
         $data[] = $header1;
 
         // ---------------------------------------------------------
@@ -72,6 +74,8 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
         foreach ($this->dates as $date) {
             $header2[] = Carbon::parse($date)->format('j'); 
         }
+        $header2[] = ''; 
+        $header2[] = ''; 
         $header2[] = ''; 
         $data[] = $header2;
 
@@ -95,12 +99,11 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
 
         $formatSeconds = function($seconds) {
             if ($seconds == 0) return '-';
-            $sign = $seconds > 0 ? '+' : ($seconds < 0 ? '-' : '');
             $seconds = abs($seconds);
             $hours = floor($seconds / 3600);
             $minutes = floor(($seconds / 60) % 60);
             $secs = $seconds % 60;
-            return sprintf("%s%02d:%02d:%02d", $sign, $hours, $minutes, $secs);
+            return sprintf("%s%02d:%02d:%02d", '+', $hours, $minutes, $secs);
         };
 
         $no = 1;
@@ -126,6 +129,9 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
             $sum_detik_pulang = 0;
             $count_pulang = 0;
 
+            $total_target_hours = 0;
+            $total_real_hours = 0;
+
             foreach ($this->dates as $date) {
                 $gap_masuk = '-';
                 $gap_pulang = '-';
@@ -147,9 +153,10 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
                                 $jam_masuk = Carbon::parse($p->check_in)->format('H:i:s');
                                 $real_masuk = Carbon::parse($p->check_in);
                                 $sec_masuk = $target_masuk->diffInSeconds($real_masuk, false);
-                                $sign_masuk = $sec_masuk > 0 ? '+' : ($sec_masuk < 0 ? '-' : '');
-                                $gap_masuk = $sign_masuk . $target_masuk->diff($real_masuk)->format('%H:%I:%S');
-                                $total_gap_detik_masuk += $sec_masuk;
+                                if ($real_masuk > $target_masuk){
+                                    $gap_masuk = '+' . $target_masuk->diff($real_masuk)->format('%H:%I:%S');
+                                    $total_gap_detik_masuk += $sec_masuk;
+                                    }
                                 $sum_detik_masuk += ($real_masuk->hour * 3600) + ($real_masuk->minute * 60) + $real_masuk->second;
                                 $count_masuk++;
                             }
@@ -158,13 +165,18 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
                                 $jam_pulang = Carbon::parse($p->check_out)->format('H:i:s');
                                 $real_pulang = Carbon::parse($p->check_out);
                                 $sec_pulang = $target_pulang->diffInSeconds($real_pulang, false);
-                                $sign_pulang = $sec_pulang > 0 ? '+' : ($sec_pulang < 0 ? '-' : '');
-                                $gap_pulang = $sign_pulang . $target_pulang->diff($real_pulang)->format('%H:%I:%S');
-                                $total_gap_detik_pulang += $sec_pulang;
+                                if ($real_pulang < $target_pulang) {
+                                    $gap_pulang = '+' . $target_pulang->diff($real_pulang)->format('%H:%I:%S');
+                                    $total_gap_detik_pulang += $sec_pulang;
+                                    }
                                 $sum_detik_pulang += ($real_pulang->hour * 3600) + ($real_pulang->minute * 60) + $real_pulang->second;
                                 $count_pulang++;
                             }
+                            if (isset($real_masuk) && isset($real_pulang)) {
+                                $total_real_hours += round(abs($real_pulang->diffInMinutes($real_masuk) / 60), 2);
+                            }
                         }
+                        $total_target_hours += round(abs($target_pulang->diffInMinutes($target_masuk) / 60), 2);
                     }
                 }
 
@@ -191,6 +203,9 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
             $rowSelisihMasuk[] = $formatSeconds($total_gap_detik_masuk);
             $rowSelisihPulang[] = $formatSeconds($total_gap_detik_pulang); 
 
+            $rowMasuk[] = $total_target_hours . ' Jam';
+            $rowMasuk[] = $total_real_hours . ' Jam';
+
             $data[] = $rowMasuk;
             $data[] = $rowPulang;
             $data[] = $rowSelisihMasuk;
@@ -211,16 +226,20 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
                 
                 $totalDates = count($this->dates);
                 $lastColIndex = 3 + $totalDates + 1; 
-                $lastColLetter = Coordinate::stringFromColumnIndex($lastColIndex);
+                $totalLetter = Coordinate::stringFromColumnIndex($lastColIndex);
+                $contractualLetter = Coordinate::stringFromColumnIndex($lastColIndex + 1);
+                $actualLetter = Coordinate::stringFromColumnIndex($lastColIndex + 2);
 
                 // ---------------------------------------------------------
                 // 1. MERGE HEADER STATIS
                 // ---------------------------------------------------------
-                $sheet->mergeCells("A1:{$lastColLetter}1"); 
+                $sheet->mergeCells("A1:{$actualLetter}1"); 
                 $sheet->mergeCells('A2:A3'); 
                 $sheet->mergeCells('B2:B3'); 
                 $sheet->mergeCells('C2:C3'); 
-                $sheet->mergeCells("{$lastColLetter}2:{$lastColLetter}3");
+                $sheet->mergeCells("{$totalLetter}2:{$totalLetter}3");
+                $sheet->mergeCells("{$contractualLetter}2:{$contractualLetter}3");
+                $sheet->mergeCells("{$actualLetter}2:{$actualLetter}3");
 
                 // ---------------------------------------------------------
                 // 2. MERGE HEADER BULAN DINAMIS
@@ -241,20 +260,22 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
                 for ($row = 4; $row <= $highestRow; $row += 4) {
                     $sheet->mergeCells("A{$row}:A" . ($row + 3)); 
                     $sheet->mergeCells("B{$row}:B" . ($row + 3)); 
+                    $sheet->mergeCells("{$contractualLetter}{$row}:{$contractualLetter}" . ($row + 3)); 
+                    $sheet->mergeCells("{$actualLetter}{$row}:{$actualLetter}" . ($row + 3)); 
                 }
 
                 // ---------------------------------------------------------
                 // 4. STYLING & BORDER
                 // ---------------------------------------------------------
-                $sheet->getStyle("A1:{$lastColLetter}{$highestRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->getStyle("A1:{$actualLetter}{$highestRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
                 
-                $sheet->getStyle("A1:{$lastColLetter}3")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("A1:{$lastColLetter}3")->getFont()->setBold(true);
+                $sheet->getStyle("A1:{$actualLetter}3")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("A1:{$actualLetter}3")->getFont()->setBold(true);
 
                 $sheet->getStyle("A4:A{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); 
-                $sheet->getStyle("C4:{$lastColLetter}{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); 
+                $sheet->getStyle("C4:{$actualLetter}{$highestRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); 
 
-                $sheet->getStyle("A2:{$lastColLetter}{$highestRow}")->applyFromArray([
+                $sheet->getStyle("A2:{$actualLetter}{$highestRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,

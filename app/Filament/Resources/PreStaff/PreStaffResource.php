@@ -106,7 +106,7 @@ class PreStaffResource extends Resource
                                     ->mask('9999.9999.999.9')
                                     ->dehydrated(),
                                 DatePicker::make('entry_date')
-                                    ->label('Terhitung Mulai Tanggal')
+                                    ->label('Terhitung Mulai Tanggal Kontrak')
                                     ->maxDate(fn () => Carbon::today())
                                     ->required()
                                     ->native(false),

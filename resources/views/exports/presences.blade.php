@@ -54,17 +54,47 @@
     <p style="margin: 0; font-size: 14px;">Jabatan: <span>{{ $data[0]->staff->chair->name }}</span></p>
     <p style="margin: 0; font-size: 14px;">Unit: <span>{{ $data[0]->staff->unit->name }}</span></p>
     <br /><br />
+    
+    @php
+        $total_target_hours = 0;
+        $total_real_hours = 0;
+
+        $dates = [];
+
+        $startDate = \Carbon\Carbon::parse($schedules->first()->schedule_date);
+        $endDate = \Carbon\Carbon::parse($schedules->last()->schedule_date);
+        
+        $current = $startDate->copy();
+        
+        while ($current->lte($endDate)) {
+            $dateString = $current->format('Y-m-d');
+            $dates[] = $dateString;
+
+            $schedule = $schedules[$dateString];
+            if ($schedule && $schedule->shift) {
+                $shift = $schedule->shift;
+                
+                if ($shift->start_time && $shift->end_time) {
+                    $target_masuk = \Carbon\Carbon::parse($shift->start_time);
+                    $target_pulang = \Carbon\Carbon::parse($shift->end_time);
+                    $total_target_hours += round(abs($target_pulang->diffInMinutes($target_masuk) / 60), 2);
+                }
+            }
+
+            $current->addDay();
+        }
+    @endphp
 
     <table style="width: 100%; border-collapse: collapse;">
         <thead>
-            <tr >
-                <th style="border: 1px solid black; padding: 5px;" valign="middle">No</th>
-                <th style="border: 1px solid black; padding: 5px;" valign="middle">Hari dan Tanggal</th>
-                <th style="border: 1px solid black; padding: 5px;" valign="middle">Masuk</th>
-                <th style="border: 1px solid black; padding: 5px;" valign="middle">Pulang</th>
-                <th style="border: 1px solid black; padding: 5px;" valign="middle">Metode</th>
-                <th style="border: 1px solid black; padding: 5px;" valign="middle">Selisih Masuk</th>
-                <th style="border: 1px solid black; padding: 5px;" valign="middle">Selisih Pulang</th>
+            <tr>
+                <th width="5%" style="border: 1px solid black; padding: 5px;" valign="middle">No</th>
+                <th width="25%" style="border: 1px solid black; padding: 5px;" valign="middle">Hari dan Tanggal</th>
+                <th width="10%" style="border: 1px solid black; padding: 5px;" valign="middle">Masuk</th>
+                <th width="10%" style="border: 1px solid black; padding: 5px;" valign="middle">Pulang</th>
+                <th width="10%" style="border: 1px solid black; padding: 5px;" valign="middle">Metode</th>
+                <th width="20%" style="border: 1px solid black; padding: 5px;" valign="middle">Selisih Masuk</th>
+                <th width="20%" style="border: 1px solid black; padding: 5px;" valign="middle">Selisih Pulang</th>
             </tr>
         </thead>
 
@@ -99,37 +129,37 @@
                             $target_masuk = \Carbon\Carbon::parse($shift->start_time);
                             $target_pulang = \Carbon\Carbon::parse($shift->end_time);
                             
-                            if ($p->check_in) {
-                                $real_masuk = \Carbon\Carbon::parse($p->check_in);
-                                $gap_masuk = $target_masuk->diff($real_masuk)->format('%H:%I:%S');
-                                // Gunakan false agar telat = positif, datang lebih awal = negatif
-                                $total_gap_detik_masuk += $target_masuk->diffInSeconds($real_masuk, false);
-                            }
+                            if ($p){
+                                if ($p->check_in) {
+                                    $real_masuk = \Carbon\Carbon::parse($p->check_in);
+                                    if ($real_masuk > $target_masuk) {
+                                        $gap_masuk = '+' . $target_masuk->diff($real_masuk)->format('%H:%I:%S');
+                                        $total_gap_detik_masuk += $target_masuk->diffInSeconds($real_masuk, false);
+                                    }
+                                }
 
-                            if ($p->check_out) {
-                                $real_pulang = \Carbon\Carbon::parse($p->check_out);
-                                $gap_pulang = $target_pulang->diff($real_pulang)->format('%H:%I:%S');
-                                // Gunakan false agar pulang awal = negatif, pulang telat = positif
-                                $total_gap_detik_pulang += $target_pulang->diffInSeconds($real_pulang, false); 
+                                if ($p->check_out) {
+                                    $real_pulang = \Carbon\Carbon::parse($p->check_out);
+                                    if ($real_pulang < $target_pulang) {
+                                        $gap_pulang = '+' . $target_pulang->diff($real_pulang)->format('%H:%I:%S');
+                                        $total_gap_detik_pulang += $target_pulang->diffInSeconds($real_pulang, false); 
+                                    }
+                                }
+
+                                if (isset($real_masuk) && isset($real_pulang)) {
+                                    $total_real_hours += round(abs($real_pulang->diffInMinutes($real_masuk) / 60), 2);
+                                }
                             }
                         }
                     }
                 @endphp
 
-                <td style="border: 1px solid black; text-align: center; padding: 5px; color: {{ ($real_masuk && $target_masuk && $real_masuk > $target_masuk) ? 'red' : 'green' }}">
-                    @if ($gap_masuk !== '-')
-                        {{ $real_masuk > $target_masuk ? '+' : '-' }} {{ $gap_masuk }}
-                    @else
-                        -
-                    @endif
+                <td style="border: 1px solid black; text-align: center; padding: 5px; color: {{ ($real_masuk > $target_masuk) ? 'red' : 'green' }}">
+                    {{ $gap_masuk }}
                 </td>
                 
-                <td style="border: 1px solid black; text-align: center; padding: 5px; color: {{ ($real_pulang && $target_pulang && $real_pulang < $target_pulang) ? 'red' : 'green' }}">
-                    @if ($gap_pulang !== '-')
-                        {{ $real_pulang < $target_pulang ? '-' : '+' }} {{ $gap_pulang }}
-                    @else
-                        -
-                    @endif
+                <td style="border: 1px solid black; text-align: center; padding: 5px; color: {{ ($real_pulang < $target_pulang) ? 'red' : 'green' }}">
+                    {{ $gap_pulang }}
                 </td>
             </tr>
             @endforeach
@@ -149,9 +179,8 @@
                         $sisa_masuk = $absolute_masuk % 3600;
                         $menit_masuk = floor($sisa_masuk / 60);
                         $detik_masuk = $sisa_masuk % 60;
-                        $tanda_masuk = $negatif_masuk ? '- ' : '+ ';
                         
-                        $total_formatted_masuk = sprintf('%s%02d:%02d:%02d', $tanda_masuk, $jam_masuk, $menit_masuk, $detik_masuk);
+                        $total_formatted_masuk = sprintf('%s%02d:%02d:%02d', '+', $jam_masuk, $menit_masuk, $detik_masuk);
                     @endphp
                     {{ $total_formatted_masuk }}
                 </td>
@@ -164,15 +193,18 @@
                         $sisa_pulang  = $absolute_pulang % 3600;
                         $menit_pulang = floor($sisa_pulang / 60);
                         $detik_pulang = $sisa_pulang % 60;
-                        $tanda_pulang = $negatif_pulang ? '- ' : '+ ';
                         
-                        $total_formatted_pulang = sprintf('%s%02d:%02d:%02d', $tanda_pulang, $jam_pulang, $menit_pulang, $detik_pulang);
+                        $total_formatted_pulang = sprintf('%s%02d:%02d:%02d', '+', $jam_pulang, $menit_pulang, $detik_pulang);
                     @endphp
                     {{ $total_formatted_pulang }}
                 </td>
             </tr>
         </tfoot>
     </table>
+    <br />
+
+    <p style="margin: 0; font-size: 14px;">Jam Kerja Kontraktual: <span>{{ $total_target_hours }} Jam</span></p>
+    <p style="margin: 0; font-size: 14px;">Jam Kerja Aktual: <span>{{ $total_real_hours }} Jam</span></p>
 
 </body>
 </html>

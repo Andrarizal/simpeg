@@ -17,7 +17,7 @@ class LeavesTable extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->heading('3 Pengajuan Cuti Terbaru')
+            ->heading('3 Pengajuan Cuti/Izin Terbaru')
             ->query(function (): Builder {
                 $query = Leave::query();
 

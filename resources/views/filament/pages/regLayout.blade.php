@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $pageTitle }}</title>
+    <link rel="icon" href="{{ asset('img/rsumpyk.ico') }}" type="image/x-icon">
 
     @filamentStyles
     @livewireStyles
@@ -106,10 +107,10 @@
           class="w-6 h-6 text-gray-100"
       />
     </button>
-    <div class="flex justify-center lg:justify-start items-center gap-4 p-4 border border-gray-50/20 bg-gray-50/5 dark:bg-gray-800/50 rounded-2xl overflow-hidden shadow-2xl">
-        <img src="{{ asset('img/rsumpyk.png') }}" class="w-14 h-14 hidden lg:block">
+    <div class="flex justify-center lg:justify-start items-center gap-4 p-4 border border-gray-200 bg-white dark:bg-gray-900/50 dark:border-gray-600 rounded-2xl overflow-hidden">
+        <img src="{{ asset('img/rsumpyk.png') }}" class="w-14 h-14 border border-gray-700/20 dark:border-0 bg-white p-1 rounded-lg block shadow-lg">
         <div class="-mt-1">
-            <h1 class="font-bold text-center lg:text-start text-4xl lg:text-5xl">SIMANTAP</h1>
+            <h1 class="font-extrabold text-center lg:text-start text-4xl lg:text-5xl">SIMANTAP</h1>
             <h2 class="font-light text-center lg:text-start text-xs lg:-mt-1">Sistem Informasi Manajemen dan <br class="lg:hidden">Tenaga Pegawai</h2>
         </div>
     </div>

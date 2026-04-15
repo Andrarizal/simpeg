@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -38,11 +37,6 @@ class Overtime extends Model
 
                 if ($period) {
                     $overtime->period_id = $period->id;
-                } else {
-                    Notification::make()
-                        ->warning()
-                        ->title('Periode bulanan tidak ditemukan untuk tanggal on call yang dipilih.')
-                        ->send();
                 }
             }
         });

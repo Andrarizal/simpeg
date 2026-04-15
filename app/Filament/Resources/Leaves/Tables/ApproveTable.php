@@ -230,14 +230,14 @@ class ApproveTable
             ])
             ->recordActions([
                 Action::make('approve')
-                    ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Ketahui' : 'Setujui')
+                    ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Rekomendasi' : 'Setujui')
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(fn ($record) => shouldShowApprovalButton($record))
                     ->requiresConfirmation()
                     ->schema([
                         Textarea::make('adverb')
-                            ->label('Catatan')
+                            ->label('Catatan/Rekomendasi')
                             ->rows(3),
                     ])
                     ->action(function (array $data, $record) {

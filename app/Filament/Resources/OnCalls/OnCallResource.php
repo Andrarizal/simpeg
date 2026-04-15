@@ -10,6 +10,7 @@ use App\Models\OnCall;
 use App\Models\Staff;
 use BackedEnum;
 use Carbon\Carbon;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -112,6 +113,17 @@ class OnCallResource extends Resource
                                             ->displayFormat('d F Y')
                                             ->required()
                                             ->native(false)
+                                            ->rule(static function () {
+                                                return function (string $attribute, $value, Closure $fail) {
+                                                    $periodExists = MonthlyPeriod::where('start_date', '<=', $value)
+                                                        ->where('end_date', '>=', $value)
+                                                        ->exists(); 
+
+                                                    if (! $periodExists) {
+                                                        $fail('Periode bulanan tidak ditemukan untuk tanggal on call yang dipilih.');
+                                                    }
+                                                };
+                                            })
                                             ->columnSpanFull(),
 
                                         Textarea::make('command')
