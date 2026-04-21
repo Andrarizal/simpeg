@@ -42,7 +42,7 @@
         
         .signature-section {
             float: right;
-            width: 40%;
+            width: 50%;
             text-align: center;
             margin-top: 30px;
         }
@@ -61,9 +61,14 @@
     
     $filePath = storage_path('app/public/' . $record->file_path);
 
-    if (!empty($record->file_path) && file_exists($filePath)) {
+    if (!empty($record->file_path) && is_file($filePath)) {
         try {
-            $mpdfCounter = new \Mpdf\Mpdf();
+            $mpdfTempDir = storage_path('app/private/mpdf-tmp');
+            if (!\Illuminate\Support\Facades\File::isDirectory($mpdfTempDir)) {
+                \Illuminate\Support\Facades\File::makeDirectory($mpdfTempDir, 0755, true, true);
+            }
+
+            $mpdfCounter = new \Mpdf\Mpdf(['tempDir' => $mpdfTempDir]);
             $pageCount = $mpdfCounter->SetSourceFile($filePath);
         } catch (\Exception $e) {
             $pageCount = 0;

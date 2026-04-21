@@ -77,7 +77,12 @@
                 if ($shift->start_time && $shift->end_time) {
                     $target_masuk = \Carbon\Carbon::parse($shift->start_time);
                     $target_pulang = \Carbon\Carbon::parse($shift->end_time);
-                    $total_target_hours += round(abs($target_pulang->diffInMinutes($target_masuk) / 60), 2);
+
+                    if ($target_pulang->format('H:i:s') < $target_masuk->format('H:i:s')) {
+                        $target_pulang->addDay();
+                    }
+
+                    $total_target_hours += round(abs($target_pulang->diffInMinutes($target_masuk)) / 60, 2);
                 }
             }
 
@@ -109,7 +114,7 @@
                 <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $i + 1 }}</td>
                 <td style="border: 1px solid black; padding: 5px;">{{ \Carbon\Carbon::parse($p->presence_date)->translatedFormat('l, d F Y') }}</td>
                 <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $p->check_in }}</td>
-                <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $p->check_out ?? '-' }}</td>
+                <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $p->check_out && $p->check_out < $p->check_in ? $p->check_out . ' (+1 Hari)' : $p->check_out ?? '-' }}</td>
                 <td style="border: 1px solid black; text-align: center; padding: 5px;">{{ $p->method === 'network' ? 'Jaringan' : 'Lokasi' }}</td>
                 
                 @php
@@ -147,7 +152,14 @@
                                 }
 
                                 if (isset($real_masuk) && isset($real_pulang)) {
-                                    $total_real_hours += round(abs($real_pulang->diffInMinutes($real_masuk) / 60), 2);
+                                    $waktu_masuk = clone $real_masuk;
+                                    $waktu_pulang = clone $real_pulang;
+
+                                    if ($waktu_pulang->format('H:i:s') < $waktu_masuk->format('H:i:s')) {
+                                        $waktu_pulang->addDay();
+                                    }
+
+                                    $total_real_hours += round(abs($waktu_pulang->diffInMinutes($waktu_masuk)) / 60, 2);
                                 }
                             }
                         }

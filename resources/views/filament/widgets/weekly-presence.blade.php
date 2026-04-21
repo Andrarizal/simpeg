@@ -37,7 +37,7 @@
                             @if($day['is_today'])
                             <span class="block text-[9px] text-primary-600 font-bold">(Hari Ini)</span>
                             @else
-                            {{ $day['day_name'] }}
+                            <span class="block text-[9px] font-bold">{{ $day['day_name'] }}</span>
                             @endif
                         </div>
 

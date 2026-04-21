@@ -29,7 +29,7 @@ class Dashboard extends BaseDashboard
     
     public function getColumns(): int | array
     {
-        return 4;
+        return 6;
     }
 
     protected function getHeaderWidgets(): array
@@ -46,7 +46,23 @@ class Dashboard extends BaseDashboard
                 Action::make('check_in')
                     ->label('Check In')
                     ->icon('heroicon-o-finger-print')
-                    ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->count() == 0)
+                    ->visible(function () {
+                        $scheduleToday = Schedule::where('staff_id', Auth::user()->staff_id)
+                            ->where('schedule_date', now()->toDateString())
+                            ->first();
+                        $isOff = $scheduleToday && $scheduleToday->shift->is_off == 1 ? true : false;
+
+                        $latestPresence = Presence::where('staff_id', Auth::user()->staff_id)
+                            ->latest('presence_date')
+                            ->first();
+                        $isAlreadyCheckedOut = $latestPresence ? $latestPresence->check_out !== null : true;
+
+                        $isNotPresenceYet = Presence::where('staff_id', Auth::user()->staff_id)
+                            ->whereDate('presence_date', now()->toDateString())
+                            ->doesntExist();
+
+                        return $isAlreadyCheckedOut && $isNotPresenceYet && !$isOff;
+                    })
                     ->action(function () {
                         $device = session('device_info');
                         $today = now()->toDateString();
@@ -100,10 +116,13 @@ class Dashboard extends BaseDashboard
                 Action::make('check_out')
                     ->label('Check Out')
                     ->icon('heroicon-o-finger-print')
-                    ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->whereNull('check_out')->count() > 0)
+                    ->visible(function () {
+                        return Presence::where('staff_id', Auth::user()->staff_id)
+                            ->whereNull('check_out')
+                            ->exists();
+                    })
                     ->action(function () {
-                        $today = now()->toDateString();
-                        $presence = Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', $today)->first();
+                        $presence = Presence::where('staff_id', Auth::user()->staff_id)->whereNull('check_out')->latest('presence_date')->first();
                         $presence->check_out = now()->toTimeString();
                         $presence->save();
 
@@ -116,7 +135,23 @@ class Dashboard extends BaseDashboard
                     ->label('Check In dengan GPS')
                     ->icon('heroicon-o-map-pin')
                     ->color('info')
-                    ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->count() == 0)
+                    ->visible(function () {
+                        $scheduleToday = Schedule::where('staff_id', Auth::user()->staff_id)
+                            ->where('schedule_date', now()->toDateString())
+                            ->first();
+                        $isOff = $scheduleToday && $scheduleToday->shift->is_off == 1 ? true : false;
+
+                        $latestPresence = Presence::where('staff_id', Auth::user()->staff_id)
+                            ->latest('presence_date')
+                            ->first();
+                        $isAlreadyCheckedOut = $latestPresence ? $latestPresence->check_out !== null : true;
+
+                        $isNotPresenceYet = Presence::where('staff_id', Auth::user()->staff_id)
+                            ->whereDate('presence_date', now()->toDateString())
+                            ->doesntExist();
+
+                        return $isAlreadyCheckedOut && $isNotPresenceYet && !$isOff;
+                    })
                     ->modalHeading('Absensi via Koordinat Lokasi')
                     ->modalWidth('2xl')
                     ->modalSubmitAction(false)
@@ -126,7 +161,11 @@ class Dashboard extends BaseDashboard
                     ->label('Check Out dengan GPS')
                     ->icon('heroicon-o-map-pin')
                     ->color('info')
-                    ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->whereNull('check_out')->count() > 0)
+                    ->visible(function () {
+                        return Presence::where('staff_id', Auth::user()->staff_id)
+                            ->whereNull('check_out')
+                            ->exists();
+                    })
                     ->modalHeading('Absensi via Koordinat Lokasi')
                     ->modalWidth('2xl')
                     ->modalSubmitAction(false)

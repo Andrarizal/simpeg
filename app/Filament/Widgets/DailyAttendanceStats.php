@@ -15,7 +15,7 @@ class DailyAttendanceStats extends StatsOverviewWidget
 
     protected ?string $pollingInterval = '10s';
 
-    protected int | string | array $columnSpan = 2;
+    protected int | string | array $columnSpan = 3;
 
     protected function getColumns(): int 
     {

@@ -12,7 +12,7 @@ class LeavesOverview extends StatsOverviewWidget
 {
     protected static ?int $sort = 3;
 
-    protected int | string | array $columnSpan = 2;
+    protected int | string | array $columnSpan = 3;
 
     protected function getColumns(): int | array
     {

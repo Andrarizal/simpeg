@@ -7,6 +7,7 @@ use App\Filament\Resources\Letters\LetterResource;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Auth;
 
 class CreateDuty extends CreateRecord
 {
@@ -30,5 +31,15 @@ class CreateDuty extends CreateRecord
                     ->markAsRead(),
             ])
             ->sendToDatabase($recipients);
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->staff || !$user->staff->chair) {
+            return false; 
+        }
+
+        return $user->role_id == 1;
     }
 }

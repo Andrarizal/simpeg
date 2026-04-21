@@ -160,14 +160,13 @@ class StaffForm
                                         TextInput::make('other_phone')
                                             ->label('No. Telepon Kerabat')
                                             ->tel()
-                                            ->mask('9999-9999-9999')
-                                            ->required(),
+                                            ->mask('9999-9999-9999'),
                                         
                                         Select::make('other_phone_adverb')
                                             ->label('Hubungan')
                                             ->options(['Suami' => 'Suami', 'Istri' => 'Istri', 'Orang tua' => 'Orang tua', 'Wali' => 'Wali', 'Saudara' => 'Saudara', 'Lainnya' => 'Lainnya'])
                                             ->native(false)
-                                            ->required(),
+                                            ->placeholder('None'),
                                     ]),
 
                                     Grid::make(2)->schema([
@@ -387,6 +386,7 @@ class StaffForm
                                     ->label('Jenjang')
                                     ->options(['Dokter' => 'Dokter', 'Dokter Gigi' => 'Dokter Gigi','Spesialis' => 'Spesialis', 'S2' => 'S2', 'S1' => 'S1', 'Profesi Ners' => 'Profesi Ners', 'Profesi Apoteker' => 'Profesi Apoteker', 'DIV' => 'DIV', 'DIII' => 'DIII', 'DIII Anestesi' => 'DIII Anestesi', 'DIV Anestesi' => 'DIV Anestesi', 'SMK' => 'SMK', 'SMA' => 'SMA', 'SMP' => 'SMP'
                                     ])
+                                    ->placeholder('None')
                                     ->native(false),
                                 TextInput::make('workEducation.major')
                                     ->label('Jurusan')

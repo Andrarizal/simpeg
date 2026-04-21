@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Filament\Widgets;
 
 use App\Models\Staff;
@@ -7,35 +6,34 @@ use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class SumStaffByUnit extends ChartWidget
+class SumStaffByGroup extends ChartWidget
 {
-    protected ?string $heading = 'Jumlah Pegawai berdasarkan Unit Kerja';
-    protected static ?int $sort = 11;
+    protected ?string $heading = 'Pegawai berdasarkan Kelompok Tenaga Kerja';
+    protected static ?int $sort = 10;
 
-    protected ?string $maxHeight = '240px';
+    protected ?string $maxHeight = '200px';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int | string | array $columnSpan = 'full'; // Dibuat lebih lebar karena bar chart
 
     protected function getData(): array
     {
-        $staffByUnit = Staff::with('unit')
-            ->select('unit_id', DB::raw('COUNT(*) as total'))
-            ->groupBy('unit_id')
+        // Pastikan nama relasi 'group' sesuai dengan Model Staff
+        $staffByGroup = Staff::with('group')
+            ->select('group_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('group_id')
             ->get();
 
-        $labels = $staffByUnit->pluck('unit.name')->toArray();
-        $data = $staffByUnit->pluck('total')->toArray();
-        $colors = $labels
-        ? array_map(fn($label) => '#' . substr(md5($label), 0, 6), $labels)
-        : [];
+        $labels = $staffByGroup->pluck('group.name')->toArray();
+        $data = $staffByGroup->pluck('total')->toArray();
+        $colors = $labels ? array_map(fn($label) => '#' . substr(md5($label), 0, 6), $labels) : [];
 
         return [
             'datasets' => [
                 [
-                    'label' => $labels,
-                    'data' => $data, // data dari controller / query
+                    'label' => 'Total Pegawai', // Label dataset
+                    'data' => $data,
                     'backgroundColor' => $colors,
-                    'borderColor' => '#ffffff', 
+                    'borderColor' => '#ffffff',
                     'borderWidth' => 2,
                 ],
             ],
@@ -45,17 +43,17 @@ class SumStaffByUnit extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar';
+        return 'bar'; // Tipe tetap bar
     }
 
     protected function getOptions(): array
     {
         return [
-            'maintainAspectRatio' => false, // Penting: Biarkan chart mengisi container tanpa terkunci rasio lama
+            'maintainAspectRatio' => false,
             'responsive' => true,
             'plugins' => [
                 'legend' => [
-                    'display' => false, // Opsional: sembunyikan legend jika tidak perlu
+                    'display' => false, 
                 ],
             ],
             'scales' => [
@@ -67,9 +65,8 @@ class SumStaffByUnit extends ChartWidget
                 ],
                 'x' => [
                     'ticks' => [
-                        // Opsional: Miringkan text agar tidak tumpang tindih saat lebar berubah
                         'maxRotation' => 45,
-                        'minRotation' => 45, 
+                        'minRotation' => 45,
                     ],
                 ],
             ],

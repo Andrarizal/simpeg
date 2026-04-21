@@ -13,6 +13,7 @@ use App\Models\StaffWorkExperience;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Auth;
 
 class CreateStaff extends CreateRecord
 {
@@ -110,5 +111,15 @@ class CreateStaff extends CreateRecord
                 ->success()
                 ->send();
         }
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->staff || !$user->staff->chair) {
+            return false; 
+        }
+
+        return $user->role_id == 1;
     }
 }

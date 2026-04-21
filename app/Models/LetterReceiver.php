@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LetterReceiver extends Model
 {
-    protected $fillable = ['letter_id', 'staff_id', 'is_attend', 'outline', 'content_path'];
+    protected $fillable = ['letter_id', 'staff_id', 'is_attend', 'outline', 'content_path', 'comment'];
 
     public function letter(): BelongsTo {
         return $this->belongsTo(Letter::class);

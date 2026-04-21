@@ -158,7 +158,7 @@ class LeaveInfolist
                                                 ->markdown()
                                                 ->placeholder('-')
                                                 ->extraAttributes([
-                                                    'class' => '-mt-2'
+                                                    'class' => '-mt-2 whitespace-pre-line'
                                                 ]),
                                         ]),
                                 ]),

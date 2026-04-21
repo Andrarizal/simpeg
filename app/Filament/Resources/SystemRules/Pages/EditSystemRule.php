@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 
 class EditSystemRule extends EditRecord
 {
@@ -34,5 +35,15 @@ class EditSystemRule extends EditRecord
                     ->icon('heroicon-m-arrow-path')
                     ->url('/clear-config'),
             ]);
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->staff || !$user->staff->chair) {
+            return false; 
+        }
+
+        return $user->role_id == 1;
     }
 }

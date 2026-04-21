@@ -21,9 +21,9 @@ class ViewLeave extends ViewRecord
             Action::make('available')
                 ->label('Bersedia')
                 ->icon('heroicon-o-check')
-                ->color('success')
+                ->color('primary')
                 ->visible(fn ($record) => 
-                    $record->staff_id != Auth::user()->staff_id &&
+                    $record->replacement_id == Auth::user()->staff_id &&
                     !$record->is_replaced &&
                     $record->status !== 'Ditolak' &&
                     is_null($record->is_verified))
@@ -76,20 +76,27 @@ class ViewLeave extends ViewRecord
                 ->icon('heroicon-o-no-symbol')
                 ->color('danger')
                 ->visible(fn ($record) => 
-                    $record->staff_id != Auth::user()->staff_id &&
+                    $record->replacement_id == Auth::user()->staff_id &&
                     !$record->is_replaced &&
                     $record->status !== 'Ditolak' &&
                     is_null($record->is_verified))
                 ->requiresConfirmation()
-                ->action(function ($record) {
+                ->schema([
+                    Textarea::make('adverb')
+                        ->label('Alasan')
+                        ->required()
+                        ->rows(3),
+                ])
+                ->action(function (array $data, $record) {
                     $record->update([
                         'is_replaced' => 0,
-                        'replacement_at' => Carbon::now()
+                        'replacement_at' => Carbon::now(),
+                        'adverb' => $data['adverb']
                     ]);
 
                     Notification::make()
                         ->title('Pengganti ' . $record->type . ' Anda tidak bersedia')
-                        ->body('Pengganti Anda telah menyatakan ketidaksediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y'))
+                        ->body('Pengganti Anda telah menyatakan ketidaksediaannya pada ' . $record->type . ' Anda tanggal ' . Carbon::parse($record->start_date)->translatedFormat('d F Y') . ". \nAlasan: " . $data['adverb'])
                         ->warning()
                         ->actions([
                             Action::make('read')
@@ -108,11 +115,12 @@ class ViewLeave extends ViewRecord
             Action::make('approve')
                 ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Ketahui' : 'Setujui')
                 ->icon('heroicon-o-check')
+                ->color('primary')
                 ->visible(fn ($record) => shouldShowApprovalButton($record))
                 ->requiresConfirmation()
                 ->schema([
                     Textarea::make('adverb')
-                        ->label('Alasan')
+                        ->label('Catatan/Rekomendasi')
                         ->rows(3),
                 ])
                 ->action(function (array $data, $record) {
@@ -154,7 +162,7 @@ class ViewLeave extends ViewRecord
                             'status'      => ucfirst($verb) . ' ' . $role,
                             'approver_id' => $staff->id,
                             'approve_at'  => Carbon::now(),
-                            'adverb'      => $data['adverb']
+                            'adverb'      => $record->adverb . ($data['adverb'] ? "\nRekomendasi " . $role . ": " . $data['adverb'] : '')
                         ];
 
                         if ($level == 3 || $level == 4) {
@@ -189,7 +197,7 @@ class ViewLeave extends ViewRecord
                             $usersToNotify = $staffs->pluck('user')->filter(); 
                             $actionType = 'Verifikasi';
                         } else {
-                            $head = $record->staff->chair->parent->staff->first();
+                            $head = $staff->chair->parent->staff->first();
                             
                             $usersToNotify = collect([$head?->user])->filter(); 
                             $actionType = 'Persetujuan';
@@ -232,13 +240,6 @@ class ViewLeave extends ViewRecord
                     $user->staff_id = $user->staff_id ?? 1;
                     $staff = $user->staff;
 
-                    $record->update([
-                        'status' => 'Ditolak',
-                        'approver_id' => $staff->id,
-                        'approve_at' => Carbon::now(),
-                        'adverb' => $data['adverb']
-                    ]);
-
                     $level = $staff->chair->level;
 
                     $role = '';
@@ -257,6 +258,13 @@ class ViewLeave extends ViewRecord
                             $role = 'Direktur';
                             break;
                     }
+
+                    $record->update([
+                        'status' => 'Ditolak',
+                        'approver_id' => $staff->id,
+                        'approve_at' => Carbon::now(),
+                        'adverb' => $record->adverb . "\nAlasan Penolakan " . $role . ": " . $data['adverb']
+                    ]);
 
                     Notification::make()
                         ->title($record->type . ' Anda telah ditolak oleh ' . $role)
@@ -285,14 +293,20 @@ class ViewLeave extends ViewRecord
                         && is_null($record->is_verified)
                         && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
                         && $record->status != 'Ditolak'
-                        && $record->is_replaced != 0;
+                        && $record->is_replaced !== 0;
                     })
                 ->requiresConfirmation()
-                ->action(function ($record) {
+                ->schema([
+                    Textarea::make('adverb')
+                        ->label('Catatan')
+                        ->rows(3),
+                ])
+                ->action(function (array $data, $record) {
                     $record->update([
                         'is_verified' => 1,
                         'verified_by' => Auth::user()->staff_id,
-                        'verified_at' => Carbon::now()
+                        'verified_at' => Carbon::now(),
+                        'adverb' => $record->adverb . ($data['adverb'] ? "\nCatatan SDM " . ": " . $data['adverb'] : '')
                     ]);
 
                     Notification::make()
@@ -322,7 +336,7 @@ class ViewLeave extends ViewRecord
                         && is_null($record->is_verified)
                         && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
                         && $record->status != 'Ditolak'
-                        && $record->is_replaced != 0;
+                        && $record->is_replaced !== 0;
                 })
                 ->requiresConfirmation()
                 ->schema([
@@ -334,7 +348,7 @@ class ViewLeave extends ViewRecord
                 ->action(function (array $data, $record) {
                     $record->update([
                         'is_verified' => 0,
-                        'adverb' => $data['adverb']
+                        'adverb' => $record->adverb . "\nAlasan Penolakan SDM" . ": " . $data['adverb']
                     ]);
 
                     Notification::make()

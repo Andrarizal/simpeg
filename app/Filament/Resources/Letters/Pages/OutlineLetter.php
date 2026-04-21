@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Letters\Pages;
 
 use App\Filament\Resources\Letters\LetterResource;
+use App\Models\Letter;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -179,5 +180,23 @@ class OutlineLetter extends Page implements HasForms
 
                 $this->redirect(LetterResource::getUrl('index'));
             });
+    }
+
+    public static function canAccess(array $parameters = []): bool{
+        $staffId = Auth::user()->staff_id;
+
+        $recordId = $parameters['record'] ?? request()->route('record');
+
+        if (is_array($recordId)) {
+            $recordId = $recordId[0];
+        }
+
+        $letters = Letter::find($recordId);
+
+        if (!$letters instanceof Letter) {
+            return false;
+        }
+
+        return $letters->targetStaffs()->where('staffs.id', $staffId)->exists();
     }
 }

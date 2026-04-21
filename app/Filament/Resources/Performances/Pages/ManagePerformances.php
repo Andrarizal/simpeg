@@ -11,8 +11,6 @@ use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
@@ -24,8 +22,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class ManagePerformances extends ManageRecords
 {
@@ -57,6 +57,110 @@ class ManagePerformances extends ManageRecords
         $data['staff_id'] = Auth::user()->staff_id;
         return $data;
     }
+
+    public function getHeading(): string | Htmlable
+    {
+        return new HtmlString(<<<HTML
+            <div class="flex items-center gap-x-2">
+                <span>Penilaian Kinerja</span>
+                
+                <button 
+                    type="button" 
+                    wire:click="mountAction('infoAction')" 
+                    class="text-primary-500 hover:text-primary-600 transition focus:outline-none" 
+                    title="Lihat Panduan Penilaian Kinerja"
+                >
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                </button>
+            </div>
+        HTML);
+    }
+
+    public function infoAction(): Action
+{
+    return Action::make('info')
+        ->modalHeading('Panduan Penilaian Kinerja & Capaian')
+        ->modalSubmitAction(false)
+        ->modalCancelActionLabel('Tutup')
+        ->modalWidth('3xl')
+        ->modalContent(fn () => new HtmlString('
+            <div class="text-sm text-gray-700 dark:text-gray-300 space-y-5">
+                <p>Fitur ini digunakan untuk merekam capaian kerja pegawai dan proses penilaiannya secara berjenjang.</p>
+                
+                <div class="rounded-lg border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-800/20">
+                    <h4 class="font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 text-xs">1</span>
+                        Pembukaan Periode (Khusus SDM)
+                    </h4>
+                    <ul class="list-disc pl-5 mt-1 space-y-1">
+                        <li>Penilaian hanya bisa dilakukan jika ada <strong>Periode/Semester Aktif</strong>.</li>
+                        <li>SDM masuk ke menu Penilaian, pilih aksi <strong>Kelola Periode</strong>.</li>
+                        <li>Isi Tanggal Mulai, Tanggal Selesai, aktifkan status, lalu klik <strong>Buat Periode</strong>.</li>
+                    </ul>
+                </div>
+
+                <div class="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+                    <h4 class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 text-xs">2</span>
+                        Input Capaian oleh Pegawai
+                    </h4>
+                    <ul class="list-disc pl-5 mt-1 space-y-1">
+                        <li>Semua pegawai masuk ke menu <strong>Penilaian / Pelatihan Pegawai</strong>.</li>
+                        <li>Klik action <strong>Tambah Capaian</strong>.</li>
+                        <li>Isi Judul dan Deskripsi kegiatan/capaian Anda selama periode tersebut, lalu klik <strong>Simpan</strong>.</li>
+                    </ul>
+                </div>
+
+                <div class="rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 dark:border-indigo-800/50 dark:bg-indigo-900/20">
+                    <h4 class="font-bold text-indigo-700 dark:text-indigo-400 mb-2 flex items-center gap-2">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-200 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200 text-xs">3</span>
+                        Proses Penilaian Berjenjang (Atasan)
+                    </h4>
+                    <p class="mb-2">Setelah capaian diinput, sistem akan meneruskannya ke Atasan secara berjenjang berdasarkan kedudukan jabatan Anda saat ini:</p>
+                    
+                    <div class="bg-white dark:bg-gray-900 rounded border border-indigo-100 dark:border-indigo-900 p-3 mb-3 text-xs">
+                        <ul class="space-y-2">
+                            <li class="flex items-start gap-2">
+                                <span class="font-semibold w-32 shrink-0">Staf Pelaksana:</span>
+                                <span>Dinilai bertahap oleh: Kepala Unit ➔ Koordinator ➔ Kepala Seksi ➔ Direktur</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="font-semibold w-32 shrink-0 text-gray-500">Staf Tanpa Kanit:</span>
+                                <span class="text-gray-500">Dinilai bertahap oleh: Koordinator ➔ Kepala Seksi ➔ Direktur</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="font-semibold w-32 shrink-0">Kepala Unit:</span>
+                                <span>Dinilai bertahap oleh: Koordinator ➔ Kepala Seksi ➔ Direktur</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="font-semibold w-32 shrink-0">Koordinator:</span>
+                                <span>Dinilai bertahap oleh: Kepala Seksi ➔ Direktur</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="font-semibold w-32 shrink-0">Kepala Seksi:</span>
+                                <span>Dinilai langsung oleh: Direktur</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="font-semibold w-32 shrink-0">Direktur:</span>
+                                <span>Ditinjau oleh: SDM (Melalui tab Perlu Tinjauan)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <p class="font-semibold text-indigo-800 dark:text-indigo-300 mt-3 mb-1">Cara Melakukan Penilaian (Bagi Atasan):</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Masuk ke menu Penilaian dan buka tab <strong>Perlu Penilaian</strong>.</li>
+                        <li>Klik cell <strong>Nilai Pegawai</strong> pada data yang perlu dinilai.</li>
+                        <li>Sebuah modal akan muncul. Isi <strong>Nilai</strong> dan berikan <strong>Catatan</strong> (Opsional).</li>
+                        <li>Klik <strong>Simpan</strong>. Data otomatis diteruskan ke tingkat atasnya hingga mencapai Direktur untuk Penilaian Akhir.</li>
+                    </ul>
+                </div>
+
+            </div>
+        '));
+}
 
     protected function getHeaderActions(): array
     {
@@ -283,6 +387,7 @@ class ManagePerformances extends ManageRecords
                                         };
                                     } else {
                                         if (Auth::user()->staff->chair->level == 4){
+                                            if ($record->staff->chair->level == 1 && Auth::user()->role_id == 1) return true;
                                             if (!Auth::user()->staff->unit->leader_id) return true;
                                         } else {
                                             if (Auth::user()->staff->chair->level == 3){
@@ -426,11 +531,9 @@ class ManagePerformances extends ManageRecords
                 ->recordActions([
                     ViewAction::make(),
                     EditAction::make(),
-                    DeleteAction::make()
                 ])
                 ->toolbarActions([
                     BulkActionGroup::make([
-                        DeleteBulkAction::make(),
                     ]),
                 ]);
         }

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\StaffTraining;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +9,7 @@ class TrainingProgressWidget extends Widget
 {
     protected static ?int $sort = 4;
 
-    protected int | string | array $columnSpan = 2;
+    protected int | string | array $columnSpan = 3;
 
     protected string $view = 'filament.widgets.training-progress-widget';
 

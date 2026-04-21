@@ -20,6 +20,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class LetterForm
 {
@@ -89,6 +91,7 @@ class LetterForm
                                     'Undangan' => 'Undangan',
                                 ])
                                 ->required()
+                                ->disabledOn('edit')
                                 ->default('Disposisi')
                                 ->inline()
                                 ->live()
@@ -116,12 +119,22 @@ class LetterForm
                                     'Rahasia' => 'Rahasia',
                                 ])
                                 ->columns(2)
+                                ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                 ->visible(fn (Get $get) => $get('classification') === 'Disposisi')
                                 ->required(fn (Get $get) => $get('classification') === 'Disposisi'),
 
                             TextInput::make('agenda_number')
                                 ->label('Nomor Agenda')
+                                ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                 ->visible(fn (Get $get) => $get('classification') === 'Disposisi')
+                                ->default(function() {
+                                    $latestDispo = Letter::where('classification', 'Disposisi')
+                                        ->whereNotNull('agenda_number')
+                                        ->whereYear('created_at', now()->year)
+                                        ->latest()
+                                        ->first();
+                                    return $latestDispo ? $latestDispo->agenda_number + 1 : 1;
+                                })
                                 ->required(fn (Get $get) => $get('classification') === 'Disposisi'),
 
                             Grid::make(2)
@@ -129,10 +142,12 @@ class LetterForm
                                     DatePicker::make('start_date')
                                         ->label('Tgl Mulai')
                                         ->minDate(today())
-                                        ->required(),
+                                        ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
+                                        ->required(fn (Get $get) => $get('classification') === 'Undangan'),
         
                                     DatePicker::make('end_date')
                                         ->label('Tgl Selesai')
+                                        ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                         ->minDate(today()),
                                 ]),
 
@@ -170,6 +185,7 @@ class LetterForm
 
                             Textarea::make('note')
                                 ->label('Keterangan Tambahan')
+                                ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                 ->rows(2),
                         ]),
                     ])
@@ -194,21 +210,22 @@ class LetterForm
                             Grid::make(2)->schema([
                                 TextInput::make('reference_number')
                                     ->label('Nomor Surat')
+                                    ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                     ->readOnly(fn (Get $get) => $get('classification') === 'Undangan')
-                                    ->dehydrated()
-                                    ->required(),
+                                    ->dehydrated(),
 
                                 TextInput::make('sender')
                                     ->label('Asal Surat / Pengirim')
-                                    ->visible(fn (Get $get) => $get('classification') === 'Disposisi')
-                                    ->required(fn (Get $get) => $get('classification') === 'Disposisi'),
+                                    ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
+                                    ->visible(fn (Get $get) => $get('classification') === 'Disposisi'),
 
                                 DatePicker::make('letter_date')
                                     ->label('Tanggal Surat')
+                                    ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                     ->maxDate(fn () => Carbon::today())
                                     ->readOnly(fn (Get $get) => $get('classification') === 'Undangan')
                                     ->dehydrated()
-                                    ->required(),
+                                    ->required(fn (Get $get) => $get('classification') === 'Undangan'),
 
                                 ToggleButtons::make('receiver_type')
                                     ->label('Tipe Penerima Surat')
@@ -233,8 +250,9 @@ class LetterForm
                                 Textarea::make('title')
                                     ->label('Perihal / Acara')
                                     ->rows(fn (Get $get) => $get('classification') === 'Undangan' ? 2 : 3)
+                                    ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                     ->columnSpan(fn (Get $get) => $get('classification') === 'Undangan' ? 2 : 1)
-                                    ->required(),
+                                    ->required(fn (Get $get) => $get('classification') === 'Undangan'),
                             ]),
                         ])
                         ->columnSpan(2),
@@ -257,8 +275,17 @@ class LetterForm
                         ->schema([
                             Textarea::make('instruction')
                                 ->label('Isi Instruksi / Catatan Disposisi')
-                                ->rows(4)
-                                ->required(fn (Get $get) => $get('classification') === 'Disposisi')
+                                ->rows(fn () => str_contains(Auth::user()->staff->chair->name, 'Umum & Kepegawaian') ? 4 : 2)
+                                ->helperText(function () {
+                                    if (!str_contains(Auth::user()->staff->chair->name, 'Umum & Kepegawaian')) {
+                                        return new HtmlString('
+                                            <span class="text-xs -mt-1">
+                                                Akan diteruskan ke Koordinator Umum & Kepegawaian untuk ditindaklanjuti
+                                            </span>
+                                        ');
+                                    }
+                                })
+                                ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Umum & Kepegawaian'))
                                 ->columnSpanFull(),
                         ]),
 
@@ -282,22 +309,22 @@ class LetterForm
                                     ->label('Lampiran Berkas (PDF)')
                                     ->disk('public')
                                     ->directory('surat')
+                                    ->disabled(fn () => !str_contains(Auth::user()->staff->chair->name, 'Sekretariat'))
                                     ->required(fn (Get $get) => $get('classification') === 'Disposisi' || $get('receiver_type') === 'Terlampir')
                                     ->acceptedFileTypes(['application/pdf'])
                                     ->maxSize(2048)
                                     ->helperText('Maksimal ukuran file 2MB')
                                     ->columnSpanFull(),
                             ]),
-                            // ->extraAttributes(fn (Get $get) => $get('classification') === 'Undangan' ? [
-                            //     'class' => '[&_.filepond--root]:!h-[72px] [&_.filepond--panel-root]:!h-[72px]',
-                            // ] : []),
                         ])
                         ->columnSpan(fn (Get $get) => $get('classification') === 'Disposisi' ? 1 : 2),
                 ])
                 ->columnSpan(2),
 
                 Section::make('Distribusi / Tujuan Surat')
-                    ->description('Pilih staf yang akan menerima notifikasi dan akses ke surat ini.')
+                    ->description(function (Get $get) {
+                        return $get('classification') === 'Undangan' || str_contains(Auth::user()->staff->chair->name, 'Umum & Kepegawaian') ? 'Pilih staf yang akan menerima notifikasi dan akses ke surat ini.' : 'Akan diteruskan ke Koordinator Umum & Kepegawaian untuk ditindaklanjuti.';
+                    })
                     ->extraAttributes([
                         'class' => implode(' ', [
                             '[&_.fi-section-header]:bg-gradient-to-br',
@@ -322,7 +349,8 @@ class LetterForm
                             ->gridDirection('row')
                             ->searchable() 
                             ->bulkToggleable()
-                            ->required()
+                            ->disabled(fn (Get $get) => $get('classification') === 'Disposisi' && !str_contains(Auth::user()->staff->chair->name, 'Umum & Kepegawaian'))
+                            ->required(fn () => str_contains(Auth::user()->staff->chair->name, 'Umum & Kepegawaian'))
                             ->extraAttributes([
                                 'class' => 'max-h-64 overflow-y-auto border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-sm'
                             ]),

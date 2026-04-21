@@ -21,6 +21,7 @@ use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Mpdf\Mpdf;
@@ -424,7 +425,14 @@ class OvertimesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(function (Collection $records) {
+                            return $records->every(fn ($record) => 
+                                is_null($record->is_verified) && 
+                                is_null($record->is_known) && 
+                                is_null($record->end_time)
+                            );
+                        }),
                 ]),
             ])
             ->defaultSort('overtime_date', 'desc');

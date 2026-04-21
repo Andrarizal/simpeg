@@ -47,6 +47,10 @@ class Staff extends Model
                 $staff->is_processing_history = false;
             });
         });
+
+        static::deleting(function (Staff $staff) {
+            User::where('staff_id', $staff->id)->delete();
+        });
     }
 
     public function createHistoryAuto()

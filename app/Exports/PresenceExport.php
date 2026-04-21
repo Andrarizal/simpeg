@@ -173,10 +173,25 @@ class PresenceExport implements FromArray, ShouldAutoSize, WithEvents
                                 $count_pulang++;
                             }
                             if (isset($real_masuk) && isset($real_pulang)) {
-                                $total_real_hours += round(abs($real_pulang->diffInMinutes($real_masuk) / 60), 2);
+                                $waktu_masuk = clone $real_masuk;
+                                $waktu_pulang = clone $real_pulang;
+
+                                if ($waktu_pulang->format('H:i:s') < $waktu_masuk->format('H:i:s')) {
+                                    $waktu_pulang->addDay();
+                                }
+
+                                $total_real_hours += round(abs($waktu_pulang->diffInMinutes($waktu_masuk) / 60), 2);
                             }
                         }
-                        $total_target_hours += round(abs($target_pulang->diffInMinutes($target_masuk) / 60), 2);
+
+                        $mark_masuk = clone $target_masuk;
+                        $mark_pulang = clone $target_pulang;
+
+                        if ($mark_pulang->format('H:i:s') < $mark_masuk->format('H:i:s')) {
+                            $mark_pulang->addDay();
+                        }
+
+                        $total_target_hours += round(abs($mark_pulang->diffInMinutes($mark_masuk) / 60), 2);
                     }
                 }
 

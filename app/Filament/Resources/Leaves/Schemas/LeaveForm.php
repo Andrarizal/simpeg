@@ -326,25 +326,6 @@ class LeaveForm
                                         }),
                                 ])
                                 ->compact(),
-
-                            Section::make('Status Persetujuan')
-                                ->icon('heroicon-m-check-badge')
-                                ->visible(fn() => $chair == 1)
-                                ->schema([
-                                    Select::make('status')
-                                        ->hiddenLabel()
-                                        ->options([
-                                            'Menunggu' => 'Menunggu',
-                                            'Disetujui Koordinator' => 'Disetujui Koordinator',
-                                            'Disetujui Kasi' => 'Disetujui Kasi',
-                                            'Disetujui Direktur' => 'Disetujui Direktur',
-                                            'Ditolak' => 'Ditolak',
-                                        ])
-                                        ->native(false)
-                                        ->selectablePlaceholder(false),
-                                ])
-                                ->extraAttributes(['class' => 'bg-gray-50 dark:bg-gray-900']),
-
                         ])->columnSpan(['lg' => 1]),
                 ])->columnSpanFull(),
             ]);

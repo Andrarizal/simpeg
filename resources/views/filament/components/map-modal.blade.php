@@ -1,5 +1,5 @@
 @php
-$presence = \App\Models\Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->whereNull('check_out')->count() > 0;
+$presence = \App\Models\Presence::where('staff_id', Auth::user()->staff_id)->whereNull('check_out')->latest('presence_date')->doesntExist();
 $officeLat = setting('lat') ?? 0; 
 $officeLng = setting('lng') ?? 0;
 $radius = 200;

@@ -15,6 +15,7 @@ use App\Models\StaffStatus;
 use App\Models\StaffWorkEducation;
 use App\Models\StaffWorkExperience;
 use App\Models\Unit;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Filament\Actions\Action;
@@ -25,8 +26,10 @@ use Filament\Resources\Pages\ListRecords;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class ListStaff extends ListRecords
 {
@@ -87,28 +90,42 @@ class ListStaff extends ListRecords
                     ])
                 ])
                 ->action(function (array $data) {
+                    $countUsers = 0;
+                    set_time_limit(60);
                     try {
                         $fullPath = storage_path('app/public/' . $data['file']);
                         $rows = Excel::toCollection(null, $fullPath)->first();
 
                         $mode = $data['mode'];
                         
-                        DB::transaction(function () use ($rows, $mode) {
+                        DB::transaction(function () use ($rows, $mode, $countUsers) {
                             $headersCheck = 0;
 
+                            $parseDate = function ($value) {
+                                if (empty(trim($value))) return null;
+                                try {
+                                    return is_numeric($value) 
+                                        ? Carbon::instance(Date::excelToDateTimeObject($value))
+                                        : Carbon::createFromFormat('d/m/Y', trim($value));
+                                } catch (\Exception $e) {
+                                    return null;
+                                }
+                            };
+
                             foreach ($rows as $row) {
-                                // dump($row);
                                 if ($headersCheck++ <= 1 || empty($row[0]) || empty($row[1])) continue;
 
                                 $isExist = Staff::where('nik', $row[1])->first();
 
                                 if ($isExist && $mode == 'skip') continue;
 
+                                $birthDate = $parseDate($row[4]);
+
                                 $staff = [
                                     'nip' => $row[2],
                                     'name' => $row[0],
                                     'birth_place' => $row[3] ?? null,
-                                    'birth_date' => isset($row[4]) ? Carbon::createFromFormat('d/m/Y', trim($row[4])) : null,
+                                    'birth_date' => $birthDate,
                                     'sex' => $row[5] ?? 'L',
                                     'marital' => $row[6] ?? 'Lajang',
                                     'phone' => $row[7] ?? null,
@@ -117,107 +134,117 @@ class ListStaff extends ListRecords
                                     'email' => $row[10] ?? null,
                                     'other_phone' => $row[11] ?? null,
                                     'other_phone_adverb' => $row[12] ?? 'Lainnya',
-                                    'entry_date' => isset($row[13]) ? Carbon::createFromFormat('d/m/Y', trim($row[13])) : null,
-                                    'retirement_date' => isset($row[14]) ? Carbon::createFromFormat('d/m/Y', trim($row[4]))->addYear(56)->format('Y-m-d') : null,
+                                    'entry_date' => $parseDate($row[13]),
+                                    'retirement_date' => $birthDate ? $birthDate->copy()->addYears(56)->format('Y-m-d') : null, 
                                     'staff_status_id' => $this->mapStatus($row[15]),
                                     'chair_id' => $this->mapChair($row[16]),
                                     'group_id' => $this->mapGroup($row[17]),
                                     'unit_id' => $this->mapUnit($row[18]),
                                 ];
-
-                                $staff_entry_education = [
-                                    'level' => $row[19],
-                                    'institution' => $row[20] ?? null,
-                                    'certificate_number' => $row[21] ?? null,
-                                    'certificate_date' => Carbon::createFromFormat('d/m/Y', trim($row[22])),
-                                    'nonformal_education' => $row[23] ?? null,
-                                    'adverb' => $row[24] ?? null,
-                                ];
-
-                                $staff_work_education = [
-                                    'level' => $row[25],
-                                    'major' => $row[26] ?? null,
-                                    'institution' => $row[27] ?? null,
-                                    'certificate_number' => $row[28] ?? null,
-                                    'certificate_date' => Carbon::createFromFormat('d/m/Y', trim($row[29])),
-                                ];
-
-                                $staff_work_experience = [
-                                    'institution' => $row[30],
-                                    'work_length' => $row[31] ?? null,
-                                    'admission' => $row[32] ?? null,
-                                ];
-
-                                $staff_contract = [
-                                    'contract_number' => $row[33],
-                                    'start_date' => Carbon::createFromFormat('d/m/Y', trim($row[34])),
-                                    'end_date' => Carbon::createFromFormat('d/m/Y', trim($row[35])),
-                                ];
-
-                                $staff_appointment = [
-                                    'decree_number' => $row[36],
-                                    'decree_date' => Carbon::createFromFormat('d/m/Y', trim($row[37])),
-                                    'class' => $row[38] ?? null,
-                                ];
-
-                                $staff_adjustment = [
-                                    'decree_number' => $row[39],
-                                    'decree_date' => Carbon::createFromFormat('d/m/Y', trim($row[40])),
-                                    'class' => $row[41] ?? null,
-                                ];
                                 
                                 $newRow = Staff::updateOrCreate(
-                                ['nik' => $row[1]],
+                                    ['nik' => $row[1]],
                                     $staff
                                 );
 
                                 if (!empty($row[19])) {
-                                    StaffEntryEducation::updateOrCreate(['staff_id' => $newRow['id']],
-                                        $staff_entry_education
+                                    StaffEntryEducation::updateOrCreate(
+                                        ['staff_id' => $newRow->id],
+                                        [
+                                            'level' => $row[19],
+                                            'institution' => $row[20] ?? null,
+                                            'certificate_number' => $row[21] ?? null,
+                                            'certificate_date' => $parseDate($row[22]),
+                                            'nonformal_education' => $row[23] ?? null,
+                                            'adverb' => $row[24] ?? null,
+                                        ]
                                     );
                                 }
 
                                 if (!empty($row[25])) {
-                                    StaffWorkEducation::updateOrCreate(['staff_id' => $newRow['id']],
-                                        $staff_work_education
+                                    StaffWorkEducation::updateOrCreate(
+                                        ['staff_id' => $newRow->id],
+                                        [
+                                            'level' => $row[25],
+                                            'major' => $row[26] ?? null,
+                                            'institution' => $row[27] ?? null,
+                                            'certificate_number' => $row[28] ?? null,
+                                            'certificate_date' => $parseDate($row[29]),
+                                        ]
                                     );
                                 }
 
                                 if (!empty($row[30])) {
-                                    StaffWorkExperience::updateOrCreate(['staff_id' => $newRow['id']],
-                                        $staff_work_experience
+                                    StaffWorkExperience::updateOrCreate(
+                                        ['staff_id' => $newRow->id],
+                                        [
+                                            'institution' => $row[30],
+                                            'work_length' => $row[31] ?? null,
+                                            'admission' => $row[32] ?? null,
+                                        ]
                                     );
                                 }
 
                                 if (!empty($row[33])) {
-                                    StaffContract::updateOrCreate(['staff_id' => $newRow['id']],
-                                        $staff_contract
+                                    StaffContract::updateOrCreate(
+                                        ['staff_id' => $newRow->id],
+                                        [
+                                            'contract_number' => $row[33],
+                                            'start_date' => $parseDate($row[34]),
+                                            'end_date' => $parseDate($row[35]),
+                                        ]
                                     );
                                 }
 
                                 if (!empty($row[36])) {
-                                    StaffAppointment::updateOrCreate(['staff_id' => $newRow['id']],
-                                        $staff_appointment
+                                    StaffAppointment::updateOrCreate(
+                                        ['staff_id' => $newRow->id],
+                                        [
+                                            'decree_number' => $row[36],
+                                            'decree_date' => $parseDate($row[37]),
+                                            'class' => $row[38] ?? null,
+                                        ]
                                     );
                                 }
 
                                 if (!empty($row[39])) {
-                                    StaffAdjustment::updateOrCreate(['staff_id' => $newRow['id']],
-                                        $staff_adjustment
+                                    StaffAdjustment::updateOrCreate(
+                                        ['staff_id' => $newRow->id],
+                                        [
+                                            'decree_number' => $row[39],
+                                            'decree_date' => $parseDate($row[40]),
+                                            'class' => $row[41] ?? null,
+                                        ]
                                     );
                                 }
+
+                                if (!empty($row[10])) {
+                                    User::updateOrCreate(
+                                        ['email' => $row[10]],
+                                        [
+                                            'name' => $row[0],
+                                            'password' => bcrypt($birthDate ? $birthDate->format('dmY') : '123456'),
+                                            'role_id' => 2,
+                                            'staff_id' => $newRow->id
+                                        ]
+                                    );
+                                }
+
+                                $countUsers++;
                             }
                         });
                     } finally {
                         $relativePath = str_replace(storage_path('app/public/'), '', $fullPath);
 
-                        if (Storage::disk('public')->exists($relativePath)) Storage::disk('public')->delete($relativePath);
+                        if (Storage::disk('public')->exists($relativePath)) {
+                            Storage::disk('public')->delete($relativePath);
+                        }
                     }
                     
                     Notification::make()
-                    ->title('Data pegawai berhasil diimpor!')
-                    ->success()
-                    ->send();
+                        ->title($countUsers . ' Data pegawai berhasil diimpor!')
+                        ->success()
+                        ->send();
                 }),
             CreateAction::make()
                 ->label('Daftarkan Pegawai'),
@@ -247,5 +274,15 @@ class ListStaff extends ListRecords
     private function mapChair($name)
     {
         return Chair::firstOrCreate(['name' => trim($name ?? 'Tidak Ada')])->id;
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->staff || !$user->staff->chair) {
+            return false; 
+        }
+
+        return $user->role_id == 1;
     }
 }

@@ -28,15 +28,20 @@ class DutiesTable
     {
         return $table
             ->modifyQueryUsing(function ($query) {
-                if (str_contains(Auth::user()->staff->chair->name, 'Sekretariat')){
-                    return $query->latest();
-                } else {
-                    $letters = DutyReceiver::where('staff_id', Auth::user()->staff_id)->pluck('duty_id')->toArray();
-                    foreach ($letters as $letterId) {
-                        $query->orWhere('id', $letterId);
-                    }
+                $chairName = Auth::user()->staff->chair->name ?? '';
+            
+                if (str_contains($chairName, 'Sekretariat')) {
                     return $query->latest();
                 }
+            
+                $query->where(function (Builder $subQuery) use ($chairName) {
+                    $letters = DutyReceiver::where('staff_id', Auth::user()->staff_id)
+                        ->pluck('duty_id')
+                        ->toArray();
+                    $subQuery->whereIn('id', $letters);
+                });
+            
+                return $query->latest();    
             })
             ->columns([
                 TextColumn::make('duty_date')
@@ -112,6 +117,8 @@ class DutiesTable
                     ->selectablePlaceholder(false)
                     ->native(false),
             ])
+            ->recordUrl(null)
+            ->recordAction('preview')
             ->recordActions([
                 Action::make('preview')
                     ->label('Lihat')
@@ -206,7 +213,8 @@ class DutiesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => str_contains(Auth::user()->staff->chair->name, 'Sekretariat')),
                 ]),
             ]);
     }

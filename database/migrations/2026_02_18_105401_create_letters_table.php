@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->enum('classification', ['Disposisi', 'Undangan']);
             $table->string('agenda_number')->nullable();
-            $table->string('reference_number');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->date('letter_date');
+            $table->string('reference_number')->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->date('letter_date')->nullable();
             $table->foreignId('template_id')->nullable()->constrained(
                 table: 'letter_templates',
                 indexName: 'letters_template_id'
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->enum('receiver_type', ['Terlampir', 'Utuh'])->nullable();
             $table->string('urgency')->nullable();
             $table->string('sender')->nullable();
-            $table->string('title');
+            $table->string('title')->nullable();
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
             $table->string('location')->nullable();

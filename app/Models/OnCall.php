@@ -39,20 +39,18 @@ class OnCall extends Model
     {
         static::saving(function (OnCall $onCall) {
             if ($onCall->oncall_date) {
+                
                 $period = MonthlyPeriod::where('start_date', '<=', $onCall->oncall_date)
                     ->where('end_date', '>=', $onCall->oncall_date)
                     ->first();
 
                 if ($period) {
                     $onCall->period_id = $period->id;
-                } else {
-                    Notification::make()
-                        ->warning()
-                        ->title('Periode bulanan tidak ditemukan untuk tanggal on call yang dipilih.')
-                        ->send();
                 }
             }
+        });
 
+        static::created(function (OnCall $onCall) {
             $onCall->command_by = Auth::user()->staff_id;
             $onCall->hours = $onCall->getTotalHours();
 
@@ -88,5 +86,10 @@ class OnCall extends Model
         $hours = abs($end->diffInMinutes($start) / 60);
 
         return round($hours, 2);
+    }
+
+    public function calculateTotalHours()
+    {
+        $this->hours = $this->getTotalHours();
     }
 }

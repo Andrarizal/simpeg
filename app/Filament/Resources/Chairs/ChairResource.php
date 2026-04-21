@@ -4,10 +4,9 @@ namespace App\Filament\Resources\Chairs;
 
 use App\Filament\Resources\Chairs\Pages\ManageChairs;
 use App\Models\Chair;
+use App\Models\Unit;
 use BackedEnum;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -65,6 +64,21 @@ class ChairResource extends Resource
                     ->preload()
                     ->inlineLabel()
                     ->nullable()
+                    ->placeholder('None')
+                    ->columnSpanFull()
+                    ->native(false),
+                Select::make('unit_id')
+                    ->label('Unit')
+                    ->searchable()
+                    ->options(function () {
+                        $query = Unit::query();
+
+                        return $query->pluck('name', 'id')->toArray();
+                    })
+                    ->preload()
+                    ->inlineLabel()
+                    ->nullable()
+                    ->required()
                     ->columnSpanFull()
                     ->native(false),
             ]);
@@ -77,7 +91,8 @@ class ChairResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Nama Jabatan')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
             ])
             ->recordActions([
                 EditAction::make(),

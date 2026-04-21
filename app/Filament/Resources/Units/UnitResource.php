@@ -7,9 +7,7 @@ use App\Filament\Resources\Units\Pages\ManageUnitSchedules;
 use App\Models\Unit;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -48,10 +46,16 @@ class UnitResource extends Resource
                 Select::make('leader_id')
                     ->label('Kepala Unit')
                     ->relationship('leader', 'name')
+                    ->placeholder('None')
+                    ->preload()
+                    ->searchable()
                     ->native(false),
                 Select::make('work_system')
                     ->label('Sistem Kerja')
-                    ->options(['Tetap', 'Shift'])
+                    ->options([
+                        'Tetap' => 'Tetap',
+                        'Shift' => 'Shift',
+                    ])
                     ->native(false),
             ]);
     }
@@ -89,12 +93,12 @@ class UnitResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Nama Unit')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()    ,
                 TextColumn::make('leader.name')
                     ->label('Kepala Unit')
                     ->default('-')
-                    ->alignCenter()
-                    ->sortable(),
+                    ->alignCenter(),
                 TextColumn::make('work_system')
                     ->label('Sistem Kerja')
                     ->alignCenter()

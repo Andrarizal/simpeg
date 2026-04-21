@@ -48,7 +48,7 @@
             </td>
             <td width="33%">
                 <span class="label">Tgl Agenda :</span><br>
-                <span class="content">{{ \Carbon\Carbon::parse($record->agenda_date)->translatedFormat('d F Y') . ($record->end_date ? ' - ' . \Carbon\Carbon::parse($record->end_date)->translatedFormat('d F Y') : '') }}</span>
+                <span class="content">{{ ($record->start_date ? \Carbon\Carbon::parse($record->start_date)->translatedFormat('d F Y') . ($record->end_date ? ' - ' . \Carbon\Carbon::parse($record->end_date)->translatedFormat('d F Y') : '') : '') }}</span>
             </td>
             <td width="33%">
               <div>

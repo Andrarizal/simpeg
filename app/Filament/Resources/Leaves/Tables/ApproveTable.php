@@ -230,7 +230,7 @@ class ApproveTable
             ])
             ->recordActions([
                 Action::make('approve')
-                    ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Rekomendasi' : 'Setujui')
+                    ->label(fn ($record) => Auth::user()->staff->chair->level > 2 || (Auth::user()->staff->chair->level == 2 && $record->staff->chair->level == 3) ? 'Ketahui' : 'Setujui')
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(fn ($record) => shouldShowApprovalButton($record))
@@ -279,7 +279,7 @@ class ApproveTable
                                 'status'      => ucfirst($verb) . ' ' . $role,
                                 'approver_id' => $staff->id,
                                 'approve_at'  => Carbon::now(),
-                                'adverb'      => $data['adverb']
+                                'adverb'      => $record->adverb . ($data['adverb'] ? "\nRekomendasi " . $role . ": " . $data['adverb'] : '')
                             ];
 
                             if ($level == 3 || $level == 4) {
@@ -314,7 +314,7 @@ class ApproveTable
                                 $usersToNotify = $staffs->pluck('user')->filter(); 
                                 $actionType = 'Verifikasi';
                             } else {
-                                $head = $record->staff->chair->parent->staff->first();
+                                $head = $staff->chair->parent->staff->first();
                                 
                                 $usersToNotify = collect([$head?->user])->filter(); 
                                 $actionType = 'Persetujuan';
@@ -357,13 +357,6 @@ class ApproveTable
                         $user->staff_id = $user->staff_id ?? 1;
                         $staff = $user->staff;
 
-                        $record->update([
-                            'status' => 'Ditolak',
-                            'approver_id' => $staff->id,
-                            'approve_at' => Carbon::now(),
-                            'adverb' => $data['adverb']
-                        ]);
-
                         $level = $staff->chair->level;
 
                         $role = '';
@@ -382,6 +375,14 @@ class ApproveTable
                                 $role = 'Direktur';
                                 break;
                         }
+
+                        $record->update([
+                            'status' => 'Ditolak',
+                            'approver_id' => $staff->id,
+                            'approve_at' => Carbon::now(),
+                            'adverb' => $record->adverb . "\nAlasan Penolakan " . $role . ": " . $data['adverb']
+                        ]);
+
 
                         Notification::make()
                             ->title($record->type . ' Anda telah ditolak oleh ' . $role)
@@ -411,12 +412,18 @@ class ApproveTable
                             && ($record->staff->chair->level == 4 ? $record->status == 'Disetujui Kepala Seksi' : $record->status == 'Disetujui Direktur')
                             && $record->status != 'Ditolak';
                     })
+                    ->schema([
+                        Textarea::make('adverb')
+                            ->label('Catatan')
+                            ->rows(3),
+                    ])
                     ->requiresConfirmation()
-                    ->action(function ($record) {
+                    ->action(function (array $data, $record) {
                         $record->update([
                             'is_verified' => 1,
                             'verified_by' => Auth::user()->staff_id,
-                            'verified_at' => Carbon::now()
+                            'verified_at' => Carbon::now(),
+                            'adverb' => $record->adverb . ($data['adverb'] ? "\nCatatan SDM " . ": " . $data['adverb'] : '')
                         ]);
 
                         Notification::make()
@@ -457,7 +464,7 @@ class ApproveTable
                     ->action(function (array $data, $record) {
                         $record->update([
                             'is_verified' => 0,
-                            'adverb' => $data['adverb']
+                            'adverb' => $record->adverb . "\nAlasan Penolakan SDM" . ": " . $data['adverb']
                         ]);
 
                         Notification::make()
@@ -486,72 +493,18 @@ class ApproveTable
                         ->modalHeading('Preview')
                         ->modalWidth('5xl')
                         ->modalContent(function ($record, $livewire) {
-                            $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = $record->verifier ?? null;
-
-                            if (!$head) {
-                                return view('filament.components.alert', [
-                                    'message' => 'Atasan user belum dipilih! Tidak dapat melanjutkan proses.',
-                                    'color'   => 'danger',
-                                ]);
-                            }
-                            
-                            $approver = '';
-                            if ($record->staff->chair->level == 4){
-                                $approver = Staff::where('chair_id', $head->chair->head_id)->first()->name;
-                            } else {
-                                $approver = Staff::where('chair_id', 1)->first()->name;
-                            }
-
-                            $signData = [
-                                'replace' => null,
-                                'known' => null,
-                                'approve' => null,
-                                'verified' => null,
+                            $approver = Staff::where('chair_id', 1)->first();
+                            $approveData = [
+                                'approve_by' => $approver->id,
+                                'approve_at' => $record['verified_at']
                             ];
-
-                            if ($record->is_replaced) {
-                                $replaceData = [
-                                    'replace_by' => $record->replacement_id,
-                                    'replace_at' => $record->replacement_at
-                                ];
-                                $replace_url = Signature::getUrl($replaceData);
-                                $signData['replace'] = base64_encode(QrCode::format('svg')->size(100)->generate($replace_url));
-                            }
-
-                            if ($record->known_by) {
-                                $knownData = [
-                                    'known_by' => $record->known_by,
-                                    'known_at' => $record->known_at
-                                ];
-                                $known_url = Signature::getUrl($knownData);
-                                $signData['known'] = base64_encode(QrCode::format('svg')->size(100)->generate($known_url));
-                            }
-
-                            if (str_contains($record->status, 'Disetujui')) {
-                                $approveData = [
-                                    'approve_by' => $record->approver_id,
-                                    'approve_at' => $record->approve_at
-                                ];
-                                $approve_url = Signature::getUrl($approveData);
-                                $signData['approve'] = base64_encode(QrCode::format('svg')->size(100)->generate($approve_url));
-                            }
-
-                            if ($record->is_verified) {
-                                $verifiedData = [
-                                    'verified_by' => $record->verified_by,
-                                    'verified_at' => $record->verified_at
-                                ];
-                                $verified_url = Signature::getUrl($verifiedData);
-                                $signData['verified'] = base64_encode(QrCode::format('svg')->size(100)->generate($verified_url));
-                            }
+                            $approve_url = Signature::getUrl($approveData);
+                            $approve = base64_encode(QrCode::format('svg')->size(100)->generate($approve_url));
 
                             $html = view('exports.leaves', [
                                 'record' => $record,
-                                'head' => $head,
-                                'sdm' => $sdm,
-                                'approver' => $approver,
-                                'qrCode' => $signData,
+                                'approver' => $approver->name,
+                                'qrCode' => $approve,
                                 'isWord' => false,
                             ])->render();
 
@@ -610,7 +563,7 @@ class ApproveTable
                         ->color('info')
                         ->action(function ($record) {
                             $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = $record->verifier ?? null;
+                            $sdm = $record->verifier->name ?? null;
 
                             if (!$head) {
                                 return Notification::make()

@@ -82,6 +82,10 @@ class AppServiceProvider extends ServiceProvider
                         border-radius: var(--radius-xl) !important;
                     }
 
+                    .fi-badge.fi-size-sm {
+                        letter-spacing: 0.075em;
+                    }
+
                     .fi-sc-tabs, 
                     .fi-ta-ctn, 
                     .fi-modal-window
@@ -97,8 +101,12 @@ class AppServiceProvider extends ServiceProvider
                         border-radius: var(--radius-3xl)!important;
                     }
 
-                    .fi-wi-stats-overview-stat, {
+                    .fi-wi-stats-overview-stat {
                         overflow: hidden;
+                    }
+
+                    .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-value {
+                        font-family: 'SF-Pro', sans-serif !important;
                     }
 
                     .fi-btn {
@@ -252,6 +260,11 @@ class AppServiceProvider extends ServiceProvider
                         border-radius: var(--radius-2xl) !important;
                         border-top-right-radius: 0 !important;
                         border-top-left-radius: 0 !important;
+                    }
+
+                    .fi-section header {
+                        padding-inline: calc(var(--spacing) * 4);
+                        padding-block: calc(var(--spacing) * 3);
                     }
 
                     .fi-ta-text-has-descriptions {

@@ -13,14 +13,62 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\HtmlString;
 
 class EditProfile extends EditRecord
 {
     protected static string $resource = ProfileResource::class;
     protected static ?string $title = 'Profil Pegawai';
+
+    public function getHeading(): string | Htmlable
+    {
+        return new HtmlString(<<<HTML
+            <div class="flex items-center gap-x-2">
+                <span>Profil Pegawai</span>
+                
+                <button 
+                    type="button" 
+                    wire:click="mountAction('infoAction')" 
+                    class="text-primary-500 hover:text-primary-600 transition focus:outline-none" 
+                    title="Lihat Panduan Pelatihan Pegawai"
+                >
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                </button>
+            </div>
+        HTML);
+    }
+
+    public function infoAction(): Action
+    {
+        return Action::make('info')
+            ->modalHeading('Panduan Pelatihan Pegawai')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Tutup')
+            ->modalWidth('2xl')
+            ->modalContent(fn () => new HtmlString('
+                <div class="text-sm text-gray-700 dark:text-gray-300 space-y-4">
+                    <p>Berikut adalah prosedur pencatatan riwayat pelatihan/diklat pegawai beserta proses verifikasinya:</p>
+                    
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+                        <ul class="list-disc pl-5 mt-2 space-y-1">
+                            <li>Pegawai masuk ke menu <strong>Profil Pegawai</strong> milik masing-masing.</li>
+                            <li>Pilih dan buka tab <strong>Riwayat Pelatihan</strong>.</li>
+                            <li>Klik tombol <strong>Tambah Pelatihan Baru</strong>.</li>
+                            <li>Isi formulir dengan lengkap: Nama Pelatihan, Tanggal Pelaksanaan, Deskripsi kegiatan, dan Durasi (dalam Jam).</li>
+                            <li><strong>Upload Sertifikat</strong> pelatihan sebagai bukti pendukung (Jika ada).</li>
+                            <li>Klik Simpan. Sistem akan menyimpan data Anda dengan status <span class="italic text-amber-600 dark:text-amber-400">Menunggu Verifikasi</span> dengan garis pelatihan berwarna kuning.</li>
+                            <li>Jika terverifikasi, garis pelatihan akan berubah menjadi warna hijau. Jika tidak terverifikasi, garis pelatihan akan berubah menjadi warna merah</li>
+                        </ul>
+                    </div>
+                </div>
+            '));
+    }
 
     protected function getHeaderActions(): array
     {

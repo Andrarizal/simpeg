@@ -19,15 +19,15 @@ class Leave extends Model
     }
 
     public function knowner(): BelongsTo {
-        return $this->belongsTo(Staff::class);
+        return $this->belongsTo(Staff::class, 'known_by');
     }
 
     public function approver(): BelongsTo {
-        return $this->belongsTo(Staff::class);
+        return $this->belongsTo(Staff::class, 'approver_id');
     }
 
     public function verifier(): BelongsTo {
-        return $this->belongsTo(Staff::class);
+        return $this->belongsTo(Staff::class, 'verified_by');
     }
 
     protected $casts = [

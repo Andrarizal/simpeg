@@ -55,9 +55,94 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
         $this->year = now()->year();
     }
 
-    public function getTitle(): string
+    public function getHeading(): string | Htmlable
     {
-        return 'Jadwal Unit: ' . $this->record->name;
+        $unitName = $this->record->name;
+        return new HtmlString(<<<HTML
+            <div class="flex items-center gap-x-2">
+                <span>Jadwal Unit: $unitName</span>
+                
+                <button 
+                    type="button" 
+                    wire:click="mountAction('infoAction')" 
+                    class="text-primary-500 hover:text-primary-600 transition focus:outline-none" 
+                    title="Lihat Panduan Penjadwalan"
+                >
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                </button>
+            </div>
+        HTML);
+    }
+
+    public function infoAction(): Action
+    {
+        return Action::make('info')
+            ->modalHeading('Panduan Pengelolaan Jadwal & Shift')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Tutup')
+            ->modalWidth('3xl')
+            ->modalContent(fn () => new HtmlString('
+                <div class="text-sm text-gray-700 dark:text-gray-300 space-y-4">
+                    <p>Berikut adalah prosedur pembuatan jadwal shift kerja bulanan untuk pegawai di unit masing-masing:</p>
+                    
+                    <div class="rounded-lg border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-800/20">
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 text-xs">1</span>
+                            Akses Menu Penjadwalan
+                        </h4>
+                        <p class="mb-2">Akses menu jadwal disesuaikan dengan kedudukan/role Anda saat login:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li><span class="font-semibold">Kepala Unit:</span> Langsung masuk ke menu <strong>Jadwal Unit</strong>.</li>
+                            <li><span class="font-semibold">Koordinator / SDM:</span> Masuk ke menu <strong>Unit Kerja</strong>, lalu pilih action <strong>Jadwal</strong> pada baris nama unit yang ingin dikelola.</li>
+                        </ul>
+                        <p class="mt-2 text-xs text-gray-500">Keduanya akan menampilkan halaman kalender yang berisi daftar nama anggota unit beserta jadwal dalam 1 bulan.</p>
+                    </div>
+
+                    <div class="rounded-lg border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+                        <h4 class="font-bold text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-2">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-amber-200 text-amber-800 dark:bg-amber-800 dark:text-amber-200 text-xs">2</span>
+                            Pengecekan & Pembuatan Shift
+                        </h4>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Sistem akan mendeteksi apakah unit Anda sudah memiliki data Shift atau belum.</li>
+                            <li><strong>Jika Belum Ada:</strong> Anda wajib membuatnya terlebih dahulu. Klik tombol <strong>Kelola Shift</strong>, lalu isi Nama Shift, Kode, Jam Masuk, dan Jam Pulang. Klik <strong>Kirim</strong> untuk menyimpan master shift.</li>
+                            <li><strong>Jika Sudah Ada:</strong> Lanjut ke tahap pengisian jadwal (Tahap 3).</li>
+                        </ul>
+                    </div>
+
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+                        <h4 class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 text-xs">3</span>
+                            Pembuatan Jadwal Pegawai
+                        </h4>
+                        <p class="mb-3">Terdapat 2 cara untuk mengisi jadwal pegawai. Keduanya akan <strong>otomatis tersimpan</strong> dan jam kerja akan <strong>terakumulasi</strong> secara instan:</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white dark:bg-gray-900 rounded border border-emerald-100 dark:border-emerald-900/50 p-3">
+                                <p class="font-semibold text-emerald-700 dark:text-emerald-400 mb-1 border-b pb-1">Cara Manual</p>
+                                <ul class="list-decimal pl-4 mt-1 space-y-1 text-xs">
+                                    <li>Pilih Filter <strong>Bulan dan Tahun</strong> di bagian atas.</li>
+                                    <li>Arahkan kursor ke baris nama karyawan.</li>
+                                    <li>Klik pada <em>input</em> tanggal tertentu yang ingin diatur.</li>
+                                    <li>Pilih <strong>Shift</strong> yang sesuai untuk hari tersebut.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-white dark:bg-gray-900 rounded border border-emerald-100 dark:border-emerald-900/50 p-3">
+                                <p class="font-semibold text-emerald-700 dark:text-emerald-400 mb-1 border-b pb-1">Cara Generate (Otomatis)</p>
+                                <ul class="list-decimal pl-4 mt-1 space-y-1 text-xs">
+                                    <li>Klik tombol <strong>Generate</strong>.</li>
+                                    <li>Sebuah modal akan muncul, pilih <strong>Bulan dan Tahun</strong> target jadwal.</li>
+                                    <li>Klik <strong>Generate Jadwal</strong>. Sistem akan menyusun jadwal secara otomatis berdasarkan pola yang diatur sebelumnya.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            '));
     }
 
     protected function getHeaderActions(): array
@@ -498,7 +583,7 @@ class ManageUnitSchedules extends Page implements HasForms, HasTable
                     <span class='text-xl font-black text-gray-700 dark:text-gray-200'>
                         {$day}
                     </span>
-                    <span class='text-[10px] font-medium text-gray-400 uppercase tracking-wide mt-1'>
+                    <span class='text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-1'>
                         {$dayName}
                     </span>
                 </div>

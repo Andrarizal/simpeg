@@ -85,7 +85,6 @@ class StaffResource extends Resource
             return true;
         }
 
-        // Default: Blokir
         return false;
     }
 }

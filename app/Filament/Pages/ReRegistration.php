@@ -272,6 +272,7 @@ class ReRegistration extends Page implements HasSchemas
                                                         ->label('Jenjang')
                                                         ->options(['Dokter' => 'Dokter', 'Dokter Gigi' => 'Dokter Gigi','Spesialis' => 'Spesialis', 'S2' => 'S2', 'S1' => 'S1', 'Profesi Ners' => 'Profesi Ners', 'Profesi Apoteker' => 'Profesi Apoteker', 'DIV' => 'DIV', 'DIII' => 'DIII', 'DIII Anestesi' => 'DIII Anestesi', 'DIV Anestesi' => 'DIV Anestesi', 'SMK' => 'SMK', 'SMA' => 'SMA', 'SMP' => 'SMP'
                                                         ])
+                                                        ->placeholder('None')
                                                         ->native(false),
                                                     TextInput::make('workEducation.major')
                                                         ->label('Jurusan')

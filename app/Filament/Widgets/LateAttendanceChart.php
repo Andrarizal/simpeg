@@ -10,11 +10,13 @@ use Illuminate\Support\Facades\Auth;
 
 class LateAttendanceChart extends ChartWidget
 {
-    protected static ?int $sort = 8;
+    protected static ?int $sort = 7;
+
+    protected ?string $maxHeight = '180px';
 
     protected int | string | array $columnSpan = 2;
 
-    protected ?string $heading = 'Tren Keterlambatan (7 Hari Terakhir)';
+    protected ?string $heading = 'Tren Keterlambatan';
     
     protected function getData(): array
     {

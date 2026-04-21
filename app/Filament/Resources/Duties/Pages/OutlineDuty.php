@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Duties\Pages;
 
 use App\Filament\Resources\Duties\DutyResource;
+use App\Models\Duty;
 use App\Models\Presence;
 use App\Models\Schedule;
 use Carbon\Carbon;
@@ -258,25 +259,58 @@ class OutlineDuty extends Page implements HasForms
                     'letter_verified'  => null,
                     'is_workhour'  => $data['is_workhour'],
                 ];
-                
-                $presence_data = [
-                    'staff_id' => $staff->id,
-                    'presence_date' => $record->duty_date,
-                    'check_in' => $schedule->shift->start_time,
-                    'check_out' => $schedule->shift->end_time,
-                    'method' => 'network',
-                ];
-                
                 $this->record->receivers()->where('staff_id', $staff->id)->update($updateData);
+                
+                $existingPresence = Presence::where('staff_id', $staff->id)
+                ->whereDate('presence_date', $record->duty_date)
+                ->first();
 
-                Presence::create($presence_data);
+                $successMessage = 'Notulensi berhasil disimpan.';
+
+                if (!$existingPresence) {
+                    $shiftStartTime = Carbon::parse($record->duty_date . ' ' . $schedule->shift->start_time);
+                    $eventStartTime = Carbon::parse($record->duty_date . ' ' . $record->start_time); 
+                    $diffInMinutes = $shiftStartTime->diffInMinutes($eventStartTime, false);
+
+                    if ($diffInMinutes > 60) {
+                        $successMessage .= ' (Anda tetap wajib melakukan Check-in karena jeda waktu mencukupi).';
+                    } else {
+                        Presence::create([
+                            'staff_id'      => $staff->id,
+                            'presence_date' => $record->duty_date,
+                            'check_in'     => $shiftStartTime, 
+                            'check_out'     => null, 
+                            'method'        => 'network',
+                        ]);
+                        $successMessage .= ' (Check-in otomatis tercatat. Jangan lupa Check-out di RS).';
+                    }
+                }
 
                 Notification::make()
                     ->success()
-                    ->title('Notulensi, Presensi, dan Konfirmasi Berhasil Disimpan')
+                    ->title('Berhasil Submit Notulensi!')
+                    ->body($successMessage)
                     ->send();
 
                 $this->redirect(DutyResource::getUrl('index'));
             });
+    }
+
+    public static function canAccess(array $parameters = []): bool{
+        $staffId = Auth::user()->staff_id;
+
+        $recordId = $parameters['record'] ?? request()->route('record');
+
+        if (is_array($recordId)) {
+            $recordId = $recordId[0];
+        }
+
+        $duties = Duty::find($recordId);
+
+        if (!$duties instanceof Duty) {
+            return false;
+        }
+
+        return $duties->targetStaffs()->where('staffs.id', $staffId)->exists();
     }
 }

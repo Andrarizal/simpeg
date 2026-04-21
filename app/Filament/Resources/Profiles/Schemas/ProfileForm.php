@@ -156,12 +156,11 @@ class ProfileForm
                                                         ->label('No. Telepon Kerabat')
                                                         ->tel()
                                                         ->mask('9999-9999-9999')
-                                                        ->placeholder('ex. 0812-3456-7890')
-                                                        ->required(),
+                                                        ->placeholder('ex. 0812-3456-7890'),
                                                     Select::make('other_phone_adverb')
                                                         ->label('Hubungan dengan Kerabat')
                                                         ->options(['Suami' => 'Suami', 'Istri' => 'Istri', 'Orang tua' =>  'Orang tua', 'Wali' => 'Wali', 'Saudara' => 'Saudara', 'Lainnya' => 'Lainnya'])
-                                                        ->required()
+                                                        ->placeholder('None')
                                                         ->native(false),
                                                 ]),
                                         ]),
@@ -215,6 +214,7 @@ class ProfileForm
                                                         ->label('Jenjang')
                                                         ->options(['Dokter' => 'Dokter', 'Dokter Gigi' => 'Dokter Gigi','Spesialis' => 'Spesialis', 'S2' => 'S2', 'S1' => 'S1', 'Profesi Ners' => 'Profesi Ners', 'Profesi Apoteker' => 'Profesi Apoteker', 'DIV' => 'DIV', 'DIII' => 'DIII', 'DIII Anestesi' => 'DIII Anestesi', 'DIV Anestesi' => 'DIV Anestesi', 'SMK' => 'SMK', 'SMA' => 'SMA', 'SMP' => 'SMP'
                                                         ])
+                                                        ->placeholder('None')
                                                         ->native(false),
                                                     TextInput::make('workEducation.major')
                                                         ->label('Jurusan')

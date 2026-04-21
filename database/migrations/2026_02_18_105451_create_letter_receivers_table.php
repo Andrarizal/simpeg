@@ -24,6 +24,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('is_attend')->nullable();
             $table->text('outline')->nullable();
             $table->string('content_path')->nullable();
+            $table->text('comment')->nullable();
             $table->timestamps();
         });
     }

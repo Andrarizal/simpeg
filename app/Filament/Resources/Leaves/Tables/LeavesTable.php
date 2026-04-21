@@ -187,7 +187,7 @@ class LeavesTable
                         ->modalWidth('5xl')
                         ->modalContent(function ($record, $livewire) {
                             $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = $record->verifier ?? null;
+                            $sdm = $record->verifier->name ?? null;
 
                             if (!$head) {
                                 return view('filament.components.alert', [
@@ -310,7 +310,7 @@ class LeavesTable
                         ->color('info')
                         ->action(function ($record, $livewire) {
                             $head = Staff::where('chair_id', $record->staff->chair->head_id)->first();
-                            $sdm = $record->verifier ?? null;
+                            $sdm = $record->verifier->name ?? null;
 
                             if (!$head) {
                                 return Notification::make()

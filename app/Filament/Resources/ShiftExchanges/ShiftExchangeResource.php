@@ -278,6 +278,19 @@ class ShiftExchangeResource extends Resource
                                     ->markAsRead()
                             ])
                             ->sendToDatabase($record->staff->user);
+
+                        Notification::make()
+                            ->title('Jadwal Anda telah diperbarui.')
+                            ->body('Jadwal Anda untuk tanggal ' . Carbon::parse($record->exchange_date)->translatedFormat('d F Y') . ' telah diperbarui oleh pembuat jadwal. Silakan cek jadwal Anda untuk melihat perubahan.')
+                            ->success()
+                            ->actions([
+                                Action::make('read')
+                                    ->label('Lihat Jadwal')
+                                    ->button()
+                                    ->url(ScheduleResource::getUrl('index'))
+                                    ->markAsRead()
+                            ])
+                            ->sendToDatabase($record->replacer->user);
                     }),
                 Action::make('rejected')
                     ->label('Tolak')

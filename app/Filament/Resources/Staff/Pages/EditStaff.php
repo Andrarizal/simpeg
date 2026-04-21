@@ -19,6 +19,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
 class EditStaff extends EditRecord
@@ -257,4 +258,13 @@ class EditStaff extends EditRecord
             ->sendToDatabase($this->record->user);
     }
 
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Auth::user();
+        if (!$user || !$user->staff || !$user->staff->chair) {
+            return false; 
+        }
+
+        return $user->role_id == 1;
+    }
 }

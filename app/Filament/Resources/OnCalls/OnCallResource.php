@@ -38,7 +38,9 @@ use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Mpdf\Mpdf;
@@ -120,7 +122,7 @@ class OnCallResource extends Resource
                                                         ->exists(); 
 
                                                     if (! $periodExists) {
-                                                        $fail('Periode bulanan tidak ditemukan untuk tanggal on call yang dipilih.');
+                                                        $fail('Periode bulanan tidak ditemukan untuk tanggal lembur yang dipilih.');
                                                     }
                                                 };
                                             })
@@ -129,7 +131,7 @@ class OnCallResource extends Resource
                                         Textarea::make('command')
                                             ->label('Perintah / Uraian Tugas')
                                             ->placeholder('Jelaskan secara rinci tugas yang harus diselesaikan...')
-                                            ->rows(4)
+                                            ->rows(5)
                                             ->required()
                                             ->columnSpanFull(),
                                     ]),
@@ -201,9 +203,14 @@ class OnCallResource extends Resource
                                         TimePicker::make('end_time')
                                             ->label('Waktu Selesai')
                                             ->prefixIcon('heroicon-m-stop')
+                                            ->helperText(new HtmlString('
+                                                <span class="text-xs -mt-1">
+                                                    Terisi setelah on call selesai
+                                                </span>
+                                            '))
                                             ->native(false)
                                             ->displayFormat('H:i')
-                                            ->required()
+                                            ->disabled()
                                             ->seconds(false),
                                     ]),
                             ])
@@ -820,6 +827,28 @@ class OnCallResource extends Resource
                     ->native(false),
             ])
             ->recordActions([
+                Action::make('selesai')
+                    ->label('Selesai')
+                    ->icon('heroicon-o-check')
+                    ->color('info')
+                    ->visible(fn($record, $livewire) => 
+                        is_null($record->end_time) && 
+                        (
+                            Carbon::parse($record->oncall_date)->isToday() ||
+                            Carbon::parse($record->oncall_date)->isYesterday()
+                        ) && $record->staff_id == Auth::user()->staff_id
+                    )
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->end_time = now()->format('H:i');
+                        $record->calculateTotalHours();
+                        $record->save();
+
+                        Notification::make()
+                            ->title('On Call diselesaikan')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('approve')
                     ->label('Ketahui')
                     ->icon('heroicon-o-check')
@@ -990,7 +1019,14 @@ class OnCallResource extends Resource
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(function (Collection $records) {
+                            $records->filter(function ($record) {
+                                return $record->command_by == Auth::user()->staff_id 
+                                    && is_null($record->is_verified) 
+                                    && is_null($record->is_known);
+                            });
+                        }),
                 ]),
             ]);
     }

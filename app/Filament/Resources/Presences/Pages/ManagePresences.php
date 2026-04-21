@@ -59,6 +59,87 @@ class ManagePresences extends ManageRecords implements HasTable
         parent::mount();
     }
 
+    public function getHeading(): string | Htmlable
+    {
+        return new HtmlString(<<<HTML
+            <div class="flex items-center gap-x-2">
+                <span>Presensi</span>
+                
+                <button 
+                    type="button" 
+                    wire:click="mountAction('infoAction')" 
+                    class="text-primary-500 hover:text-primary-600 transition focus:outline-none" 
+                    title="Lihat Panduan Presensi"
+                >
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                </button>
+            </div>
+        HTML);
+    }
+
+    public function infoAction(): Action
+    {
+        return Action::make('info')
+            ->modalHeading('Panduan Presensi (Check In / Check Out)')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Tutup')
+            ->modalWidth('2xl')
+            ->modalContent(fn () => new HtmlString('
+                <div class="text-sm text-gray-700 dark:text-gray-300 space-y-4">
+                    <p>Berikut adalah panduan lengkap cara melakukan presensi kehadiran harian melalui sistem:</p>
+
+                    <div class="rounded-lg border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-700/50 dark:bg-slate-800/20">
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 text-xs">1</span>
+                            Persiapan & Akses Menu
+                        </h4>
+                        <ul class="list-disc pl-5 mt-2 space-y-1">
+                            <li>Pastikan Anda <strong>memiliki jadwal kerja</strong> pada hari ini. (Jadwal dapat dilihat tepat di bawah tulisan Dashboard). Jika tidak ada jadwal, Anda tidak bisa presensi.</li>
+                            <li>Pilih jalur presensi yang Anda inginkan:
+                                <ul class="list-none pl-2 mt-1 space-y-1">
+                                    <li><span class="font-medium text-slate-600 dark:text-slate-400">Jalur Cepat:</span> Langsung klik tombol <strong>Presensi</strong> yang ada di halaman Dashboard.</li>
+                                    <li><span class="font-medium text-slate-600 dark:text-slate-400">Jalur Utama:</span> Buka menu navigasi <strong>Presensi</strong> di bilah samping <em>(sidebar)</em>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <p class="font-semibold text-gray-800 dark:text-gray-200 pt-1">Langkah 2: Pilih Metode Presensi</p>
+
+                    <div class="rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800/50 dark:bg-blue-900/20">
+                        <h4 class="font-bold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-2">
+                            Opsi A: Menggunakan Jaringan Kantor
+                        </h4>
+                        <ul class="list-disc pl-5 mt-2 space-y-1">
+                            <li>Jika Anda hendak <strong>Menggunakan Jaringan</strong>, klik tombol <strong>Check In / Check Out</strong>.</li>
+                            <li><strong>Syarat Mutlak:</strong> Perangkat (HP/Laptop) Anda <u>wajib</u> terhubung dengan jaringan internet/Wi-Fi resmi milik Rumah Sakit.</li>
+                            <li>Jika Anda menggunakan paket data pribadi atau Wi-Fi luar, sistem akan menolak presensi dengan peringatan <em>"Gunakan Jaringan Kantor"</em>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
+                        <h4 class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                            Opsi B: Menggunakan Geolokasi (GPS)
+                        </h4>
+                        <ul class="list-disc pl-5 mt-2 space-y-1">
+                            <li>Jika Anda hendak <strong>Menggunakan Geolokasi</strong>, klik <strong>Check In dengan GPS</strong>.</li>
+                            <li>Tunggu maksimal 15 detik agar sistem dapat mendeteksi dan mengunci lokasi satelit Anda dengan akurat.</li>
+                            <li><strong>Ketentuan Verifikasi Lokasi:</strong>
+                                <ul class="list-none pl-2 mt-2 space-y-2 text-xs">
+                                    <li class="flex gap-2 items-start"><span class="text-red-500 font-bold">✗</span> <span><strong>Anti Fake GPS:</strong> Sistem dilengkapi pendeteksi lokasi palsu. Jika Anda menggunakan aplikasi Fake GPS, sistem akan menampilkan peringatan dan mengunci presensi.</span></li>
+                                    <li class="flex gap-2 items-start"><span class="text-amber-500 font-bold">!</span> <span><strong>Jarak > 200m (Di luar jangkauan):</strong> Jika lokasi Anda berada lebih dari 200 meter dari titik koordinat RS atau akurasi sinyal lemah, tombol presensi tidak akan muncul. Silakan mendekat ke area RS atau cari tempat terbuka.</span></li>
+                                    <li class="flex gap-2 items-start"><span class="text-emerald-500 font-bold">✓</span> <span><strong>Jarak < 200m (Dalam jangkauan):</strong> Sistem akan menampilkan indikator jarak Anda. Tombol <strong>Check In / Check Out</strong> akan aktif dan bisa ditekan untuk merekam presensi.</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            '));
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [
@@ -79,7 +160,23 @@ class ManagePresences extends ManageRecords implements HasTable
             Action::make('check_in')
                 ->label('Check In')
                 ->icon('heroicon-o-finger-print')
-                ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->count() == 0)
+                ->visible(function () {
+                    $scheduleToday = Schedule::where('staff_id', Auth::user()->staff_id)
+                            ->where('schedule_date', now()->toDateString())
+                            ->first();
+                        $isOff = $scheduleToday && $scheduleToday->shift->is_off == 1 ? true : false;
+
+                    $latestPresence = Presence::where('staff_id', Auth::user()->staff_id)
+                        ->latest('presence_date')
+                        ->first();
+                    $isAlreadyCheckedOut = $latestPresence ? $latestPresence->check_out !== null : true;
+
+                    $isNotPresenceYet = Presence::where('staff_id', Auth::user()->staff_id)
+                        ->whereDate('presence_date', now()->toDateString())
+                        ->doesntExist();
+
+                    return $isAlreadyCheckedOut && $isNotPresenceYet && !$isOff;
+                })
                 ->action(function () {
                     $device = session('device_info');
                     $today = now()->toDateString();
@@ -133,10 +230,13 @@ class ManagePresences extends ManageRecords implements HasTable
             Action::make('check_out')
                 ->label('Check Out')
                 ->icon('heroicon-o-finger-print')
-                ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->whereNull('check_out')->count() > 0)
+                ->visible(function () {
+                    return Presence::where('staff_id', Auth::user()->staff_id)
+                        ->whereNull('check_out')
+                        ->exists();
+                })
                 ->action(function () {
-                    $today = now()->toDateString();
-                    $presence = Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', $today)->first();
+                    $presence = Presence::where('staff_id', Auth::user()->staff_id)->whereNull('check_out')->latest('presence_date')->first();
                     $presence->check_out = now()->toTimeString();
                     $presence->save();
 
@@ -149,7 +249,24 @@ class ManagePresences extends ManageRecords implements HasTable
                 ->label('Check In dengan GPS')
                 ->icon('heroicon-o-map-pin')
                 ->color('info')
-                ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->count() == 0)
+                ->visible(function () {
+                    $scheduleToday = Schedule::where('staff_id', Auth::user()->staff_id)
+                            ->where('schedule_date', now()->toDateString())
+                            ->first();
+                    $isOff = $scheduleToday && $scheduleToday->shift->is_off == 1 ? true : false;
+
+
+                    $latestPresence = Presence::where('staff_id', Auth::user()->staff_id)
+                        ->latest('presence_date')
+                        ->first();
+                    $isAlreadyCheckedOut = $latestPresence ? $latestPresence->check_out !== null : true;
+
+                    $isNotPresenceYet = Presence::where('staff_id', Auth::user()->staff_id)
+                        ->whereDate('presence_date', now()->toDateString())
+                        ->doesntExist();
+
+                    return $isAlreadyCheckedOut && $isNotPresenceYet && !$isOff;
+                })
                 ->modalHeading('Absensi via Koordinat Lokasi')
                 ->modalWidth('2xl')
                 ->modalSubmitAction(false)
@@ -159,7 +276,11 @@ class ManagePresences extends ManageRecords implements HasTable
                 ->label('Check Out dengan GPS')
                 ->icon('heroicon-o-map-pin')
                 ->color('info')
-                ->visible(fn () => Presence::where('staff_id', Auth::user()->staff_id)->whereDate('presence_date', now()->toDateString())->whereNull('check_out')->count() > 0)
+                ->visible(function () {
+                    return Presence::where('staff_id', Auth::user()->staff_id)
+                        ->whereNull('check_out')
+                        ->exists();
+                })
                 ->modalHeading('Absensi via Koordinat Lokasi')
                 ->modalWidth('2xl')
                 ->modalSubmitAction(false)
@@ -444,6 +565,7 @@ class ManagePresences extends ManageRecords implements HasTable
                     TextColumn::make('check_out')
                         ->label('Pulang')
                         ->time()
+                        ->formatStateUsing(fn ($record) => $record->check_out < $record->check_in ? $record->check_out . ' (+1 Hari)' : $record->check_out)
                         ->sortable(),
                     TextColumn::make('method')
                         ->label('Metode Presensi')
